@@ -1,0 +1,50 @@
+Package: GiottoDB
+Title: Database Backend for Giotto
+Version: 3.2.1
+Authors@R: c(
+	person("Ruben", "Dries", email = "rubendries@gmail.com",
+		 role = c("aut", "cre")),
+	person("Jiaji", "George Chen", email = "jiajic@bu.edu",
+		 role = c("aut")),
+	person("Eddie", "Ruiz", email = "ecruiz@bu.edu",
+		 role = c("aut")),
+	)
+Maintainer: Ruben Dries <rubendries@gmail.com>
+Description: Extends the Giotto package for working out-of-memory using duckdb
+License: GPL (>= 3)
+Encoding: UTF-8
+LazyData: true
+URL: https://drieslab.github.io/Giotto/, https://github.com/drieslab/Giotto
+BugReports: https://github.com/drieslab/Giotto/issues
+RoxygenNote: 7.2.3
+Depends:
+    base (>= 3.5.0),
+    utils (>= 3.5.0),
+    R (>= 3.5.0),
+    methods
+Imports:
+    data.table (>= 1.12.2),
+    DBI,
+    DelayedArray,
+    DelayedMatrixStats,
+    duckdb,
+    future.apply,
+    jsonlite,
+    Matrix,
+    MatrixGenerics,
+    magrittr,
+    matrixStats (>= 0.55.0),
+    parallel,
+    progressr,
+    sparseMatrixStats,
+    stats
+Suggests:
+    arrow,
+    dplyr,
+    HDF5Array (>= 1.18.1),
+    hdf5r,
+    testthat (>= 3.0.0),
+Collate: 
+    'classes.R'
+    'generics.R'
+    'duckDB_backend.R'
