@@ -7,7 +7,7 @@ Authors@R: c(
 	person("Jiaji", "George Chen", email = "jiajic@bu.edu",
 		 role = c("aut")),
 	person("Eddie", "Ruiz", email = "ecruiz@bu.edu",
-		 role = c("aut")),
+		 role = c("aut"))
 	)
 Maintainer: Ruben Dries <rubendries@gmail.com>
 Description: Extends the Giotto package for working out-of-memory using duckdb
@@ -21,13 +21,13 @@ Depends:
     base (>= 3.5.0),
     utils (>= 3.5.0),
     R (>= 3.5.0),
-    methods
+    methods,
+    duckdb
 Imports:
     data.table (>= 1.12.2),
     DBI,
     DelayedArray,
     DelayedMatrixStats,
-    duckdb,
     future.apply,
     jsonlite,
     Matrix,
@@ -48,3 +48,4 @@ Collate:
     'classes.R'
     'generics.R'
     'duckDB_backend.R'
+    'extract.R'

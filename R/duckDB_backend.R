@@ -93,17 +93,7 @@ setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 })
 
 
-#' setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
-#'
-#'   if(is.na(x@dim[2L])) {
-#'     res = DBI::dbGetQuery(con(x), sprintf('SELECT DISTINCT j from %s',
-#'                                           tblName(x)))
-#'   } else {
-#'     res = x@dim[2L]
-#'   }
-#'
-#'   return(as.integer())
-#' })
+
 
 
 
