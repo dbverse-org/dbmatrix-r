@@ -22,7 +22,8 @@ Depends:
     utils (>= 3.5.0),
     R (>= 3.5.0),
     methods,
-    duckdb
+    duckdb,
+    DBI
 Imports:
     data.table (>= 1.12.2),
     DBI,
@@ -41,11 +42,16 @@ Imports:
 Suggests:
     arrow,
     dplyr,
+    dbplyr,
     HDF5Array (>= 1.18.1),
     hdf5r,
     testthat (>= 3.0.0),
 Collate: 
     'classes.R'
     'generics.R'
+    'connection.R'
+    'dd.R'
     'duckDB_backend.R'
     'extract.R'
+    'operations.R'
+    'summary_stats.R'

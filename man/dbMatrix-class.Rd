@@ -12,6 +12,8 @@ is used as a connection to a single table that exists within the database.
 \section{Slots}{
 
 \describe{
+\item{\code{driver}}{driver function for the database}
+
 \item{\code{connection}}{database connection object}
 
 \item{\code{path}}{path to database on-disk file}
