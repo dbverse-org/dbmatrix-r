@@ -4,10 +4,15 @@
 \alias{reconnect}
 \title{Reconnect to database}
 \usage{
-\S4method{reconnect}{dbData}(x)
+\S4method{reconnect}{dbData}(x, connect_type = NULL, custom_call)
 }
 \arguments{
 \item{x}{GiottoDB object}
+
+\item{connect_type}{(either 'default' or 'custom') type of connection process
+(optional because this value is usually carried by the object)}
+
+\item{custom_call}{specific custom call to use when rebooting (optional)}
 }
 \description{
 Reconnects to a database. Additionally checks that the object contains a
