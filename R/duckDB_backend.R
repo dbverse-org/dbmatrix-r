@@ -213,42 +213,43 @@ create_dbmatrix_matrix = function(matrix,
 
 
 # add key - no support ####
-setMethod('setRemoteKey',
-          signature(x = 'dbData',
-                    remote_name = 'character',
-                    primary_key = 'character'),
-          function(x, remote_name, primary_key, ...) {
-            stopifnot(remoteValid(x),
-                      remoteExistsTable(x, remote_name))
-            cols_in_table = DBI::dbListFields(conn = connection(x),
-                                              name = remote_name)
-            stopifnot(setequal(primary_key, intersect(primary_key, cols_in_table)))
-            query = sql_set_remote_key(conn = connection(x),
-                                       remote_name = remote_name,
-                                       primary_key = primary_key)
-            DBI::dbExecute(conn = connection(x),
-                           statement = query)
-          })
-
-
-
-
-
-sql_set_remote_key = function(conn, remote_name, primary_key) {
-  table_q = DBI::dbQuoteIdentifier(conn, remote_name)
-  key_q = sapply(primary_key, function(x) {
-    DBI::dbQuoteIdentifier(conn, as.character(x))
-  })
-
-  sql_alter_table = DBI::SQL(paste0(
-    'ALTER TABLE ',
-    table_q,
-    '\n',
-    'ADD PRIMARY KEY (',
-    paste0(key_q, collapse = ', '),
-    ');'
-  ))
-}
+# Functions from https://github.com/schardtbc/DBIExt
+# setMethod('setRemoteKey',
+#           signature(x = 'dbData',
+#                     remote_name = 'character',
+#                     primary_key = 'character'),
+#           function(x, remote_name, primary_key, ...) {
+#             stopifnot(remoteValid(x),
+#                       remoteExistsTable(x, remote_name))
+#             cols_in_table = DBI::dbListFields(conn = connection(x),
+#                                               name = remote_name)
+#             stopifnot(setequal(primary_key, intersect(primary_key, cols_in_table)))
+#             query = sql_set_remote_key(conn = connection(x),
+#                                        remote_name = remote_name,
+#                                        primary_key = primary_key)
+#             DBI::dbExecute(conn = connection(x),
+#                            statement = query)
+#           })
+#
+#
+#
+#
+#
+# sql_set_remote_key = function(conn, remote_name, primary_key) {
+#   table_q = DBI::dbQuoteIdentifier(conn, remote_name)
+#   key_q = sapply(primary_key, function(x) {
+#     DBI::dbQuoteIdentifier(conn, as.character(x))
+#   })
+#
+#   sql_alter_table = DBI::SQL(paste0(
+#     'ALTER TABLE ',
+#     table_q,
+#     '\n',
+#     'ADD PRIMARY KEY (',
+#     paste0(key_q, collapse = ', '),
+#     ');'
+#   ))
+# }
 
 
 

@@ -14,4 +14,4 @@ setGeneric('queryStack<-', function(x, value, ...) standardGeneric('queryStack<-
 setGeneric('remoteValid', function(x, ...) standardGeneric('remoteValid'))
 setGeneric('remoteListTables', function(x, ...) standardGeneric('remoteListTables'))
 setGeneric('remoteExistsTable', function(x, remote_name, ...) standardGeneric('remoteExistsTable'))
-setGeneric('setRemoteKey', function(x, remote_name, primary_key, ...) standardGeneric('setRemoteKey'))
+# setGeneric('setRemoteKey', function(x, remote_name, primary_key, ...) standardGeneric('setRemoteKey'))
