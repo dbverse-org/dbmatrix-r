@@ -22,36 +22,36 @@ Depends:
     utils (>= 3.5.0),
     R (>= 3.5.0),
     methods,
-    duckdb,
-    DBI
 Imports:
     data.table (>= 1.12.2),
     DBI,
+    duckdb,
+    dplyr,
+    dbplyr,
     DelayedArray,
     DelayedMatrixStats,
     future.apply,
-    jsonlite,
     Matrix,
     MatrixGenerics,
     magrittr,
-    matrixStats (>= 0.55.0),
     parallel,
     progressr,
-    sparseMatrixStats,
-    stats
+    tidyr
 Suggests:
     arrow,
-    dplyr,
-    dbplyr,
     HDF5Array (>= 1.18.1),
     hdf5r,
     testthat (>= 3.0.0),
 Collate: 
     'classes.R'
+    'Math.R'
     'generics.R'
-    'connection.R'
-    'dd.R'
-    'duckDB_backend.R'
+    'query.R'
     'extract.R'
+    'connection.R'
+    'data_input.R'
+    'dd.R'
+    'matrix_to_dt.R'
+    'duckDB_backend.R'
     'operations.R'
-    'summary_stats.R'
+    'utils.R'

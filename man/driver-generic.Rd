@@ -12,5 +12,5 @@
 \S4method{driver}{dbData}(x) <- value
 }
 \description{
-Set or get the driver/database instance generation function
+Set or get the driver/database instance generation function call
 }
