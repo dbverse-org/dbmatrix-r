@@ -2,10 +2,38 @@
 
 
 
+#' @keywords internal
+#' @noRd
+setMethod('initialize', signature(.Object = 'backendInfo'),
+          function(.Object, driver_call, db_path, add_params, ...) {
+
+            if(!missing(driver_call)) .Object@driver_call = driver_call
+            if(!missing(db_path)) .Object@db_path = db_path
+            if(!missing(add_params)) .Object@add_params = add_params
+
+            if(!is.na(.Object@db_path)) {
+              .Object@hash = calculate_hash(.Object@db_path)
+            }
+
+            validObject(.Object)
+            return(.Object)
+
+          })
 
 
 
-# initialize ####
+
+# initialize dbData ####
+# setMethod('initialize', signature(.Object = 'dbData'),
+#           function(.Object,
+#                    dvr,))
+
+
+
+
+
+
+# initialize dbMatrix ####
 
 # Method for initializing dbMatrix. Concerns only the processing that is related
 # to elements internal to the object.
@@ -13,6 +41,7 @@
 # For pre-object construction data operations/massaging, see the constructor
 # function create_dbMatrix()
 #' @keywords internal
+#' @noRd
 setMethod(
   'initialize',
   signature(.Object = 'dbMatrix'),
@@ -37,7 +66,7 @@ setMethod(
 
     if(!missing(data)) {
       if(!inherits(data, 'tbl_dbi')) {
-        stop('Data slot only accepts dplyr::tbl() connections to databases')
+        stopf('Data slot only accepts dplyr::tbl() connections to databases')
       }
       .Object@data = data
 
@@ -49,7 +78,9 @@ setMethod(
 
     if(!missing(path)) {
       if(!is.null(.Object$path)) {
-        message('Replacing path to DB.\n NOTE: It is preferred to omit path param in favor of detection from data input')
+        wrap_msg('Replacing path to DB...
+                 NOTE: It is preferred to omit path param in favor of',
+                 'detection from data input')
       }
       .Object$path = path
     }
@@ -256,6 +287,19 @@ create_dbmatrix_matrix = function(matrix,
 
 
 
+
+toTable = function(query, remote_name) {
+  dplyr::do(paste(unclass(query$query$sql), 'TO TABLE', remote_name))
+}
+
+
+
+
+
+
+
+
+# as.matrix ####
 setMethod('as.matrix', signature(x = 'dbMatrix'), function(x, ...) {
   message('Pulling DB matrix into memory...')
   p_tbl = x@data %>%

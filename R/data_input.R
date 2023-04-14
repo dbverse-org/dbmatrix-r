@@ -16,9 +16,9 @@ readMatrixR = function(path,
                        transpose = FALSE) {
 
   # check if path is a character vector and exists
-  if(!is.character(path)) stop('path needs to be character vector')
+  if(!is.character(path)) stopf('path needs to be character vector')
   path = path.expand(path)
-  if(!file.exists(path)) stop('the file: ', path, ' does not exist')
+  if(!file.exists(path)) stopf('the file: ', path, ' does not exist')
 
 
   data.table::setDTthreads(threads = cores)

@@ -1,17 +1,19 @@
 
 
-setGeneric('connection', function(x, ...) standardGeneric('connection'))
-setGeneric('connection<-', function(x, value, ...) standardGeneric('connection<-'))
+# dbData object interactions ####
+setGeneric('cPool', function(x, ...) standardGeneric('cPool'))
+setGeneric('cPool<-', function(x, value, ...) standardGeneric('cPool<-'))
 setGeneric('remoteName', function(x, ...) standardGeneric('remoteName'))
-# setGeneric('remoteName<-', function(x, value, ...) standardGeneric('remoteName<-'))
 setGeneric('reconnect', function(x, ...) standardGeneric('reconnect'))
 setGeneric('disconnect', function(x, ...) standardGeneric('disconnect'))
-setGeneric('driver', function(x, ...) standardGeneric('driver'))
-setGeneric('driver<-', function(x, ...) standardGeneric('driver<-'))
-setGeneric('query', function(x, statement, ...) standardGeneric('query'))
 setGeneric('queryStack', function(x, ...) standardGeneric('queryStack'))
 setGeneric('queryStack<-', function(x, value, ...) standardGeneric('queryStack<-'))
-setGeneric('remoteValid', function(x, ...) standardGeneric('remoteValid'))
-setGeneric('remoteListTables', function(x, ...) standardGeneric('remoteListTables'))
-setGeneric('remoteExistsTable', function(x, remote_name, ...) standardGeneric('remoteExistsTable'))
+setGeneric('query', function(x, statement, ...) standardGeneric('query'))
+
+# backend system interactions ####
+setGeneric('validBE', function(x, ...) standardGeneric('validBE'))
+setGeneric('listTablesBE', function(x, ...) standardGeneric('listTablesBE'))
+setGeneric('existsTableBE', function(x, remote_name, ...) standardGeneric('existsTableBE'))
+setGeneric('hashBE', function(x, ...) standardGeneric('hashBE'))
+setGeneric('reconnectBackend', function(x, ...) standardGeneric('reconnectBackend'))
 # setGeneric('setRemoteKey', function(x, remote_name, primary_key, ...) standardGeneric('setRemoteKey'))
