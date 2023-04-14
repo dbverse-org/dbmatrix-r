@@ -35,14 +35,14 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 {
-  if(!identical(e1@dim, e2@dim)) stop('non-conformable arrays\n')
+  if(!identical(e1@dim, e2@dim)) stopf('non-conformable arrays')
 
   build_call = str2lang(paste0("e1[] %>%
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) %>%
     dplyr::mutate(x = `", as.character(.Generic), "`(e1 = x, e2 = x.y)) %>%
     dplyr::select(c('i', 'j', 'x'))"))
   e1[] = eval(build_call)
-  print(e1[])
+  # print(e1[])
   e1
 })
 

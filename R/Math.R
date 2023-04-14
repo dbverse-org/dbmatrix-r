@@ -15,7 +15,7 @@ setMethod('Math', signature(x = 'dbMatrix'), function(x)
     x[] = eval(build_call)
     print(x[])
   } else {
-    stop('GiottoDB: Not currently supported\n', call. = FALSE)
+    stopf('Not currently supported\n')
   }
   x
 })

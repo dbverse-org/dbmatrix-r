@@ -1,43 +1,54 @@
 
 
 
-# driver ####
 
-#' @name driver-generic
-#' @title Database driver generation
+# hash ####
+#' @name hashBE-generic
+#' @title Get hash of backend
 #' @description
-#' Set or get the driver/database instance generation function call
-#' @aliases driver, driver<-
+#' Get the hash value/slot
+#' @param x object to get hash from
 #' @export
-setMethod('driver', signature(x = 'dbData'), function(x) x@dvr_call)
-
-#' @rdname driver-generic
-#' @export
-setMethod('driver<-', signature(x = 'dbData'), function(x, value) {
-  x@dvr_call = substitute(value)
-  x
+setMethod('hashBE', signature(x = 'backendInfo'), function(x) {
+  slot(x, 'hash')
 })
 
 
 
 
 
-# connection ####
 
-#' @name connection-generic
-#' @title Database connection
-#' @description Return the database connection object
-#' @aliases connection, connection<-
+
+
+
+
+
+
+
+
+
+# cPool ####
+
+#' @name cPool-generic
+#' @title Database connection pool
+#' @description Return the database connection pool object
+#' @aliases cPool, cPool<-
 #' @inheritParams db_params
 #' @include extract.R
 #' @export
-setMethod('connection', signature(x = 'dbData'), function(x) {
+setMethod('cPool', signature(x = 'dbData'), function(x) {
   dbplyr::remote_con(x[])
 })
 
-#' @rdname connection-generic
+#' @rdname cPool-generic
 #' @export
-setMethod('connection<-', signature(x = 'dbData'), function(x, value) {
+connection.tbl_Pool = function(x) {
+  dbplyr::remote_con(x)
+}
+
+#' @rdname cPool-generic
+#' @export
+setMethod('cPool<-', signature(x = 'dbData'), function(x, value) {
   dbtbl = x[]
   dbtbl$src$con = value
   initialize(x, data = dbtbl)
@@ -65,13 +76,14 @@ setMethod('remoteName', signature(x = 'dbData'), function(x) {
 
 
 
-# remoteValid ####
-#' @name remoteValid
+# validBE ####
+#' @name validBE-generic
 #' @title Check if DB backend object has valid connection
+#' @aliases validBE
 #' @inheritParams db_params
 #' @export
-setMethod('remoteValid', signature(x = 'dbData'), function(x) {
-  con = connection(x)
+setMethod('validBE', signature(x = 'dbData'), function(x) {
+  con = cPool(x)
   if(is.null(con)) stop('No connection object found\n')
   return(DBI::dbIsValid(con))
 })
@@ -81,20 +93,20 @@ setMethod('remoteValid', signature(x = 'dbData'), function(x) {
 
 
 
-# remoteListTables ####
-#' @name remoteListTables
+# listTablesBE ####
+#' @name listTablesBE
 #' @title List the tables in a connection
 #' @param x GiottoDB object or DB connection
 #' @param ... additional params to pass
 #' @export
-setMethod('remoteListTables', signature(x = 'dbData'), function(x, ...) {
+setMethod('listTablesBE', signature(x = 'dbData'), function(x, ...) {
   stopifnot(remoteValid(x))
   DBI::dbListTables(connection(x), ...)
 })
 
-#' @rdname remoteListTables
+#' @rdname listTablesBE
 #' @export
-setMethod('remoteListTables', signature(x = 'ANY'), function(x, ...) {
+setMethod('listTablesBE', signature(x = 'ANY'), function(x, ...) {
   stopifnot(DBI::dbIsValid(x))
   DBI::dbListTables(x, ...)
 })
@@ -104,23 +116,23 @@ setMethod('remoteListTables', signature(x = 'ANY'), function(x, ...) {
 
 
 
-# remoteExistsTable ####
-#' @name remoteExistsTable
+# existsTableBE ####
+#' @name existsTableBE
 #' @title Whether a particular table exists in a connection
 #' @param x GiottoDB object or DB connection
 #' @param ... additional params to pass
 #' @export
-setMethod('remoteExistsTable',
+setMethod('existsTableBE',
           signature(x = 'dbData', remote_name = 'character'),
           function(x, remote_name, ...) {
             stopifnot(remoteValid(x))
-            extabs = DBI::dbListTables(conn = connection(x), ...)
+            extabs = DBI::dbListTables(conn = cPool(x), ...)
             remote_name %in% extabs
           })
 
-#' @rdname remoteExistsTable
+#' @rdname existsTableBE
 #' @export
-setMethod('remoteExistsTable',
+setMethod('existsTableBE',
           signature(x = 'ANY', remote_name = 'character'),
           function(x, remote_name, ...) {
             stopifnot(DBI::dbIsValid(x))
@@ -134,60 +146,6 @@ setMethod('remoteExistsTable',
 
 
 
-# reconnection ####
-
-#' @name reconnect
-#' @title Reconnect to database
-#' @description
-#' Reconnects to a database. Additionally checks that the object contains a
-#' reference to a valid table within the database. Runs at the beginning of
-#' most function calls
-#' @inheritParams db_params
-#' @param connect_type (either 'default' or 'custom') type of connection process
-#' (optional because this value is usually carried by the object)
-#' @param custom_call specific custom call to use when rebooting (optional)
-#' @include query.R
-#' @export
-setMethod('reconnect', signature(x = 'dbData'),
-          function(x, connect_type = NULL, custom_call) {
-
-  if(!x@connect_type %in% c('default', 'custom')) {
-    stop('Invalid connect_type. Must be one of "default" or "custom"\n')
-  }
-
-  # if connection is still active, return directly
-  if(remoteValid(x)) return(x)
-
-
-
-  # otherwise regenerate connection
-  if(x@connect_type == 'default') {
-    con = DBI::dbConnect(drv = eval(x@dvr_call), dbdir = x@path)
-    connection(x) = con
-    if(!x@remote_name %in% remoteListTables(x)) {
-      stop(paste('GiottoDB-reconnect: Table of name', x@remote_name,
-                 'not found in db connection.\n',
-                 'Memory-only table that was never written to DB?'),
-           call. = FALSE)
-    }
-  }
-
-  if(x@connect_type == 'custom' | identical(connect_type, 'custom')) {
-    qstack = queryStack(x)
-
-    if(!missing(custom_call)) {
-      ccsub = substitute(custom_call)
-      new_tbl = eval(cc)
-    } else {
-      new_tbl = eval(x@custom_call)
-    }
-
-    queryStack(new_tbl) = qstack
-    x@data = new_tbl
-  }
-
-  return(x)
-})
 
 
 
@@ -204,10 +162,251 @@ setMethod('reconnect', signature(x = 'dbData'),
 setMethod('disconnect', signature(x = 'dbData'), function(x, shutdown = TRUE) {
   # already closed
   if(!remoteValid(x)) return(x)
-  DBI::dbDisconnect(connection(x), shutdown = shutdown)
+  pool::poolClose(cPool(x), force = TRUE)
   return(x)
 })
 
+
+
+
+
+
+#' @title Create a pool of database connections
+#' @name create_connection_pool
+#' @description Generate a pool object from which connection objects can be
+#' checked out.
+#' @param drv DB driver (default is duckdb::duckdb())
+#' @param dbpath path to database
+#' @param ... additional params to pass to pool::dbPool()
+#' @return pool of connection objects
+#' @keywords internal
+create_connection_pool = function(drv = 'duckdb::duckdb()',
+                                  dbdir = ':memory:',
+                                  ...) {
+  pool::dbPool(drv = eval(parse(text = drv)), dbdir = dbdir, ...)
+}
+
+
+
+
+
+#' @title Create GiottoDB backend
+#' @name createBackend
+#' @description
+#' Defines and creates a database connection pool to be used by the backend.
+#' This pool object and a backendInfo object that contains the connection
+#' details for reconnection
+#'
+#' @param drv database driver (default is duckdb::duckdb())
+#' @param dbdir directory to create a backend database
+#' @param extension file extension (default = '.duckdb')
+#' @param ... additional params to pass to pool::dbPool()
+#' @return environment containing backendInfo object
+#' @export
+createBackend = function(drv = duckdb::duckdb(),
+                        dbdir = ':temp:',
+                        extension = '.duckdb',
+                        ...) {
+
+  additional_params = list(...)
+
+  # store driver call as a string
+  drv_call = deparse(substitute(drv))
+
+  # setup database filepath
+  dbpath = set_db_path(path = dbdir, extension = extension)
+
+  # collect connection information
+  gdb_info = new('backendInfo',
+                 driver_call = drv_call,
+                 db_path = dbpath,
+                 add_params = additional_params)
+
+  # assemble params
+  list_args = additional_params
+  list_args$drv = drv_call
+  list_args$dbdir = dbpath
+
+  # get connection pool and store info
+  con_pool = do.call(what = 'create_connection_pool', args = list_args)
+
+  backend_list = list(info = gdb_info,
+                      pool = con_pool)
+
+  .DB_ENV[[hashBE(gdb_info)]] = backend_list
+  invisible()
+}
+
+
+
+
+
+#' @title Get the backend details environment
+#' @name getBackendEnv
+#' @export
+getBackendEnv = function() {
+  return(.DB_ENV)
+}
+
+
+
+
+
+#' @name getBackendPool
+#' @description
+#' Get backend information. \code{getBackendPool} gets the associated
+#' connection pool object. \code{getBackendInfo} gets the backendInfo object
+#' that contains all connection details needed to regenerate another connection
+#' @param hash hash generated from the dbpath (xxhash64) used as unique ID for
+#' the backend
+#' @export
+getBackendPool = function(hash) {
+  .DB_ENV[[hash]]$pool
+}
+
+#' @describeIn getBackendInfo get backendInfo object containing connection details
+#' @export
+getBackendInfo = function(hash) {
+  .DB_ENV[[hash]]$info
+}
+
+
+
+
+
+# reconnectBackend ####
+
+#' @title Reconnect GiottoDB backend
+#' @name reconnectBackend-generic
+#' @aliases reconnectBackend
+#' @param x backendInfo object
+#' @export
+setMethod('reconnectBackend', signature('backendInfo'), function(x, ...) {
+
+  hash = hashBE(x)
+
+  # if already valid, exit
+  if(DBI::dbIsValid(.DB_ENV[[hash]]$pool)) return(invisible())
+
+
+  # assemble params
+  list_args = x@add_params
+  list_args$drv = x@driver_call
+  list_args$dbdir = x@db_path
+
+  # regenerate connection pool object
+  con_pool = do.call(what = 'create_connection_pool', args = list_args)
+  .DB_ENV[[hash]]$pool = con_pool
+  .DB_ENV[[hash]]$info = x
+
+  return(invisible())
+})
+
+
+
+
+
+
+
+
+#' @name closeBackend
+#' @title Close backend connection pool
+#' @description
+#' Closes pools. If specific hash(es) are given then those will be closed. When
+#' no specific hash is given, all existing backends will be closed.
+#' @param hash hash of backend to close (optional)
+#' @export
+closeBackend = function(hash) {
+
+  if(missing(hash)) {
+    hash = ls(.DB_ENV)
+  }
+
+  lapply(hash, function(x) {
+    pool::poolClose(.DB_ENV[[x]]$pool)
+  })
+
+  return(invisible())
+}
+
+
+
+
+# dbData reconnection ####
+
+#' @name reconnect
+#' @title Reconnect to backend
+#' @description
+#' Checks if the object still has a valid connection. If it does then it returns
+#' the object without modification. If it does need reconnection then a copy of
+#' the associated active connection pool object is pulled from .DB_ENV and if
+#' that is also closed, an error is thrown asking for a reconnectBackend() run.
+#'
+#' Also ensures that the object contains a reference to a valid table within
+#' the database. Runs at the beginning of most function calls involving
+#' dbData object queries.
+#' @inheritParams db_params
+#' @include query.R
+#' @export
+setMethod('reconnect', signature(x = 'dbData'),
+          function(x) {
+
+            # if connection is still active, return directly
+            if(validBE(x)) return(x)
+
+
+            # otherwise get conn pool
+            p = .DB_ENV[[x@hash]]$pool
+            if(!validBE(p)) {
+              stopf('Backend needs to be created or reconnected.
+                    Run reconnectBackend()?')
+            }
+
+            cPool(x) = p
+
+            if(!x@remote_name %in% listTablesBE(x)) {
+              stopf('Reconnection attempted, but table of name', x@remote_name,
+                    'not found in db connection.\n',
+                    'Memory-only table that was never written to DB?')
+            }
+
+            return(x)
+          })
+
+
+
+
+
+
+
+
+
+# DB table management ####
+
+
+
+#' @title Write a persistent table to the database
+#' @name writeRemoteTable
+#' @param cPool database connection pool object
+#' @param remote_name name to assign the table within the database
+#' @param value table to write
+#' @param ... additional params to pass to DBI::dbWriteTable()
+#' @export
+writeTableBE = function(cPool, remote_name, value, ...) {
+  DBI::dbWriteTable(conn = cPool, name = remote_name, value = value, ...)
+}
+
+
+
+#' @title Create a table from database
+#' @name tableBE
+#' @param cPool database connection pool object
+#' @param remote_name name of table with database
+#' @param ... additional params to pass to dplyr::tbl()
+#' @export
+tableBE = function(cPool, remote_name, ...) {
+  dplyr::tbl(src = cPool, remote_name, ...)
+}
 
 
 

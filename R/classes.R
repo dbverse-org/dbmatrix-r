@@ -1,36 +1,60 @@
 
 
+
+
+# backendInfo Class ####
+#' @name backendInfo
+#' @title backendInfo
+#' @description
+#' Simple S4 class to contain information about the database backend and
+#' regenerate connection pools. A hash is generated from the db_path to act
+#' as a unique identifier for each backend.
+#' @slot driver_call DB driver call stored as a string
+#' @slot db_path path to database
+#' @slot add_params additional connection params e.g. user, pass, etc
+#' @slot hash xxhash64 hash of the db_path
+#' @export
+setClass('backendInfo',
+         slots = list(
+           driver_call = 'character',
+           db_path = 'character',
+           add_params = 'list',
+           hash = 'character'
+         ),
+         prototype = list(
+           driver_call = NA_character_,
+           db_path = NA_character_,
+           add_params = list(),
+           hash = NA_character_
+         ))
+
+
+
+
+
+
+
+
 # dbData Class ####
 
 #' @name dbData
 #' @title dbData
-#' @description Framework for objects that link to a database
-#' @slot dvr_call driver function for the database as a call
-#' @slot custom_call custom calls used to generate or regenerate a database
-#' connection with the correct formatting
+#' @description Framework for objects that link to the database backend
 #' @slot data dplyr tbl that represents the database data
-#' @slot path path to database on-disk file
+#' @slot hash unique hash ID for backend
 #' @slot remote_name name of table within database that contains the data
-#' @slot dim_names row [1] and col [2] names
-#' @slot dim dimensions of the matrix
-#' @slot connect_type type of connection (either default or custom)
 #' @noRd
 setClass('dbData',
          contains = 'VIRTUAL',
          slots = list(
-           dvr_call = 'ANY',
-           custom_call = 'ANY',
            data = 'ANY',
-           path = 'character',
-           remote_name = 'character',
-           connect_type = 'character'
+           hash = 'character',
+           remote_name = 'character'
          ),
          prototype = list(
-           dvr_call = NULL,
            data = NULL,
-           path = NA_character_,
-           remote_name = NA_character_,
-           connect_type = NA_character_
+           hash = NA_character_,
+           remote_name = NA_character_
          ))
 
 
@@ -92,13 +116,12 @@ check_dbMatrix = function(object) {
 #' @description
 #' Representation of triplet matrices using an on-disk database. Each object
 #' is used as a connection to a single table that exists within the database.
-#' @slot driver driver function for the database
-#' @slot connection database connection object
+#' @slot data dplyr tbl that represents the database data
+#' @slot hash unique hash ID for backend
+#' @slot remote_name name of table within database that contains the data
 #' @slot path path to database on-disk file
-#' @slot table_name name of table within database that contains matrix
 #' @slot dim_names row [1] and col [2] names
 #' @slot dim dimensions of the matrix
-#' @slot valid whether the object is initialized for use
 #' @export
 dbMatrix = setClass(
   'dbMatrix',
@@ -127,7 +150,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   # class and dim #
   # ------------- #
 
-  if(is.null(nrow(object@data))) {
+  if(is.null(nrow(object@data)) | is.na(nrow(object@data))) {
     cat('0 x 0 matrix of class "dbMatrix"\n')
     return() # exit early if no info
   } else {
@@ -193,11 +216,9 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
 #' @description
 #' Representation of dataframes using an on-disk database. Each object
 #' is used as a connection to a single table that exists within the database.
-#' @slot driver driver function for the database
-#' @slot connection database connection object
-#' @slot path path to database on-disk file
-#' @slot table_name name of table within database that contains matrix
-#' @slot valid whether the object is initialized for use
+#' @slot data dplyr tbl that represents the database data
+#' @slot hash unique hash ID for backend
+#' @slot remote_name name of table within database that contains the data
 #' @export
 dbDataFrame = setClass(
   'dbDataFrame',
