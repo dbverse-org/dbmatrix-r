@@ -16,8 +16,6 @@ as a unique identifier for each backend.
 
 \item{\code{db_path}}{path to database}
 
-\item{\code{add_params}}{additional connection params e.g. user, pass, etc}
-
 \item{\code{hash}}{xxhash64 hash of the db_path}
 }}
 

@@ -12,6 +12,9 @@ create_connection_pool(drv = "duckdb::duckdb()", dbdir = ":memory:", ...)
 \item{...}{additional params to pass to pool::dbPool()}
 
 \item{dbpath}{path to database}
+
+\item{with_login}{(default = FALSE) flag to check R environment variables
+for login info and/or prompt for password}
 }
 \value{
 pool of connection objects

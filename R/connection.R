@@ -177,6 +177,8 @@ setMethod('disconnect', signature(x = 'dbData'), function(x, shutdown = TRUE) {
 #' checked out.
 #' @param drv DB driver (default is duckdb::duckdb())
 #' @param dbpath path to database
+#' @param with_login (default = FALSE) flag to check R environment variables
+#' for login info and/or prompt for password
 #' @param ... additional params to pass to pool::dbPool()
 #' @return pool of connection objects
 #' @keywords internal
@@ -194,21 +196,20 @@ create_connection_pool = function(drv = 'duckdb::duckdb()',
 #' @name createBackend
 #' @description
 #' Defines and creates a database connection pool to be used by the backend.
-#' This pool object and a backendInfo object that contains the connection
-#' details for reconnection
+#' This pool object and a backendInfo object that contains details about the
 #'
 #' @param drv database driver (default is duckdb::duckdb())
 #' @param dbdir directory to create a backend database
 #' @param extension file extension (default = '.duckdb')
+#' @param with_login (default = FALSE) whether a login is needed
 #' @param ... additional params to pass to pool::dbPool()
 #' @return environment containing backendInfo object
 #' @export
 createBackend = function(drv = duckdb::duckdb(),
-                        dbdir = ':temp:',
-                        extension = '.duckdb',
-                        ...) {
-
-  additional_params = list(...)
+                         dbdir = ':temp:',
+                         extension = '.duckdb',
+                         with_login = FALSE,
+                         ...) {
 
   # store driver call as a string
   drv_call = deparse(substitute(drv))
@@ -219,11 +220,21 @@ createBackend = function(drv = duckdb::duckdb(),
   # collect connection information
   gdb_info = new('backendInfo',
                  driver_call = drv_call,
-                 db_path = dbpath,
-                 add_params = additional_params)
+                 db_path = dbpath)
 
   # assemble params
-  list_args = additional_params
+  list_args = list(...)
+  if(isTRUE(with_login)) { # check login details
+    if(is.null(list_args$user)) list_args$user = Sys.getenv('DB_USERNAME')
+    if(is.null(list_args$pass)) {
+      if(requireNamespace('rstudioapi', quietly = TRUE)) {
+        list_args$pass =
+          Sys.getenv('DB_PASSWORD', rstudioapi::askForPassword('Database Password'))
+      } else {
+        list_args$pass = Sys.getenv('DB_PASSWORD')
+      }
+    }
+  }
   list_args$drv = drv_call
   list_args$dbdir = dbpath
 
@@ -253,6 +264,7 @@ getBackendEnv = function() {
 
 
 #' @name getBackendPool
+#' @title Get backend connection pool
 #' @description
 #' Get backend information. \code{getBackendPool} gets the associated
 #' connection pool object. \code{getBackendInfo} gets the backendInfo object
@@ -261,13 +273,19 @@ getBackendEnv = function() {
 #' the backend
 #' @export
 getBackendPool = function(hash) {
-  .DB_ENV[[hash]]$pool
+  p = .DB_ENV[[hash]]$pool
+  if(is.null(p)) stopf('No associated backend found.
+                       Please create or reconnect the backend.')
+  return(p)
 }
 
-#' @describeIn getBackendInfo get backendInfo object containing connection details
+#' @describeIn getBackendPool get backendInfo object containing connection details
 #' @export
 getBackendInfo = function(hash) {
-  .DB_ENV[[hash]]$info
+  i = .DB_ENV[[hash]]$info
+  if(is.null(i)) stopf('No associated backend found.
+                       Please create or reconnect the backend.')
+  return(i)
 }
 
 
@@ -280,8 +298,10 @@ getBackendInfo = function(hash) {
 #' @name reconnectBackend-generic
 #' @aliases reconnectBackend
 #' @param x backendInfo object
+#' @param with_login (default = FALSE) flag to check R environment variables
+#' for login info and/or prompt for password
 #' @export
-setMethod('reconnectBackend', signature('backendInfo'), function(x, ...) {
+setMethod('reconnectBackend', signature('backendInfo'), function(x, with_login = FALSE, ...) {
 
   hash = hashBE(x)
 
@@ -290,7 +310,18 @@ setMethod('reconnectBackend', signature('backendInfo'), function(x, ...) {
 
 
   # assemble params
-  list_args = x@add_params
+  list_args = list(...)
+  if(isTRUE(with_login)) { # check login details
+    if(is.null(list_args$user)) list_args$user = Sys.getenv('DB_USERNAME')
+    if(is.null(list_args$pass)) {
+      if(requireNamespace('rstudioapi', quietly = TRUE)) {
+        list_args$pass =
+          Sys.getenv('DB_PASSWORD', rstudioapi::askForPassword('Database Password'))
+      } else {
+        list_args$pass = Sys.getenv('DB_PASSWORD')
+      }
+    }
+  }
   list_args$drv = x@driver_call
   list_args$dbdir = x@db_path
 

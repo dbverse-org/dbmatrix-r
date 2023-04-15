@@ -13,9 +13,11 @@
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
+  e1 = reconnect(e1)
+
   build_call = str2lang(paste0('e1[] %>% dplyr::mutate(x = `',
                                as.character(.Generic)
-                               ,'`(e1 = x, e2 = e2))'))
+                               ,'`(x, e2))'))
   e1[] = eval(build_call)
   e1
 })
@@ -24,9 +26,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 #' @export
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 {
+  e2 = reconnect(e2)
+
   build_call = str2lang(paste0('e2[] %>% dplyr::mutate(x = `',
                                as.character(.Generic)
-                               ,'`(e1 = e1, e2 = x))'))
+                               ,'`(e1, x))'))
   e2[] = eval(build_call)
   e2
 })
@@ -35,11 +39,14 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 {
-  if(!identical(e1@dim, e2@dim)) stopf('non-conformable arrays')
+  e1 = reconnect(e1)
+  e2 = reconnect(e2)
+
+  if(!identical(e1@dims, e2@dims)) stopf('non-conformable arrays')
 
   build_call = str2lang(paste0("e1[] %>%
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) %>%
-    dplyr::mutate(x = `", as.character(.Generic), "`(e1 = x, e2 = x.y)) %>%
+    dplyr::mutate(x = `", as.character(.Generic), "`(x, x.y)) %>%
     dplyr::select(c('i', 'j', 'x'))"))
   e1[] = eval(build_call)
   # print(e1[])
@@ -72,11 +79,14 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 #' @export
 setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 
-  if(is.na(x@dim[1L])) {
-    res = DBI::dbGetQuery(connection(x), sprintf('SELECT DISTINCT i from %s',
-                                                 remoteName(x)))
+  x = reconnect(x)
+
+  if(is.na(x@dims[1L])) {
+    conn = pool::localCheckout(cPool(x))
+    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT i from %s',
+                                               remoteName(x)))
   } else {
-    res = x@dim[1L]
+    return(x@dims[1L])
   }
 
   return(base::nrow(res))
@@ -88,11 +98,14 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 #' @export
 setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 
-  if(is.na(x@dim[1L])) {
-    res = DBI::dbGetQuery(connection(x), sprintf('SELECT COUNT(*) AS n FROM %s',
-                                                 remoteName(x)))
+  x = reconnect(x)
+
+  if(is.na(x@dims[1L])) {
+    conn = pool::localCheckout(cPool(x))
+    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT COUNT(*) AS n FROM %s',
+                                               remoteName(x)))
   } else {
-    res = x@dim[1L]
+    return(x@dims[1L])
   }
 
   return(as.integer(res))
@@ -110,11 +123,14 @@ setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 
-  if(is.na(x@dim[2L])) {
-    res = DBI::dbGetQuery(connection(x), sprintf('SELECT DISTINCT j from %s',
-                                                 remoteName(x)))
+  x = reconnect(x)
+
+  if(is.na(x@dims[2L])) {
+    conn = pool::localCheckout(cPool(x))
+    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT j from %s',
+                                               remoteName(x)))
   } else {
-    res = x@dim[2L]
+    return(x@dims[2L])
   }
 
   return(base::nrow(res))
@@ -135,10 +151,12 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 #' @title Dimensions of an object
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
-  if(is.na(x@dim)) {
+  x = reconnect(x)
+
+  if(any(is.na(x@dims))) {
     return(c(nrow(x), ncol(x)))
   } else {
-    res = x@dim
+    res = x@dims
   }
 })
 
@@ -151,11 +169,13 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 
 #' @export
 setMethod('rownames', signature(x = 'dbData'), function(x) {
+  x = reconnect(x)
   rownames(x@data)
 })
 
 #' @export
 setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
+  x = reconnect(x)
   x@dim_names[[1]]
 })
 
@@ -164,11 +184,13 @@ setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
 
 #' @export
 setMethod('colnames', signature(x = 'dbData'), function(x) {
+  x = reconnect(x)
   colnames(x@data)
 })
 
 #' @export
 setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
+  x = reconnect(x)
   x@dim_names[[2]]
 })
 
@@ -180,6 +202,9 @@ setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
 
 # col classes ####
 
+# Internal function for finding the classes of each of the columns of a lazy
+# table
+#' @param x lazy table
 #' @noRd
 remote_col_classes = function(x) {
   x %>%
@@ -194,13 +219,17 @@ remote_col_classes = function(x) {
 # head ####
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  slot(x, 'dim_names')[[1L]] = head(slot(x, 'dim_names')[[1L]], n = n)
-  x[] = x[] %>% dplyr::filter(i %in% slot(x, 'dim_names')[[1L]])
-  x@dim[][1L] = as.integer(n)
+  x = reconnect(x)
+
+  n_subset = x@dim_names[[1L]] = head(x@dim_names[[1L]], n = n)
+  x[] = x[] %>% dplyr::filter(i %in% n_subset)
+  x@dims[][1L] = as.integer(n)
   x
 })
 #' @export
 setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
+  x = reconnect(x)
+
   x[] = x[] %in% head(x, n = n)
   x
 })
@@ -208,13 +237,17 @@ setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 # tail ####
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  slot(x, 'dim_names')[[1L]] = tail(slot(x, 'dim_names')[[1L]], n = n)
-  x[] = x[] %>% dplyr::filter(i %in% slot(x, 'dim_names')[[1L]])
-  x@dim[][1L] = as.integer(n)
+  x = reconnect(x)
+
+  n_subset = x@dim_names[[1L]] = tail(x@dim_names[[1L]], n = n)
+  x[] = x[] %>% dplyr::filter(i %in% n_subset)
+  x@dims[][1L] = as.integer(n)
   x
 })
 #' @export
 setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
+  x = reconnect(x)
+
   x[] = x[] %in% tail(x, n = n)
   x
 })
@@ -235,7 +268,11 @@ setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 
 #' @export
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
+  x = reconnect(x)
+
   x[] = x[] %>% dplyr::select(i = j, j = i, x)
+  x@dims = c(x@dims[[2L]], x@dims[[1L]])
+  x@dim_names = list(x@dim_names[[2L]], x@dim_names[[1L]])
   x
 })
 

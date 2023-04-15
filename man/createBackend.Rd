@@ -8,6 +8,7 @@ createBackend(
   drv = duckdb::duckdb(),
   dbdir = ":temp:",
   extension = ".duckdb",
+  with_login = FALSE,
   ...
 )
 }
@@ -18,6 +19,8 @@ createBackend(
 
 \item{extension}{file extension (default = '.duckdb')}
 
+\item{with_login}{(default = FALSE) whether a login is needed}
+
 \item{...}{additional params to pass to pool::dbPool()}
 }
 \value{
@@ -25,6 +28,5 @@ environment containing backendInfo object
 }
 \description{
 Defines and creates a database connection pool to be used by the backend.
-This pool object and a backendInfo object that contains the connection
-details for reconnection
+This pool object and a backendInfo object that contains details about the
 }

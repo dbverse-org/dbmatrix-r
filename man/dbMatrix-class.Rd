@@ -12,18 +12,16 @@ is used as a connection to a single table that exists within the database.
 \section{Slots}{
 
 \describe{
-\item{\code{driver}}{driver function for the database}
+\item{\code{data}}{dplyr tbl that represents the database data}
 
-\item{\code{connection}}{database connection object}
+\item{\code{hash}}{unique hash ID for backend}
+
+\item{\code{remote_name}}{name of table within database that contains the data}
 
 \item{\code{path}}{path to database on-disk file}
 
-\item{\code{table_name}}{name of table within database that contains matrix}
-
 \item{\code{dim_names}}{row [1] and col [2] names}
 
-\item{\code{dim}}{dimensions of the matrix}
-
-\item{\code{valid}}{whether the object is initialized for use}
+\item{\code{dims}}{dimensions of the matrix}
 }}
 

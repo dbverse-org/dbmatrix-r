@@ -43,6 +43,7 @@ Suggests:
     arrow,
     HDF5Array (>= 1.18.1),
     hdf5r,
+    rstudioapi,
     testthat (>= 3.0.0),
 Collate: 
     'classes.R'
