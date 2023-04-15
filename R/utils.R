@@ -80,6 +80,14 @@ set_db_path = function(path = ':temp:', extension = '.duckdb') {
                   ':memory' = ':memory:',
                   path)
   parent = normalizePath(parent)
+
+  # get dir if already full path
+  if(basename(parent) == paste0('giotto_backend', extension)) {
+    parent = gsub(pattern = basename(parent),
+                  replacement = '',
+                  x = parent)
+  }
+
   if(!dir.exists(parent)) {
     dir.create(dir.create(parent, recursive = TRUE))
   }

@@ -33,6 +33,8 @@ setMethod('queryStack<-', signature(x = 'dbData'), function(x, value) {
 #' @export
 setMethod('query', signature(x = 'dbDataFrame', statement = 'character'),
           function(x, statement, ...) {
+            x = reconnect(x)
+
             DBI::dbGetQuery(connection(x), statement)
           })
 
@@ -40,5 +42,7 @@ setMethod('query', signature(x = 'dbDataFrame', statement = 'character'),
 #' @keywords internal
 setMethod('query', signature(x = 'dbMatrix', statement = 'character'),
           function(x, statement, ...) {
+            x = reconnect(x)
+
             DBI::dbGetQuery(connection(x), statement)
           })

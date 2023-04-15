@@ -11,20 +11,17 @@
 #' as a unique identifier for each backend.
 #' @slot driver_call DB driver call stored as a string
 #' @slot db_path path to database
-#' @slot add_params additional connection params e.g. user, pass, etc
 #' @slot hash xxhash64 hash of the db_path
 #' @export
 setClass('backendInfo',
          slots = list(
            driver_call = 'character',
            db_path = 'character',
-           add_params = 'list',
            hash = 'character'
          ),
          prototype = list(
            driver_call = NA_character_,
            db_path = NA_character_,
-           add_params = list(),
            hash = NA_character_
          ))
 
@@ -62,52 +59,51 @@ setClass('dbData',
 
 # dbMatrix Class ####
 
-#' @noRd
-check_dbMatrix = function(object) {
-  errors = character()
-
-  if(!is.na(object@connect_type)) {
-    if(!object@connect_type %in% c('default', 'custom')) {
-      msg = 'Invalid connect_type. Must be either "default" or "custom"\n'
-      errors = c(errors, msg)
-    }
-
-
-    if(object@connect_type == 'default') {
-      if(is.na(object@remote_name)) {
-        msg = 'Name of table within DB to link to must be supplied\n use remoteName()<- to set\n'
-        errors = c(errors, msg)
-      }
-    }
-
-    if(object@connect_type == 'custom') {
-      if(is.null(custom_call)) {
-        msg = 'custom_call is missing.\n'
-        errors = c(errors, msg)
-      }
-    }
-  }
-
-  if(is.null(object@data)) {
-    msg = 'Missing DB connection table\n Run initialize() on this object\n'
-    errors = c(errors, msg)
-  } else if(!inherits(object@data, 'tbl_dbi')) {
-    msg = 'Only class of "tbl_dbi" allowed in data slot\n'
-    errors = c(errors, msg)
-  } else if(!DBI::dbIsValid(object@data$src$con)) {
-    msg = 'Invalid or disconnected DB connection\n Run reconnect() on this object\n'
-    errors = c(errors, msg)
-  }
-
-  if(is.null(object@dim_names)) {
-    # dim names are needed as long as i and j are character
-    msg = 'dim_names must be provided for dbMatrix'
-    errors = c(errors, msg)
-  }
-
-
-  if(length(errors) == 0) TRUE else errors
-}
+# check_dbMatrix = function(object) {
+#   errors = character()
+#
+#   if(!is.na(object@connect_type)) {
+#     if(!object@connect_type %in% c('default', 'custom')) {
+#       msg = 'Invalid connect_type. Must be either "default" or "custom"\n'
+#       errors = c(errors, msg)
+#     }
+#
+#
+#     if(object@connect_type == 'default') {
+#       if(is.na(object@remote_name)) {
+#         msg = 'Name of table within DB to link to must be supplied\n use remoteName()<- to set\n'
+#         errors = c(errors, msg)
+#       }
+#     }
+#
+#     if(object@connect_type == 'custom') {
+#       if(is.null(custom_call)) {
+#         msg = 'custom_call is missing.\n'
+#         errors = c(errors, msg)
+#       }
+#     }
+#   }
+#
+#   if(is.null(object@data)) {
+#     msg = 'Missing DB connection table\n Run initialize() on this object\n'
+#     errors = c(errors, msg)
+#   } else if(!inherits(object@data, 'tbl_dbi')) {
+#     msg = 'Only class of "tbl_dbi" allowed in data slot\n'
+#     errors = c(errors, msg)
+#   } else if(!DBI::dbIsValid(object@data$src$con)) {
+#     msg = 'Invalid or disconnected DB connection\n Run reconnect() on this object\n'
+#     errors = c(errors, msg)
+#   }
+#
+#   if(is.null(object@dim_names)) {
+#     # dim names are needed as long as i and j are character
+#     msg = 'dim_names must be provided for dbMatrix'
+#     errors = c(errors, msg)
+#   }
+#
+#
+#   if(length(errors) == 0) TRUE else errors
+# }
 
 
 
@@ -121,20 +117,19 @@ check_dbMatrix = function(object) {
 #' @slot remote_name name of table within database that contains the data
 #' @slot path path to database on-disk file
 #' @slot dim_names row [1] and col [2] names
-#' @slot dim dimensions of the matrix
+#' @slot dims dimensions of the matrix
 #' @export
 dbMatrix = setClass(
   'dbMatrix',
   contains = 'dbData',
   slots = list(
     dim_names = 'list',
-    dim = 'integer'
+    dims = 'integer'
   ),
   prototype = list(
     dim_names = list(NULL, NULL),
-    dim = c(NA_integer_, NA_integer_)
-  ),
-  validity = check_dbMatrix
+    dims = c(NA_integer_, NA_integer_)
+  )
 )
 
 
@@ -150,11 +145,11 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   # class and dim #
   # ------------- #
 
-  if(is.null(nrow(object@data)) | is.na(nrow(object@data))) {
+  if(identical(object@dims,  c(0L, 0L))) {
     cat('0 x 0 matrix of class "dbMatrix"\n')
     return() # exit early if no info
   } else {
-    cat(object@dim[[1]], 'x', object@dim[[2]], ' matrix of class "dbMatrix"\n')
+    cat(object@dims[[1]], 'x', object@dims[[2]], ' matrix of class "dbMatrix"\n')
   }
 
 
@@ -162,7 +157,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   # ------------- #
 
   # colnames
-  colname_show_n = object@dim[[2]] - 6L
+  colname_show_n = object@dims[[2]] - 6L
   if(colname_show_n < 0L) {
     message('Colnames: ', vector_to_string(coln))
   } else if(colname_show_n >= 1L) {
@@ -177,7 +172,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
 
   # matrix
   p_coln = head(coln, 10L)
-  if(object@dim[[1L]] - 6L > 0L) {
+  if(object@dims[[1L]] - 6L > 0L) {
     p_rown = c(head(rown, 3L), tail(rown, 3L))
   } else {
     p_rown = rown
@@ -185,6 +180,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
 
   preview_dt = object@data %>%
     dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
+    dplyr::mutate(j = paste0("col_", j)) %>% # forces type to be character
     tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
   colnames(preview_dt) = NULL
@@ -195,7 +191,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     print(preview_dt[1:3,], digits = 5L, row.names = 'none')
 
     sprintf(' ........suppressing %d columns and %d rows\n',
-            object@dim[[2L]] - 10L, object@dim[[1L]] - 6L)
+            object@dims[[2L]] - 10L, object@dims[[1L]] - 6L)
 
     print(preview_dt[4:6,], digits = 5L, row.names = 'none')
   }

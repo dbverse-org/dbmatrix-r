@@ -2,20 +2,20 @@
 % Please edit documentation in R/connection.R
 \name{reconnect}
 \alias{reconnect}
-\title{Reconnect to database}
+\title{Reconnect to backend}
 \usage{
-\S4method{reconnect}{dbData}(x, connect_type = NULL, custom_call)
+\S4method{reconnect}{dbData}(x)
 }
 \arguments{
 \item{x}{GiottoDB object}
-
-\item{connect_type}{(either 'default' or 'custom') type of connection process
-(optional because this value is usually carried by the object)}
-
-\item{custom_call}{specific custom call to use when rebooting (optional)}
 }
 \description{
-Reconnects to a database. Additionally checks that the object contains a
-reference to a valid table within the database. Runs at the beginning of
-most function calls
+Checks if the object still has a valid connection. If it does then it returns
+the object without modification. If it does need reconnection then a copy of
+the associated active connection pool object is pulled from .DB_ENV and if
+that is also closed, an error is thrown asking for a reconnectBackend() run.
+
+Also ensures that the object contains a reference to a valid table within
+the database. Runs at the beginning of most function calls involving
+dbData object queries.
 }

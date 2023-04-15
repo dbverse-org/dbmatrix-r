@@ -1,15 +1,14 @@
 
 
-
+# initialize backendInfo ####
 
 #' @keywords internal
 #' @noRd
 setMethod('initialize', signature(.Object = 'backendInfo'),
-          function(.Object, driver_call, db_path, add_params, ...) {
+          function(.Object, driver_call, db_path, ...) {
 
             if(!missing(driver_call)) .Object@driver_call = driver_call
             if(!missing(db_path)) .Object@db_path = db_path
-            if(!missing(add_params)) .Object@add_params = add_params
 
             if(!is.na(.Object@db_path)) {
               .Object@hash = calculate_hash(.Object@db_path)
@@ -23,10 +22,39 @@ setMethod('initialize', signature(.Object = 'backendInfo'),
 
 
 
+
 # initialize dbData ####
-# setMethod('initialize', signature(.Object = 'dbData'),
-#           function(.Object,
-#                    dvr,))
+# This virtual class deals with establishment of a connection to the backend
+# environment containing the source copy of the connection pool object. IT
+# gets that connection pool object and sets up a dplyr lazy table to
+# represent the information
+# NOTE: DB table writing is handled externally to this initialize function.
+# see the relevant create_ functions
+setMethod('initialize', signature(.Object = 'dbData'),
+          function(.Object, data, hash, remote_name, ...) {
+
+            # data input
+            if(!missing(remote_name)) .Object@remote_name = remote_name
+            if(!missing(hash)) .Object@hash = hash
+            if(!missing(data)) .Object@data = data
+
+            # try to generate if lazy table does not exist
+            # the hash and remote_name are needed for this
+            if(is.null(.Object@data)) {
+              if(!is.na(.Object@hash) & !is.na(.Object@remote_name)) {
+                p = getBackendPool(hash = .Object@hash)
+                tBE = tableBE(cPool = p, remote_name = remote_name)
+                .Object@data = tBE
+              }
+            }
+
+            if(!inherits(.Object@data, 'tbl_Pool')) {
+              stopf('data slot only accepts dplyr class "tbl_Pool"')
+            }
+
+            validObject(.Object)
+            return(.Object)
+          })
 
 
 
@@ -45,72 +73,34 @@ setMethod('initialize', signature(.Object = 'backendInfo'),
 setMethod(
   'initialize',
   signature(.Object = 'dbMatrix'),
-  function(.Object,
-           dvr_call,
-           custom_call,
-           data,
-           path,
-           remote_name,
-           connect_type,
-           dim_names,
-           dim,
-           ...) {
+  function(.Object, dim_names, dims, ...) {
 
-    # data input #
-    # ---------- #
-
-    if(!missing(dvr_call)) .Object@dvr_call = dvr_call
-    if(!missing(custom_call)) .Object@custom_call = custom_call
-    if(!missing(remote_name)) .Object@remote_name = remote_name
-    if(!missing(connect_type)) .Object@connect_type = connect_type
-
-    if(!missing(data)) {
-      if(!inherits(data, 'tbl_dbi')) {
-        stopf('Data slot only accepts dplyr::tbl() connections to databases')
-      }
-      .Object@data = data
-
-      con_path = DBI::dbGetInfo(dbplyr::remote_con(data))$dbname
-      if(con_path != ':memory:') con_path = normalizePath(con_path)
-      .Object@path = con_path
-    }
+    .Object = callNextMethod(.Object, ...)
 
 
-    if(!missing(path)) {
-      if(!is.null(.Object$path)) {
-        wrap_msg('Replacing path to DB...
-                 NOTE: It is preferred to omit path param in favor of',
-                 'detection from data input')
-      }
-      .Object$path = path
-    }
+    # matrix specific data input #
+    # -------------------------- #
 
     # matrix specific
     if(!missing(dim_names)) .Object@dim_names = dim_names
-    if(!missing(dim)) .Object@dim = dim
-
-
-
+    if(!missing(dims)) .Object@dims = dims
 
 
     # generate default DB connection if no input provided #
     # --------------------------------------------------- #
     if(is.null(.Object@data)) {
-      .Object@path = if(is.na(.Object@path)) ':memory:'
-      .Object@dvr_call = if(is.null(.Object@dvr_call)) substitute(duckdb::duckdb())
-      .Object@remote_name = if(is.na(.Object@remote_name)) 'test'
-      .Object@connect_type = 'default'
-
-      test_table = data.table::data.table(i = 'a', j = 'b', x = NA_integer_) # TODO update if matrix uses integer indexing
-
-      con = DBI::dbConnect(drv = eval(.Object@dvr_call), dbdir = .Object@path)
-      DBI::dbCreateTable(conn = con,
-                         name = .Object@remote_name,
-                         fields = test_table)
-      .Object@data = dplyr::tbl(con, .Object@remote_name)
-
-      .Object@dim = c(1L, 1L)
-      .Object@dim_names = list('a', 'b')
+      # test_table = data.table::data.table(i = 'a', j = 'b', x = NA_integer_) # TODO update if matrix uses integer indexing
+      #
+      # con = DBI::dbConnect(drv = eval(.Object@dvr_call), dbdir = .Object@path)
+      # DBI::dbCreateTable(conn = con,
+      #                    name = .Object@remote_name,
+      #                    fields = test_table)
+      # .Object@data = dplyr::tbl(con, .Object@remote_name)
+      #
+      # .Object@dim = c(1L, 1L)
+      # .Object@dim_names = list('a', 'b')
+      .Object@dims = c(0L, 0L)
+      .Object@dim_names = list(NULL, NULL)
     }
 
 
@@ -146,35 +136,23 @@ setMethod(
 #' could also be read in from files on disk
 #' @param matrix object coercible to matrix or filepath to matrix data accessible
 #' by one of the read functions
-#' @param db_name name to assign within database
-#' @param db_connection a db connection object
+#' @param remote_name name to assign within database
 #' @param db_path path to database on disk
-#' @param db_driver db driver generation function. Default is duckdb::duckdb()
-#' @param to_triplet (default = TRUE) conversion to triplet (ijx) is needed
-#' @param custom_call non-default calls for generating a database connection
+#' @param to_triplet (default = TRUE) conversion to triplet (ijx) format
 #' @param dim_names list of rownames and colnames of the matrix (optional)
-#' @param dim dimensions of the matrix (optional)
+#' @param dims dimensions of the matrix (optional)
 #' @param cores number of cores to use if reading into R
+#' @param ... additional params to pass
 #' @include matrix_to_dt.R
 #' @noRd
 createDBMatrix = function(matrix,
                           remote_name = 'test',
-                          db_connection,
-                          db_path = ':memory:',
-                          db_driver,
+                          db_path = ':temp:',
                           to_triplet = TRUE,
-                          custom_call,
                           dim_names,
-                          dim,
-                          cores = 1L) {
-
-  # store driver call
-  if(!missing(db_driver)) {
-    drv_sub = substitute(db_driver)
-  } else {
-    drv_sub = substitute(duckdb::duckdb())
-  }
-
+                          dims,
+                          cores = 1L,
+                          ...) {
 
   # read matrix if needed
   if(is.character(matrix)) {
@@ -189,56 +167,36 @@ createDBMatrix = function(matrix,
   # convert to IJX format if needed
   # TODO update to allow usage of representations with no zeroes
   if(isTRUE(to_triplet)) {
-    ijx = get_Ijx_Zero_DT(matrix)
+    ijx = get_ijx_zero_dt(matrix)
   }
 
+  db_path = set_db_path(db_path)
+  hash = calculate_hash(db_path)
 
-  if(is.character(db_path)) {
-
-    if(db_path != ':memory:') {
-      # Generate path to DB save location
-      db_path = path.expand(db_path)
-      if(!file.exists(db_path)) {
-        dbdir = gsub(basename(db_path), '/', db_path)
-        if(!dir.exists(dbdir)) dir.create(dbdir, recursive = TRUE)
-      }
-    }
-
-    con = DBI::dbConnect(drv = eval(drv_sub), dbdir = db_path)
-
-    DBI::dbWriteTable(con, db_name, ijx)
-    db_tbl = dplyr::tbl(con, db_name)
-
-  }
+  p = getBackendPool(hash)
+  conn = pool::poolCheckout(p)
+  DBI::dbWriteTable(conn = conn,
+                    name = remote_name,
+                    value = ijx,
+                    ...)
+  pool::poolReturn(conn)
 
 
-
-
-  # TODO edit dim_names and dim input to allow for workflows that do not read into mem
   dbMat = new('dbMatrix',
-              dvr_call = drv_sub,
-              data = db_tbl,
-              remote_name = db_name,
+              hash = hash,
+              remote_name = remote_name,
               dim_names = list(rownames(matrix),
                                colnames(matrix)),
-              dim = dim(matrix))
+              dims = dim(matrix))
 
+  return(dbMat)
 }
 
 
 
 
 
-# TODO create from tbl_dbi?
 
-create_dbmatrix_matrix = function(matrix,
-                                  db_name = 'test',
-                                  db_path = ':memory:',
-                                  db_driver = duckdb::duckdb(),
-                                  to_triplet = TRUE,
-                                  cores = 1L) {
-
-}
 
 
 
