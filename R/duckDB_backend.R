@@ -152,7 +152,23 @@ createDBMatrix = function(matrix,
                           dim_names,
                           dims,
                           cores = 1L,
+                          overwrite = FALSE,
                           ...) {
+  db_path = set_db_path(db_path)
+  hash = calculate_hash(db_path)
+  p = getBackendPool(hash)
+  fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
+
+  if(existsTableBE(x = p, remote_name = remote_name)) {
+    if(isTRUE(overwrite)) {
+      DBI::dbRemoveTable(p, DBI::SQL(fnq))
+    }
+    else {
+      stopf(fnq, 'already exists.
+          Set overwrite = TRUE to recreate it.')
+    }
+  }
+
 
   # read matrix if needed
   if(is.character(matrix)) {
@@ -170,16 +186,28 @@ createDBMatrix = function(matrix,
     ijx = get_ijx_zero_dt(matrix)
   }
 
-  db_path = set_db_path(db_path)
-  hash = calculate_hash(db_path)
 
-  p = getBackendPool(hash)
   conn = pool::poolCheckout(p)
-  DBI::dbWriteTable(conn = conn,
-                    name = remote_name,
-                    value = ijx,
-                    ...)
+  on.exit(try(pool::poolReturn(conn), silent = TRUE))
+  # create table with primary keys in i and j
+  sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
+  DBI::dbExecute(conn, sql_create)
   pool::poolReturn(conn)
+
+  ijx %>%
+    DBI::dbAppendTable(conn = p,
+                       name = remote_name,
+                       value = ijx,
+                       ...)
+    # dplyr::copy_to(dest = p,
+    #                name = remote_name,
+    #                temporary = FALSE,
+    #                indexes = list("i", "j"),
+    #                ...)
+  # DBI::dbWriteTable(conn = conn,
+  #                   name = remote_name,
+  #                   value = ijx,
+  #                   ...)
 
 
   dbMat = new('dbMatrix',
@@ -195,61 +223,256 @@ createDBMatrix = function(matrix,
 
 
 
+# compute / DB table creation from lazy dplyr query results ####
+# Based on functions in CDMConnector/R/compute.R
+
+#' @name computeDBMatrix
+#' @title Execute dplyr query of dbMatrix and save the results in remote database
+#' @description
+#' Calculate the lazy query of a dbMatrix object and send it to the database backend
+#' either as a temporary or permanent table.
+#' @param x dbData object to compute from
+#' @param remote_name name of table to create on DB
+#' @param temporary (default = TRUE) whether to make a temporary table on the DB
+#' @param overwrite (default = FALSE) whether to overwrite if remote_name already exists
+#' @param ... additional params to pass
+#' @export
+computeDBMatrix = function(x,
+                           remote_name = 'test',
+                           temporary = TRUE,
+                           overwrite = FALSE,
+                           ...) {
+
+  hash = hashBE(x)
+  p = try(getBackendPool(hash = hash))
+  full_name_quoted = get_full_table_name_quoted(p, remote_name)
+  if(existsTableBE(x = p, remote_name = remote_name)) {
+    if(isTRUE(overwrite)) {
+      DBI::dbRemoveTable(p, DBI::SQL(full_name_quoted))
+    }
+    else {
+      stopf(fullNameQuoted, 'already exists.
+          Set overwrite = TRUE to recreate it.')
+    }
+  }
+
+  args_list = list(x = x,
+                   p = p,
+                   fnq = full_name_quoted,
+                   ...)
+
+  if(isTRUE(temporary)) {
+    do.call('compute_temporary', args = args_list)
+  } else {
+    do.call('compute_permanent', args = args_list)
+  }
+}
+
+
+#' @noRd
+compute_temporary = function(x, p, fnq, ...) {
+  x[] = x[] %>%
+    dbplyr::compute(name = as.character(fnq),
+                    temporary = TRUE,
+                    ...)
+  x@remote_name = as.character(fnq)
+
+  return(x)
+}
+
+#' @noRd
+compute_permanent = function(x, p, fnq, ...) {
+
+  conn = pool::poolCheckout(p)
+  on.exit(try(pool::poolReturn(conn), silent = TRUE))
+
+  # create table with primary keys in i and j
+
+  if(dbms(p) %in% c('duckdb', 'oracle')) {
+    sql = dbplyr::build_sql(
+      con = conn,
+      'CREATE TABLE ', fnq, ' (',
+      'i VARCHAR,',
+      'j VARCHAR,',
+      'x DOUBLE,', # will not be computing non numeric matrices
+      'PRIMARY KEY (i, j)',
+      '); ',
+      'INSERT INTO ' , fnq, ' (i, j, x) ',
+      dbplyr::sql_render(x[], con = conn), ';'
+    )
+  }
+
+  DBI::dbExecute(conn, sql)
+  pool::poolReturn(conn)
+
+  dbMat = new('dbMatrix',
+              hash = x@hash,
+              remote_name = as.character(fnq),
+              dim_names = x@dim_names,
+              dims = x@dims)
+  return(dbMat)
+}
 
 
 
 
 
+appendPermanent = function() {
 
-# add key - no support ####
-# Functions from https://github.com/schardtbc/DBIExt
-# setMethod('setRemoteKey',
-#           signature(x = 'dbData',
-#                     remote_name = 'character',
-#                     primary_key = 'character'),
-#           function(x, remote_name, primary_key, ...) {
-#             stopifnot(remoteValid(x),
-#                       remoteExistsTable(x, remote_name))
-#             cols_in_table = DBI::dbListFields(conn = connection(x),
-#                                               name = remote_name)
-#             stopifnot(setequal(primary_key, intersect(primary_key, cols_in_table)))
-#             query = sql_set_remote_key(conn = connection(x),
-#                                        remote_name = remote_name,
-#                                        primary_key = primary_key)
-#             DBI::dbExecute(conn = connection(x),
-#                            statement = query)
-#           })
+}
+
+
+
+
+
+# Table creation
+# @name create_table_sql
+# @title Create the SQL needed to create a new empty table
+# @description
 #
+# @param conn DBI connection, pool, or hashID
+# @param remote_name name to assign new table in the database
+# @param pk primary key to set
+# @param overwrite whether to overwrite if remote_name already exists in DB
+# @param ... additional params to pass
+# @keywords internal
+# create_table_sql = function(conn,
+#                             remote_name,
+#                             pk,
+#                             overwrite = FALSE,
+#                             ...) {
+#   p = evaluate_conn(conn, mode = 'pool')
+#   fullNameQuoted = quote_full_table_name_quoted(
+#     conn = conn,
+#     remote_name = remote_name
+#   )
+#   if(existsTableBE(x = p, remote_name = remote_name)) {
+#     if(isTRUE(overwrite)) {
+#       DBI::dbRemoveTable(p, DBI::SQL(fullNameQuoted))
+#     }
+#     else {
+#       stopf(fullNameQuoted, 'already exists.
+#           Set overwrite = TRUE to recreate it.')
+#     }
+#   }
 #
-#
-#
-#
-# sql_set_remote_key = function(conn, remote_name, primary_key) {
-#   table_q = DBI::dbQuoteIdentifier(conn, remote_name)
-#   key_q = sapply(primary_key, function(x) {
-#     DBI::dbQuoteIdentifier(conn, as.character(x))
-#   })
-#
-#   sql_alter_table = DBI::SQL(paste0(
-#     'ALTER TABLE ',
-#     table_q,
-#     '\n',
-#     'ADD PRIMARY KEY (',
-#     paste0(key_q, collapse = ', '),
-#     ');'
-#   ))
 # }
 
 
 
 
+# Internal function to build SQL to create a table for a dbMatrix object with
+# columns i j and x. A primary key is defined on columns i and j
+#' @param conn DBI connection object, pool, or backend hashID
+#' @param full_name_quoted full name of table to create
+#' @keywords internal
+#' @noRd
+create_dbmatrix_sql = function(conn, full_name_quoted) {
+  p = evaluate_conn(conn, mode = 'pool')
+  conn = pool::poolCheckout(p)
+  tryCatch({
 
+    if(dbms(p) == 'duckdb') {
+      sql = dbplyr::build_sql(
+        'CREATE TABLE ', full_name_quoted, ' (',
+        'i VARCHAR,',
+        'j VARCHAR,',
+        'x DOUBLE,',
+        'PRIMARY KEY (i, j)',
+        ')',
+        con = conn)
+    }
 
+    return(sql)
 
-toTable = function(query, remote_name) {
-  dplyr::do(paste(unclass(query$query$sql), 'TO TABLE', remote_name))
+  },
+  finally = {
+   pool::poolReturn(conn)
+  })
+
 }
 
+
+
+
+
+
+
+
+#' @name get_full_table_name_quoted
+#' @title Get the full table name consisting of the schema and table name
+#' @description
+#' Get the full name of a table. This information is then quoted to protect against
+#' SQL injections.
+#' Either param x or hash must be given
+#' @param conn a hashID, DBI connection object, or pool object
+#' @param remote_name name of table within DB
+#' @return return the full table name
+#' @keywords internal
+get_full_table_name_quoted = function(conn, remote_name) {
+  p = evaluate_conn(conn, mode = 'pool')
+
+  stopifnot(is.character(remote_name))
+  stopifnot(length(remote_name) == 1L)
+
+  full_name_quoted = DBI::dbQuoteIdentifier(p, remote_name)
+
+  return(full_name_quoted)
+}
+
+
+
+
+
+#' @name tableInfo
+#' @title Get information about the table
+#' @param conn hashID of backend, DBI connection or pool
+#' @param remote_name name of table on DB
+#' @return a data.table of information about the existing DB tables
+tableInfo = function(conn, remote_name) {
+  conn = evaluate_conn(conn, mode = 'conn')
+  on.exit(pool::poolReturn(conn))
+  sql_statement = dbplyr::build_sql(
+    con = conn,
+    'PRAGMA table_info(', remote_name,')'
+  )
+  res = DBI::dbGetQuery(conn = conn, statement = sql_statement)
+  res = data.table::setDT(res)
+
+  return(res)
+}
+
+
+
+#' @name primaryKey
+#' @title Show if table has any primary keys
+#' @param conn hashID of backend, DBI connection, or pool
+#' @param remote_name name of table on DB
+primaryKey = function(conn, remote_name) {
+  name = pk = NULL
+  res = tableInfo(conn, remote_name)[pk == TRUE, name]
+  if(length(res) == 0L) return(NULL)
+  res
+}
+
+
+
+
+
+
+#' @name dropTableBE
+#' @title Drop a table from the database
+#' @param conn connection object or pool
+#' @param remote_name name of table to drop
+#' @export
+dropTableBE = function(conn, remote_name) {
+  con = evaluate_conn(conn, mode = 'conn')
+  on.exit(pool::poolReturn(con))
+  fnq = get_full_table_name_quoted(conn = con, remote_name = remote_name)
+  sql = dbplyr::build_sql('DROP TABLE ', fnq, con = con)
+  DBI::dbExecute(con, sql)
+  return(invisible())
+}
 
 
 

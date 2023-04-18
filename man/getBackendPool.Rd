@@ -3,11 +3,14 @@
 \name{getBackendPool}
 \alias{getBackendPool}
 \alias{getBackendInfo}
+\alias{getBackendConn}
 \title{Get backend connection pool}
 \usage{
 getBackendPool(hash)
 
 getBackendInfo(hash)
+
+getBackendConn(hash)
 }
 \arguments{
 \item{hash}{hash generated from the dbpath (xxhash64) used as unique ID for
@@ -21,5 +24,8 @@ that contains all connection details needed to regenerate another connection
 \section{Functions}{
 \itemize{
 \item \code{getBackendInfo()}: get backendInfo object containing connection details
+
+\item \code{getBackendConn()}: Get a DBI connection object from pool.
+Provided for convenience. Must be returned using pool::poolReturn() after use.
 
 }}
