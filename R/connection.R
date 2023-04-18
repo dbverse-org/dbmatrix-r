@@ -306,6 +306,7 @@ getBackendConn = function(hash) {
 
 
 
+# evaluate_conn ####
 # Internal function to allow functions to take connection inputs as a DBI
 # connection object, Pool of connections, or a hash ID of a backend
 # The connections outputted will be preferentially a pool, but if a DBI
