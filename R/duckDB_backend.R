@@ -244,7 +244,7 @@ computeDBMatrix = function(x,
                            ...) {
 
   hash = hashBE(x)
-  p = try(getBackendPool(hash = hash))
+  p = getBackendPool(hash = hash)
   full_name_quoted = get_full_table_name_quoted(p, remote_name)
   if(existsTableBE(x = p, remote_name = remote_name)) {
     if(isTRUE(overwrite)) {
@@ -264,7 +264,7 @@ computeDBMatrix = function(x,
   if(isTRUE(temporary)) {
     do.call('compute_temporary', args = args_list)
   } else {
-    do.call('compute_permanent', args = args_list)
+    do.call('compute_dbmatrix_permanent', args = args_list)
   }
 }
 
@@ -281,7 +281,7 @@ compute_temporary = function(x, p, fnq, ...) {
 }
 
 #' @noRd
-compute_permanent = function(x, p, fnq, ...) {
+compute_dbmatrix_permanent = function(x, p, fnq, ...) {
 
   conn = pool::poolCheckout(p)
   on.exit(try(pool::poolReturn(conn), silent = TRUE))
@@ -317,8 +317,14 @@ compute_permanent = function(x, p, fnq, ...) {
 
 
 
-appendPermanent = function() {
-
+appendPermanent = function(x, remote_name, ...) {
+  hash = hashBE(x)
+  p = getBackendPool(hash = hash)
+  fnq = get_full_table_name_quoted(p, remote_name)
+  # if table to append to does not exist, make
+  if(!existsTableBE(x = p, remote_name = remote_name)) {
+    return(compute_permanent(x = x, p = p, fnq = fnq, ...))
+  }
 }
 
 
@@ -450,7 +456,8 @@ tableInfo = function(conn, remote_name) {
 #' @param remote_name name of table on DB
 primaryKey = function(conn, remote_name) {
   name = pk = NULL
-  res = tableInfo(conn, remote_name)[pk == TRUE, name]
+  res = tableInfo(conn, remote_name)
+  res = res[pk == TRUE, name]
   if(length(res) == 0L) return(NULL)
   res
 }
@@ -468,7 +475,7 @@ primaryKey = function(conn, remote_name) {
 dropTableBE = function(conn, remote_name) {
   con = evaluate_conn(conn, mode = 'conn')
   on.exit(pool::poolReturn(con))
-  fnq = get_full_table_name_quoted(conn = con, remote_name = remote_name)
+  fnq = get_full_table_name_quoted(conn = conn, remote_name = remote_name)
   sql = dbplyr::build_sql('DROP TABLE ', fnq, con = con)
   DBI::dbExecute(con, sql)
   return(invisible())
