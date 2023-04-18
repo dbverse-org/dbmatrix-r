@@ -6,11 +6,11 @@
 # https://stackoverflow.com/questions/64473488/melting-a-sparse-matrix-dgcmatrix-and-keeping-its-zeros
 #' @noRd
 get_ijx_zero_dt <- function(x){
-  data.table::as.data.table(data.frame(
+  dplyr::tibble(
     i=rownames(x)[row(x)],
     j=colnames(x)[col(x)],
     x=as.numeric(x)
-  ))
+  )
 }
 
 

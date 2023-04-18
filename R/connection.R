@@ -12,7 +12,9 @@
 setMethod('hashBE', signature(x = 'backendInfo'), function(x) {
   slot(x, 'hash')
 })
-
+setMethod('hashBE', signature(x = 'dbData'), function(x) {
+  slot(x, 'hash')
+})
 
 
 
@@ -101,7 +103,7 @@ setMethod('validBE', signature(x = 'dbData'), function(x) {
 #' @export
 setMethod('listTablesBE', signature(x = 'dbData'), function(x, ...) {
   stopifnot(remoteValid(x))
-  DBI::dbListTables(connection(x), ...)
+  DBI::dbListTables(cPool(x), ...)
 })
 
 #' @rdname listTablesBE
@@ -292,6 +294,69 @@ getBackendInfo = function(hash) {
 
 
 
+#' @describeIn getBackendPool Get a DBI connection object from pool.
+#' Provided for convenience. Must be returned using pool::poolReturn() after use.
+#' @export
+getBackendConn = function(hash) {
+  p = getBackendPool(hash)
+  pool::poolCheckout(p)
+}
+
+
+
+
+
+# Internal function to allow functions to take connection inputs as a DBI
+# connection object, Pool of connections, or a hash ID of a backend
+# The connections outputted will be preferentially a pool, but if a DBI
+# connection is given as input, it will also be returned. This default can also
+# be overridden using the mode = 'pool' or mode = 'conn' param for hash or pool
+# inputs
+setMethod('evaluate_conn', signature(conn = 'character'),
+          function(conn, mode = 'pool', ...)
+{
+  mode = match.arg(mode, choices = c('pool', 'conn'))
+  if(mode == 'pool') {
+    return(getBackendPool(conn))
+  } else if(mode == 'conn') {
+    return(getBackendConn(conn))
+  }
+})
+setMethod('evaluate_conn', signature(conn = 'Pool'),
+          function(conn, mode = 'pool', ...)
+{
+  mode = match.arg(mode, choices = c('pool', 'conn'))
+  if(mode == 'pool') {
+    return(conn)
+  } else if(mode == 'conn') {
+    return(pool::poolCheckout(conn))
+  }
+})
+setMethod('evaluate_conn', signature(conn = 'DBIConnection'),
+          function(conn, mode = 'conn', ...)
+{
+  if(mode == 'pool') stopf('Cannot get pool from conn object')
+  if(class(conn) %in% c("Microsoft SQL Server",
+                        "PqConnection",
+                        "RedshiftConnection",
+                        "BigQueryConnection",
+                        "SQLiteConnection",
+                        "duckdb_connection",
+                        "Spark SQL",
+                        "OraConnection",
+                        "Oracle",
+                        "Snowflake")) {
+    return(conn)
+  } else {
+    stopf(class(conn), "is not a supported connection type.")
+  }
+})
+
+
+
+
+
+
 # reconnectBackend ####
 
 #' @title Reconnect GiottoDB backend
@@ -354,10 +419,23 @@ closeBackend = function(hash) {
   }
 
   lapply(hash, function(x) {
-    pool::poolClose(.DB_ENV[[x]]$pool)
+    conn = getBackendConn(x)
+    DBI::dbDisconnect(conn, shutdown = TRUE)
+    pool::poolReturn(conn)
+    suppressWarnings(pool::poolClose(getBackendPool(x)))
   })
 
   return(invisible())
+}
+
+
+
+
+#' @name existingHashIDs
+#' @title Get all existing backend hash IDs
+#' @export
+existingHashIDs = function() {
+  ls(.DB_ENV)
 }
 
 
@@ -438,6 +516,67 @@ writeTableBE = function(cPool, remote_name, value, ...) {
 tableBE = function(cPool, remote_name, ...) {
   dplyr::tbl(src = cPool, remote_name, ...)
 }
+
+
+
+
+
+# DBMS detection ####
+
+# From package CDMConnection
+
+#' @name dbms-generic
+#' @title Database management system
+#' @aliases dbms
+#' @description
+#' Get the database management system (dbms) of an object
+#' @param x A connection pool object, DBI connection, or dbData
+#' @param ... additional params to pass
+#' @export
+setMethod('dbms', signature(x = 'dbData'), function(x, ...) {
+  dbms(cPool(x))
+})
+#' @rdname dbms-generic
+#' @export
+setMethod('dbms', signature(x = 'character'), function(x, ...) {
+  dbms(evaluate_conn(x, mode = 'pool'))
+})
+
+#' @rdname dbms-generic
+#' @importClassesFrom pool Pool
+#' @export
+setMethod('dbms', signature(x = 'Pool'), function(x, ...) {
+  conn = pool::poolCheckout(x)
+  on.exit(pool::poolReturn(conn))
+  res = dbms(conn)
+  return(res)
+})
+#' @rdname dbms-generic
+#' @export
+setMethod('dbms', signature(x = 'DBIConnection'), function(x, ...) {
+  if (!is.null(attr(x, "dbms")))
+    return(attr(x, "dbms"))
+  result = switch(
+    class(x),
+    "Microsoft SQL Server" = "sql server",
+    "PqConnection" = "postgresql",
+    "RedshiftConnection" = "redshift",
+    "BigQueryConnection" = "bigquery",
+    "SQLiteConnection" = "sqlite",
+    "duckdb_connection" = "duckdb",
+    "Spark SQL" = "spark",
+    "OraConnection" = "oracle",
+    "Oracle" = "oracle",
+    "Snowflake" = "snowflake"
+    # add mappings from various connection classes to dbms here
+  )
+  if (is.null(result)) {
+    stopf(class(x), "is not a supported connection type.")
+  }
+  return(result)
+})
+
+
 
 
 
