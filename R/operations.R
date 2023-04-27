@@ -78,7 +78,6 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 #' @aliases ncol
 #' @export
 setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
-
   x = reconnect(x)
 
   if(is.na(x@dims[1L])) {
@@ -97,7 +96,6 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 #' @rdname nrow
 #' @export
 setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
-
   x = reconnect(x)
 
   if(is.na(x@dims[1L])) {
@@ -122,7 +120,6 @@ setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 #' @rdname nrow
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
-
   x = reconnect(x)
 
   if(is.na(x@dims[2L])) {
@@ -207,6 +204,8 @@ setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
 #' @param x lazy table
 #' @noRd
 remote_col_classes = function(x) {
+  x = reconnect(x)
+
   x %>%
     head(1L) %>%
     dplyr::collect() %>%
@@ -223,7 +222,7 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 
   n_subset = x@dim_names[[1L]] = head(x@dim_names[[1L]], n = n)
   x[] = x[] %>% dplyr::filter(i %in% n_subset)
-  x@dims[][1L] = as.integer(n)
+  x@dims[1L] = min(x@dims[1L], as.integer(n))
   x
 })
 #' @export
@@ -241,7 +240,7 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 
   n_subset = x@dim_names[[1L]] = tail(x@dim_names[[1L]], n = n)
   x[] = x[] %>% dplyr::filter(i %in% n_subset)
-  x@dims[][1L] = as.integer(n)
+  x@dims[1L] = min(x@dims[1L], as.integer(n))
   x
 })
 #' @export

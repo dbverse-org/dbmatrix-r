@@ -4,12 +4,12 @@
 \alias{closeBackend}
 \title{Close backend connection pool}
 \usage{
-closeBackend(hash)
+closeBackend(backend_ID)
 }
 \arguments{
-\item{hash}{hash of backend to close (optional)}
+\item{backend_ID}{hashID of backend to close (optional)}
 }
 \description{
-Closes pools. If specific hash(es) are given then those will be closed. When
-no specific hash is given, all existing backends will be closed.
+Closes pools. If specific backend_ID(s) are given then those will be closed.
+When no specific ID is given, all existing backends will be closed.
 }

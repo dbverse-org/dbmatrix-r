@@ -11,7 +11,7 @@ setMethod('initialize', signature(.Object = 'backendInfo'),
             if(!missing(db_path)) .Object@db_path = db_path
 
             if(!is.na(.Object@db_path)) {
-              .Object@hash = calculate_hash(.Object@db_path)
+              .Object@hash = calculate_backend_id(.Object@db_path)
             }
 
             validObject(.Object)
@@ -42,7 +42,7 @@ setMethod('initialize', signature(.Object = 'dbData'),
             # the hash and remote_name are needed for this
             if(is.null(.Object@data)) {
               if(!is.na(.Object@hash) & !is.na(.Object@remote_name)) {
-                p = getBackendPool(hash = .Object@hash)
+                p = getBackendPool(backend_ID = .Object@hash)
                 tBE = tableBE(cPool = p, remote_name = remote_name)
                 .Object@data = tBE
               }
@@ -75,7 +75,7 @@ setMethod(
   signature(.Object = 'dbMatrix'),
   function(.Object, dim_names, dims, ...) {
 
-    .Object = callNextMethod(.Object, ...)
+    .Object = methods::callNextMethod(.Object, ...)
 
 
     # matrix specific data input #
@@ -138,24 +138,26 @@ setMethod(
 #' by one of the read functions
 #' @param remote_name name to assign within database
 #' @param db_path path to database on disk
-#' @param to_triplet (default = TRUE) conversion to triplet (ijx) format
 #' @param dim_names list of rownames and colnames of the matrix (optional)
 #' @param dims dimensions of the matrix (optional)
 #' @param cores number of cores to use if reading into R
+#' @param overwrite whether to overwrite if table already exists in database
+#' @param callback callback functions to apply to each data chunk before it is
+#' sent to the database backend
 #' @param ... additional params to pass
 #' @include matrix_to_dt.R
-#' @noRd
+#' @export
 createDBMatrix = function(matrix,
                           remote_name = 'test',
                           db_path = ':temp:',
-                          to_triplet = TRUE,
                           dim_names,
                           dims,
                           cores = 1L,
                           overwrite = FALSE,
+                          callback = callback_formatIJX(),
                           ...) {
   db_path = set_db_path(db_path)
-  hash = calculate_hash(db_path)
+  hash = calculate_backend_id(db_path)
   p = getBackendPool(hash)
   fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
 
@@ -169,53 +171,55 @@ createDBMatrix = function(matrix,
     }
   }
 
-
   # read matrix if needed
   if(is.character(matrix)) {
-    matrix = readMatrixFlat(matrix)
+    fstreamToDB_IJX(path = matrix,
+                    backend_ID = hash,
+                    remote_name = remote_name,
+                    nlines = 10000L,
+                    with_pk = FALSE,
+                    cores = cores,
+                    callback = callback,
+                    overwrite = overwrite)
+    # matrix = readMatrixR(matrix)
   }
 
-  # coerce to matrix if not matrix or DB
-  if(!inherits(matrix, c('matrix', 'Matrix', 'tbl_dbi'))) {
-    matrix = as.matrix(matrix)
-  }
-
-  # convert to IJX format if needed
-  # TODO update to allow usage of representations with no zeroes
-  if(isTRUE(to_triplet)) {
+  # convert to IJX format if needed Matrix
+  if(inherits(matrix, 'Matrix')) {
     ijx = get_ijx_zero_dt(matrix)
+    DBI::dbWriteTable(conn = p,
+                      name = remote_name,
+                      value = ijx,
+                      ...)
   }
 
 
   conn = pool::poolCheckout(p)
   on.exit(try(pool::poolReturn(conn), silent = TRUE))
-  # create table with primary keys in i and j
-  sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
-  DBI::dbExecute(conn, sql_create)
-  pool::poolReturn(conn)
 
-  ijx %>%
-    DBI::dbAppendTable(conn = p,
-                       name = remote_name,
-                       value = ijx,
-                       ...)
-    # dplyr::copy_to(dest = p,
-    #                name = remote_name,
-    #                temporary = FALSE,
-    #                indexes = list("i", "j"),
-    #                ...)
-  # DBI::dbWriteTable(conn = conn,
-  #                   name = remote_name,
-  #                   value = ijx,
-  #                   ...)
+  mtx_tbl = dplyr::tbl(conn, remote_name)
+  r_names = mtx_tbl %>% dplyr::distinct(i) %>% dplyr::pull()
+  c_names = mtx_tbl %>% dplyr::distinct(j) %>% dplyr::pull()
+
+  # create table with primary keys in i and j - nonfeasible too large
+  # sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
+  # DBI::dbExecute(conn, sql_create)
+  # pool::poolReturn(conn)
+  #
+  # ijx %>%
+  #   DBI::dbAppendTable(conn = p,
+  #                      name = remote_name,
+  #                      value = ijx,
+  #                      ...)
 
 
   dbMat = new('dbMatrix',
               hash = hash,
               remote_name = remote_name,
-              dim_names = list(rownames(matrix),
-                               colnames(matrix)),
-              dims = dim(matrix))
+              dim_names = list(r_names,
+                               c_names),
+              dims = c(length(r_names),
+                       length(c_names)))
 
   return(dbMat)
 }
@@ -243,8 +247,8 @@ computeDBMatrix = function(x,
                            overwrite = FALSE,
                            ...) {
 
-  hash = hashBE(x)
-  p = getBackendPool(hash = hash)
+  bID = backendID(x)
+  p = getBackendPool(backend_ID = bID)
   full_name_quoted = get_full_table_name_quoted(p, remote_name)
   if(existsTableBE(x = p, remote_name = remote_name)) {
     if(isTRUE(overwrite)) {
@@ -318,8 +322,8 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
 
 
 appendPermanent = function(x, remote_name, ...) {
-  hash = hashBE(x)
-  p = getBackendPool(hash = hash)
+  bID = backendID(x)
+  p = getBackendPool(backend_ID = bID)
   fnq = get_full_table_name_quoted(p, remote_name)
   # if table to append to does not exist, make
   if(!existsTableBE(x = p, remote_name = remote_name)) {

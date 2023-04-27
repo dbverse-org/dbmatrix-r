@@ -6,14 +6,14 @@
 \alias{getBackendConn}
 \title{Get backend connection pool}
 \usage{
-getBackendPool(hash)
+getBackendPool(backend_ID)
 
-getBackendInfo(hash)
+getBackendInfo(backend_ID)
 
-getBackendConn(hash)
+getBackendConn(backend_ID)
 }
 \arguments{
-\item{hash}{hash generated from the dbpath (xxhash64) used as unique ID for
+\item{backend_ID}{hashID generated from the dbpath (xxhash64) used as unique ID for
 the backend}
 }
 \description{

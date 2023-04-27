@@ -13,13 +13,24 @@ setMethod('queryStack', signature(x = 'dbData'), function(x) {
 })
 
 #' @rdname queryStack-generic
-#' @include generics.R
+#' @export
+setMethod('queryStack', signature(x = 'tbl_lazy'), function(x) {
+  x$lazy_query
+})
+
+#' @rdname queryStack-generic
 #' @export
 setMethod('queryStack<-', signature(x = 'dbData'), function(x, value) {
   x@data$lazy_query = value
   x
 })
 
+#' @rdname queryStack-generic
+#' @export
+setMethod('queryStack<-', signature(x = 'tbl_lazy'), function(x, value) {
+  x@lazy_query = value
+  x
+})
 
 
 #' @name query

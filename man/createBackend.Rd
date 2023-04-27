@@ -9,6 +9,7 @@ createBackend(
   dbdir = ":temp:",
   extension = ".duckdb",
   with_login = FALSE,
+  verbose = TRUE,
   ...
 )
 }
@@ -20,6 +21,8 @@ createBackend(
 \item{extension}{file extension (default = '.duckdb')}
 
 \item{with_login}{(default = FALSE) whether a login is needed}
+
+\item{verbose}{be verbose}
 
 \item{...}{additional params to pass to pool::dbPool()}
 }
