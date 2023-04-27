@@ -45,7 +45,7 @@ readMatrixDT = function(path,
 
 
 
-#' @name fstreamToDB_IJX
+#' @name fstreamToDB
 #' @title Stream large flat files to database backend using fread
 #' @param path path to the matrix file
 #' @param backend_ID ID of the backend to use
@@ -59,15 +59,15 @@ readMatrixDT = function(path,
 #' increase greatly with a pk
 #' @param ... additional params to pass
 #' @export
-fstreamToDB_IJX = function(path,
-                           backend_ID,
-                           remote_name = 'test',
-                           nlines = 10000L,
-                           cores = 1L,
-                           callback = NULL,
-                           overwrite = FALSE,
-                           with_pk = FALSE,
-                           ...) {
+fstreamToDB = function(path,
+                       backend_ID,
+                       remote_name = 'test',
+                       nlines = 10000L,
+                       cores = 1L,
+                       callback = NULL,
+                       overwrite = FALSE,
+                       with_pk = FALSE,
+                       ...) {
   stopifnot(is.character(remote_name))
   stopifnot(is.character(backend_ID))
   stopifnot(is.numeric(nlines), length(nlines) == 1L)
@@ -88,7 +88,7 @@ fstreamToDB_IJX = function(path,
     }
   }
 
-  # create new ijx table
+  # create new ijx table with primary key if desired
   if(isTRUE(with_pk)) {
     sql_create = create_dbmatrix_sql(conn = p, full_name_quoted = fnq)
     DBI::dbExecute(conn = p, sql_create)
