@@ -1,6 +1,6 @@
 Package: GiottoDB
 Title: Database Backend for Giotto
-Version: 3.2.1
+Version: 0.1.1
 Authors@R: c(
 	person("Ruben", "Dries", email = "rubendries@gmail.com",
 		 role = c("aut", "cre")),
@@ -24,20 +24,16 @@ Depends:
     R (>= 3.5.0),
     methods,
 Imports:
+    arkdb,
     data.table (>= 1.12.2),
     DBI,
     digest,
     duckdb,
     dplyr,
-    DelayedArray,
-    DelayedMatrixStats,
-    future.apply,
+    fpeek,
     Matrix,
-    MatrixGenerics,
     magrittr,
-    parallel,
     pool,
-    progressr,
     tidyr
 Suggests:
     arrow,
@@ -48,6 +44,7 @@ Suggests:
 Collate: 
     'classes.R'
     'Math.R'
+    'assert.R'
     'generics.R'
     'query.R'
     'extract.R'
@@ -57,6 +54,5 @@ Collate:
     'matrix_to_dt.R'
     'duckDB_backend.R'
     'operations.R'
-    'unload.R'
     'utils.R'
     'zzz.R'

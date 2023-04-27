@@ -4,12 +4,18 @@
 \alias{queryStack-generic}
 \alias{queryStack,}
 \alias{queryStack<-}
+\alias{queryStack,tbl_lazy-method}
 \alias{queryStack<-,dbData-method}
+\alias{queryStack<-,tbl_lazy-method}
 \title{Get and set the queryStack for a db backend object}
 \usage{
 \S4method{queryStack}{dbData}(x)
 
+\S4method{queryStack}{tbl_lazy}(x)
+
 \S4method{queryStack}{dbData}(x) <- value
+
+\S4method{queryStack}{tbl_lazy}(x) <- value
 }
 \arguments{
 \item{x}{GiottoDB object}

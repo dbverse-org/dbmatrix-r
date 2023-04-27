@@ -2,24 +2,37 @@
 
 
 
-# hash ####
-#' @name hashBE-generic
-#' @title Get hash of backend
+# backendID ####
+#' @name backendID-generic
+#' @title Get and set hash ID of backend
 #' @description
 #' Get the hash value/slot
+#' @aliases backendID, backendID<-
 #' @param x object to get hash from
+#' @param value (character) hash ID to set
 #' @export
-setMethod('hashBE', signature(x = 'backendInfo'), function(x) {
+setMethod('backendID', signature(x = 'backendInfo'), function(x) {
   slot(x, 'hash')
 })
-setMethod('hashBE', signature(x = 'dbData'), function(x) {
+#' @rdname backendID-generic
+#' @export
+setMethod('backendID', signature(x = 'dbData'), function(x) {
   slot(x, 'hash')
 })
 
 
-
-
-
+#' @rdname backendID-generic
+#' @export
+setMethod('backendID<-', signature(x = 'backendInfo', value = 'character'),
+          function(x, ..., value) {
+            slot(x, 'hash') = value
+          })
+#' @rdname backendID-generic
+#' @export
+setMethod('backendID<-', signature(x = 'dbData', value = 'character'),
+          function(x, ..., value) {
+            slot(x, 'hash') = value
+          })
 
 
 
@@ -204,6 +217,7 @@ create_connection_pool = function(drv = 'duckdb::duckdb()',
 #' @param dbdir directory to create a backend database
 #' @param extension file extension (default = '.duckdb')
 #' @param with_login (default = FALSE) whether a login is needed
+#' @param verbose be verbose
 #' @param ... additional params to pass to pool::dbPool()
 #' @return environment containing backendInfo object
 #' @export
@@ -211,18 +225,22 @@ createBackend = function(drv = duckdb::duckdb(),
                          dbdir = ':temp:',
                          extension = '.duckdb',
                          with_login = FALSE,
+                         verbose = TRUE,
                          ...) {
 
   # store driver call as a string
   drv_call = deparse(substitute(drv))
 
   # setup database filepath
-  dbpath = set_db_path(path = dbdir, extension = extension)
+  dbpath = set_db_path(path = dbdir, extension = extension, verbose = verbose)
 
   # collect connection information
   gdb_info = new('backendInfo',
                  driver_call = drv_call,
                  db_path = dbpath)
+  if(isTRUE(verbose)) wrap_msg(
+    ' Backend Identifier:', backendID(gdb_info)
+  )
 
   # assemble params
   list_args = list(...)
@@ -246,7 +264,7 @@ createBackend = function(drv = duckdb::duckdb(),
   backend_list = list(info = gdb_info,
                       pool = con_pool)
 
-  .DB_ENV[[hashBE(gdb_info)]] = backend_list
+  .DB_ENV[[backendID(gdb_info)]] = backend_list
   invisible()
 }
 
@@ -271,22 +289,26 @@ getBackendEnv = function() {
 #' Get backend information. \code{getBackendPool} gets the associated
 #' connection pool object. \code{getBackendInfo} gets the backendInfo object
 #' that contains all connection details needed to regenerate another connection
-#' @param hash hash generated from the dbpath (xxhash64) used as unique ID for
+#' @param backend_ID hashID generated from the dbpath (xxhash64) used as unique ID for
 #' the backend
 #' @export
-getBackendPool = function(hash) {
-  p = .DB_ENV[[hash]]$pool
-  if(is.null(p)) stopf('No associated backend found.
-                       Please create or reconnect the backend.')
+getBackendPool = function(backend_ID) {
+  p = try(.DB_ENV[[backend_ID]]$pool, silent = TRUE)
+  if(is.null(p) | inherits(p, 'try-error')) {
+    stopf('No associated backend found.
+          Please create or reconnect the backend.')
+  }
   return(p)
 }
 
 #' @describeIn getBackendPool get backendInfo object containing connection details
 #' @export
-getBackendInfo = function(hash) {
-  i = .DB_ENV[[hash]]$info
-  if(is.null(i)) stopf('No associated backend found.
-                       Please create or reconnect the backend.')
+getBackendInfo = function(backend_ID) {
+  i = try(.DB_ENV[[backend_ID]]$info, silent = TRUE)
+  if(is.null(i) | inherits(p, 'try-error')) {
+    stopf('No associated backend found.
+          Please create or reconnect the backend.')
+  }
   return(i)
 }
 
@@ -297,8 +319,8 @@ getBackendInfo = function(hash) {
 #' @describeIn getBackendPool Get a DBI connection object from pool.
 #' Provided for convenience. Must be returned using pool::poolReturn() after use.
 #' @export
-getBackendConn = function(hash) {
-  p = getBackendPool(hash)
+getBackendConn = function(backend_ID) {
+  p = getBackendPool(backend_ID)
   pool::poolCheckout(p)
 }
 
@@ -365,14 +387,17 @@ setMethod('evaluate_conn', signature(conn = 'DBIConnection'),
 #' @aliases reconnectBackend
 #' @param x backendInfo object
 #' @param with_login (default = FALSE) flag to check R environment variables
+#' @param verbose be verbose
+#' @param ... additional params to pass
 #' for login info and/or prompt for password
 #' @export
-setMethod('reconnectBackend', signature('backendInfo'), function(x, with_login = FALSE, ...) {
-
-  hash = hashBE(x)
-
+setMethod('reconnectBackend', signature('backendInfo'), function(x,
+                                                                 with_login = FALSE,
+                                                                 verbose = TRUE,
+                                                                 ...) {
+  b_ID = backendID(x)
   # if already valid, exit
-  if(DBI::dbIsValid(.DB_ENV[[hash]]$pool)) return(invisible())
+  if(DBI::dbIsValid(.DB_ENV[[b_ID]]$pool)) return(invisible())
 
 
   # assemble params
@@ -392,9 +417,9 @@ setMethod('reconnectBackend', signature('backendInfo'), function(x, with_login =
   list_args$dbdir = x@db_path
 
   # regenerate connection pool object
-  con_pool = do.call(what = 'create_connection_pool', args = list_args)
-  .DB_ENV[[hash]]$pool = con_pool
-  .DB_ENV[[hash]]$info = x
+  con_pool = do.call(what = create_connection_pool, args = list_args)
+  .DB_ENV[[b_ID]]$pool = con_pool
+  .DB_ENV[[b_ID]]$info = x
 
   return(invisible())
 })
@@ -409,17 +434,17 @@ setMethod('reconnectBackend', signature('backendInfo'), function(x, with_login =
 #' @name closeBackend
 #' @title Close backend connection pool
 #' @description
-#' Closes pools. If specific hash(es) are given then those will be closed. When
-#' no specific hash is given, all existing backends will be closed.
-#' @param hash hash of backend to close (optional)
+#' Closes pools. If specific backend_ID(s) are given then those will be closed.
+#' When no specific ID is given, all existing backends will be closed.
+#' @param backend_ID hashID of backend to close (optional)
 #' @export
-closeBackend = function(hash) {
+closeBackend = function(backend_ID) {
 
-  if(missing(hash)) {
-    hash = ls(.DB_ENV)
+  if(missing(backend_ID)) {
+    backend_ID = ls(.DB_ENV)
   }
 
-  lapply(hash, function(x) {
+  lapply(backend_ID, function(x) {
     conn = getBackendConn(x)
     DBI::dbDisconnect(conn, shutdown = TRUE)
     pool::poolReturn(conn)

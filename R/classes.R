@@ -183,6 +183,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     dplyr::mutate(j = paste0("col_", j)) %>% # forces type to be character
     tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
+  data.table::setkeyv(preview_dt, names(preview_dt)[1L]) # enforce ordering
   colnames(preview_dt) = NULL
 
   if(nrow(preview_dt < 7L)) {

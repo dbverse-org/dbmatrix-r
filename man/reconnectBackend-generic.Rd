@@ -5,12 +5,16 @@
 \alias{reconnectBackend}
 \title{Reconnect GiottoDB backend}
 \usage{
-\S4method{reconnectBackend}{backendInfo}(x, with_login = FALSE, ...)
+\S4method{reconnectBackend}{backendInfo}(x, with_login = FALSE, verbose = TRUE, ...)
 }
 \arguments{
 \item{x}{backendInfo object}
 
-\item{with_login}{(default = FALSE) flag to check R environment variables
+\item{with_login}{(default = FALSE) flag to check R environment variables}
+
+\item{verbose}{be verbose}
+
+\item{...}{additional params to pass
 for login info and/or prompt for password}
 }
 \description{
