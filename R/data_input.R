@@ -47,6 +47,15 @@ readMatrixDT = function(path,
 
 #' @name fstreamToDB
 #' @title Stream large flat files to database backend using fread
+#' @description
+#' Files are read in chunks of lines via \code{fread} and then converted to the
+#' proper formatting with plugin functions provided through the \code{callback}
+#' param before being written/appended to the database table.
+#' This is slower than directly writing the information in, but is a scalable
+#' approach as it never requires the full dataset to be in memory. \cr
+#' If more than one or a custom callback is needed for the formatting then a
+#' combined or new function can be defined on the spot as long as it accepts
+#' \code{data.table} input and returns a \code{data.table}.
 #' @param path path to the matrix file
 #' @param backend_ID ID of the backend to use
 #' @param remote_name name to assign table of read in values in database
