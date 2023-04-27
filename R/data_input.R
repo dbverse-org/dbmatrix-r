@@ -42,116 +42,11 @@ readMatrixDT = function(path,
 
 
 
-#' @title Read matrix via R and data.table
-#' @name readMatrixDB
-#' @description Function to read a matrix in from flat file directly into database.
-#' This function is specific for tsv and csv style formats. The table will be read
-#' in as 'read_temp' and converted to IJX format and permanently written in as a
-#' table with the name supplied through remote_name param. The table generated
-#' when reading ('read_temp') will then be dropped.
-#' @param path path to the matrix file
-#' @param backend_ID ID of backend to use
-#' @param transpose transpose matrix
-#' @param remote_name name to assign the dbMatrix
-#' @param rowname_cols numeric vector. Which columns of flat file contain rownames
-#' information
-#' @param ... additional params to pass
-#' @return matrix
-#' @details The matrix needs to have both unique column names and row names.
-#' A Giotto database backend also must already be existing. .csv and .tsv files
-#' when the database is duckdb will be handled through duckdb_read_csv
-#' @export
-readMatrixDB = function(path,
-                        backend_ID,
-                        remote_name = 'temp',
-                        rowname_cols = 1,
-                        transpose = FALSE,
-                        ...) {
-  stopifnot(is.character(remote_name))
-  stopifnot(is.character(backend_ID))
-  stopifnot(file.exists(path))
-
-  conn = getBackendConn(backend_ID = backend_ID)
-  on.exit(pool::poolReturn(conn))
-  fnq = get_full_table_name_quoted(conn = conn, remote_name = remote_name)
-
-
-  # 1. get rownames and colnames
-  c_names = path %>%
-    data.table::fread(nrows = 0L, drop = rowname_cols) %>%
-    colnames()
-
-  r_names_table = path %>%
-    data.table::fread(select = rowname_cols)
-  if(length(rowname_cols) > 1L) {
-    r_names_table[, combined := do.call(paste, c())] #TODO
-  } else {
-
-  }
-
-
-  # 2. read in flat file
-
-  streamToDB(path = path,
-             backend_ID = backend_ID,
-             remote_name = 'read_temp')
-
-  # 3. convert to long format ijx
-
-  # account for multiple ID related columns
-
-  temp_table = dplyr::tbl(conn, 'read_temp') %>%
-    tidyr::pivot_longer(cols = !1, names_to = 'j', values_to = 'x') |>
-    dplyr::rename(i = 1)
-
-
-  # 4. save resulting table as permanent
-  sql_create = create_dbmatrix_sql(conn = conn, full_name_quoted = fnq)
-  DBI::dbExecute(conn = conn, sql_create)
-  DBI::dbAppendTable(conn = conn,
-                     name = remote_name,
-                     value = temp_table,
-                     ...)
-
-  DBI::dbRemoveTable(conn, 'read_temp')
-
-
-  return()
-}
-
-
-
-
-
-#' @name pivotToIJX
-#' @title Pivot a remote table to IJX format
-#' @param x a remote database table
-#' @export
-pivotToIJX = function(x) {
-  assert_conn_table(x)
-  assert_conn_valid(x)
-
-  # Split data into smaller chunks
-  chunk_size <- 10000
-  num_chunks <- ceiling(nrow(x) / chunk_size)
-  chunks <- split(x, 0:(num_chunks - 1) %/% chunk_size)
-
-  # Apply pivot_longer to each chunk
-  chunks <- purrr::map(chunks, ~ .x %>%
-                         tidyr::pivot_longer(cols = !1, names_to = 'j', values_to = 'x') %>%
-                         dplyr::rename(i = 1))
-
-  # Combine chunks back into a single data frame
-  x <- do.call(rbind, chunks)
-
-  return(x)
-}
-
 
 
 
 #' @name fstreamToDB_IJX
-#' @title Stream large flat filess to database backend using fread
+#' @title Stream large flat files to database backend using fread
 #' @param path path to the matrix file
 #' @param backend_ID ID of the backend to use
 #' @param remote_name name to assign table of read in values in database
@@ -296,82 +191,49 @@ callback_formatIJX = function(x, group_by = 1) {
 
 
 # Old
-#' streamToDB = function(path,
-#'                       backend_ID,
-#'                       remote_name = 'read_temp',
-#'                       ...) {
-#'   stopifnot(is.character(remote_name))
-#'   stopifnot(is.character(backend_ID))
-#'   stopifnot(file.exists(path))
-#'
-#'   conn = getBackendConn(backend_ID = backend_ID)
-#'   on.exit(pool::poolReturn(conn))
-#'
-#'   if(match_file_ext(path = path, ext_to_match = '.csv')) { # .csv
-#'     if(dbms(conn) == 'duckdb') {
-#'       duckdb::duckdb_read_csv(conn = conn,
-#'                               name = remote_name,
-#'                               files = path,
-#'                               delim = ',',
-#'                               header = TRUE,
-#'                               ...)
-#'     } else {
-#'       arkdb::unark(files = path,
-#'                    db_con = conn,
-#'                    tablenames = remote_name,
-#'                    overwrite = TRUE,
-#'                    ...)
-#'     }
-#'
-#'   } else if(match_file_ext(path = path, ext_to_match = '.tsv')) { # .tsv
-#'
-#'     arkdb::unark(files = path,
-#'                  db_con = conn,
-#'                  tablenames = remote_name,
-#'                  overwrite = TRUE,
-#'                  ...)
-#'
-#'   } else { # else throw error
-#'     stopf('readMatrixDB only works for .csv and .tsv type files
-#'           Not:', basename(path))
-#'   }
-#' }
+# streamToDB = function(path,
+#                       backend_ID,
+#                       remote_name = 'read_temp',
+#                       ...) {
+#   stopifnot(is.character(remote_name))
+#   stopifnot(is.character(backend_ID))
+#   stopifnot(file.exists(path))
+#
+#   conn = getBackendConn(backend_ID = backend_ID)
+#   on.exit(pool::poolReturn(conn))
+#
+#   if(match_file_ext(path = path, ext_to_match = '.csv')) { # .csv
+#     if(dbms(conn) == 'duckdb') {
+#       duckdb::duckdb_read_csv(conn = conn,
+#                               name = remote_name,
+#                               files = path,
+#                               delim = ',',
+#                               header = TRUE,
+#                               ...)
+#     } else {
+#       arkdb::unark(files = path,
+#                    db_con = conn,
+#                    tablenames = remote_name,
+#                    overwrite = TRUE,
+#                    ...)
+#     }
+#
+#   } else if(match_file_ext(path = path, ext_to_match = '.tsv')) { # .tsv
+#
+#     arkdb::unark(files = path,
+#                  db_con = conn,
+#                  tablenames = remote_name,
+#                  overwrite = TRUE,
+#                  ...)
+#
+#   } else { # else throw error
+#     stopf('readMatrixDB only works for .csv and .tsv type files
+#           Not:', basename(path))
+#   }
+# }
 
 
 
-#' @name combineColsDB
-#' @title Combine designated columns in database table
-#' @description Combines designated columns into a single one and removes the
-#' originals. Useful for wrangling ID column values. The combined column will
-#' be created as a new column called 'combined_col'
-#' @param backend_ID ID of backend
-#' @param remote_name name of table on database
-#' @param col_indices numerical vector of columns to combine
-#' @param remove_originals boolean. Whether to remove the original columns
-#' @export
-combineColsDB = function(x,
-                         col_indices,
-                         combined_colname = 'new',
-                         remove_originals = TRUE) {
-  assert_conn_table(x)
-  stopifnot(is.numeric(col_indices))
-
-  col_n = colnames(x)[col_indices]
-  .col_n = col_n %>%
-    sapply(as.name, USE.NAMES = FALSE) %>%
-    as.list()
-
-  x = x %>%
-    dplyr::mutate(!!combined_colname := paste0('ID_', paste(!!!.col_n, sep = '_')))
-
-  if(isTRUE(remove_originals)) {
-    select_cols = colnames(x)[-c(1,2)][c(ncol(x) - 2, seq(ncol(x) - 3))]
-    x = x %>%
-      dplyr::select(tidyr::all_of(select_cols))
-  }
-
-  return(x)
-}
 
 
 
@@ -383,12 +245,12 @@ combineColsDB = function(x,
 
 
 
-match_file_ext = function(path, ext_to_match) {
-  stopifnot(file.exists(path))
-
-  grepl(pattern = paste0(ext_to_match, '$|', ext_to_match, '\\.'),
-        x = path,
-        ignore.case = TRUE)
-}
+# match_file_ext = function(path, ext_to_match) {
+#   stopifnot(file.exists(path))
+#
+#   grepl(pattern = paste0(ext_to_match, '$|', ext_to_match, '\\.'),
+#         x = path,
+#         ignore.case = TRUE)
+# }
 
 

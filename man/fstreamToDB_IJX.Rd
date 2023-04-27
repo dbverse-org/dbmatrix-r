@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_input.R
 \name{fstreamToDB_IJX}
 \alias{fstreamToDB_IJX}
-\title{Stream large flat filess to database backend using fread}
+\title{Stream large flat files to database backend using fread}
 \usage{
 fstreamToDB_IJX(
   path,
@@ -38,5 +38,5 @@ increase greatly with a pk}
 \item{...}{additional params to pass}
 }
 \description{
-Stream large flat filess to database backend using fread
+Stream large flat files to database backend using fread
 }
