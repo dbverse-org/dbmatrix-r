@@ -156,7 +156,7 @@ createDBMatrix = function(matrix,
                           overwrite = FALSE,
                           callback = callback_formatIJX(),
                           ...) {
-  db_path = set_db_path(db_path)
+  db_path = getDBPath(db_path)
   hash = calculate_backend_id(db_path)
   p = getBackendPool(hash)
   fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)

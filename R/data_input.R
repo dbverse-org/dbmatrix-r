@@ -49,7 +49,7 @@ readMatrixDT = function(path,
 #' @title Stream large flat files to database backend using fread
 #' @description
 #' Files are read in chunks of lines via \code{fread} and then converted to the
-#' proper formatting with plugin functions provided through the \code{callback}
+#' required formatting with plugin functions provided through the \code{callback}
 #' param before being written/appended to the database table.
 #' This is slower than directly writing the information in, but is a scalable
 #' approach as it never requires the full dataset to be in memory. \cr
