@@ -121,6 +121,17 @@ setMethod('listTablesBE', signature(x = 'dbData'), function(x, ...) {
 
 #' @rdname listTablesBE
 #' @export
+setMethod('listTablesBE', signature(x = 'character'), function(x, ...) {
+  x_pool = try(getBackendPool(x), silent = TRUE) # should be backend_ID
+  if(inherits(x_pool, 'try-error')) {
+    x_pool = getBackendID(x)
+  }
+  stopifnot(DBI::dbIsValid(x_pool))
+  DBI::dbListTables(x_pool, ...)
+})
+
+#' @rdname listTablesBE
+#' @export
 setMethod('listTablesBE', signature(x = 'ANY'), function(x, ...) {
   stopifnot(DBI::dbIsValid(x))
   DBI::dbListTables(x, ...)
@@ -219,7 +230,7 @@ create_connection_pool = function(drv = 'duckdb::duckdb()',
 #' @param with_login (default = FALSE) whether a login is needed
 #' @param verbose be verbose
 #' @param ... additional params to pass to pool::dbPool()
-#' @return environment containing backendInfo object
+#' @return invisibly returns backend ID
 #' @export
 createBackend = function(drv = duckdb::duckdb(),
                          dbdir = ':temp:',
@@ -265,7 +276,7 @@ createBackend = function(drv = duckdb::duckdb(),
                       pool = con_pool)
 
   .DB_ENV[[backendID(gdb_info)]] = backend_list
-  invisible()
+  invisible(backendID(gdb_info))
 }
 
 

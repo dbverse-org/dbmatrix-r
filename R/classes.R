@@ -178,9 +178,15 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     p_rown = rown
   }
 
-  preview_dt = object@data %>%
+  conn = cPool(object) %>% pool::poolCheckout()
+  on.exit(pool::poolReturn(conn))
+  preview = object
+  cPool(preview) = conn
+  preview_dt = preview@data %>%
     dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
     dplyr::mutate(j = paste0("col_", j)) %>% # forces type to be character
+    dplyr::compute() %>%
+    # dplyr::arrange(i, j) %>%
     tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
   data.table::setkeyv(preview_dt, names(preview_dt)[1L]) # enforce ordering

@@ -2,10 +2,13 @@
 % Please edit documentation in R/connection.R
 \name{listTablesBE}
 \alias{listTablesBE}
+\alias{listTablesBE,character-method}
 \alias{listTablesBE,ANY-method}
 \title{List the tables in a connection}
 \usage{
 \S4method{listTablesBE}{dbData}(x, ...)
+
+\S4method{listTablesBE}{character}(x, ...)
 
 \S4method{listTablesBE}{ANY}(x, ...)
 }
