@@ -49,7 +49,7 @@ readMatrixDT = function(path,
 #' @title Stream large flat files to database backend using fread
 #' @description
 #' Files are read in chunks of lines via \code{fread} and then converted to the
-#' proper formatting with plugin functions provided through the \code{callback}
+#' required formatting with plugin functions provided through the \code{callback}
 #' param before being written/appended to the database table.
 #' This is slower than directly writing the information in, but is a scalable
 #' approach as it never requires the full dataset to be in memory. \cr
@@ -195,6 +195,21 @@ callback_formatIJX = function(x, group_by = 1) {
 }
 
 
+
+#' @name callback_swapCols
+#' @title Swap values in two columns
+#' @param x data.table
+#' @param c1 col 1 to use (character)
+#' @param c2 col 2 to use (character)
+#' @return data.table with designated column values swapped
+#' @export
+callback_swapCols = function(x, c1, c2) {
+  assert_DT(x)
+  if(identical(c1, c2)) stop('Cols to swap can not be identical')
+
+  x[, c(c2, c1) := .(get(c1), get(c2))]
+  return(x)
+}
 
 
 

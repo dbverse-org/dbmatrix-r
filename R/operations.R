@@ -57,12 +57,89 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 
 
 
+# rowSums ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('rowSums', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+            x[] %>%
+              dplyr::group_by(i) %>%
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
+              dplyr::arrange(i) %>%
+              dplyr::pull(sum_x)
+          })
+# colSums ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('colSums', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+
+            x[] %>%
+              dplyr::group_by(j) %>%
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
+              dplyr::arrange(j) %>%
+              dplyr::pull(sum_x)
+          })
+# rowMeans ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('rowMeans', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+            x[] %>%
+              dplyr::group_by(i) %>%
+              dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
+              dplyr::arrange(i) %>%
+              dplyr::pull(mean_x)
+          })
+# colMeans ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('colMeans', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+            x[] %>%
+              dplyr::group_by(j) %>%
+              dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
+              dplyr::arrange(j) %>%
+              dplyr::pull(mean_x)
+          })
 
 
 
 
 
+# t ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('t', signature(x = 'dbMatrix'), function(x) {
+  x = reconnect(x)
 
+  x[] = x[] %>% dplyr::select(i = j, j = i, x)
+  x@dims = c(x@dims[[2L]], x@dims[[1L]])
+  x@dim_names = list(x@dim_names[[2L]], x@dim_names[[1L]])
+  x
+})
+
+
+
+
+
+# mean ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
+  x = reconnect(x)
+
+  x[] %>% dplyr::summarise(mean_x = mean(x)) %>%
+    dplyr::pull(mean_x)
+})
 
 
 
@@ -161,40 +238,52 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 
 
 
-
+# TODO ensure these match the row / col operations
 # rownames ####
-
+#' @rdname hidden_aliases
 #' @export
 setMethod('rownames', signature(x = 'dbData'), function(x) {
   x = reconnect(x)
   rownames(x@data)
 })
-
+#' @rdname hidden_aliases
 #' @export
 setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
   x = reconnect(x)
   x@dim_names[[1]]
 })
+#' @rdname hidden_aliases
+#' @export
+setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
+  x = reconnect(x)
+  if(x@dims[1] != length(value)) stopf('length of rownames to set does not equal number of rows')
+  x@dim_names[[1]] = value
+  x
+})
+
 
 
 # colnames ####
-
+#' @rdname hidden_aliases
 #' @export
 setMethod('colnames', signature(x = 'dbData'), function(x) {
   x = reconnect(x)
   colnames(x@data)
 })
-
+#' @rdname hidden_aliases
 #' @export
 setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
   x = reconnect(x)
   x@dim_names[[2]]
 })
-
-# @export
-# setMethod('colnames<-', signature(x = 'dbMatrix'), function(x) {
-#
-# })
+#' @rdname hidden_aliases
+#' @export
+setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
+  x = reconnect(x)
+  if(x@dims[2] != length(value)) stopf('length of colnames to set does not equal number of columns')
+  x@dim_names[[2]] = value
+  x
+})
 
 
 # col classes ####
@@ -264,14 +353,4 @@ setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 # })
 
 
-
-#' @export
-setMethod('t', signature(x = 'dbMatrix'), function(x) {
-  x = reconnect(x)
-
-  x[] = x[] %>% dplyr::select(i = j, j = i, x)
-  x@dims = c(x@dims[[2L]], x@dims[[1L]])
-  x@dim_names = list(x@dim_names[[2L]], x@dim_names[[1L]])
-  x
-})
 

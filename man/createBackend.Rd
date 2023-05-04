@@ -27,7 +27,7 @@ createBackend(
 \item{...}{additional params to pass to pool::dbPool()}
 }
 \value{
-environment containing backendInfo object
+invisibly returns backend ID
 }
 \description{
 Defines and creates a database connection pool to be used by the backend.

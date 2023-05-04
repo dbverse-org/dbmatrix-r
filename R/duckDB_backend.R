@@ -156,7 +156,7 @@ createDBMatrix = function(matrix,
                           overwrite = FALSE,
                           callback = callback_formatIJX(),
                           ...) {
-  db_path = set_db_path(db_path)
+  db_path = getDBPath(db_path)
   hash = calculate_backend_id(db_path)
   p = getBackendPool(hash)
   fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
@@ -173,14 +173,14 @@ createDBMatrix = function(matrix,
 
   # read matrix if needed
   if(is.character(matrix)) {
-    fstreamToDB_IJX(path = matrix,
-                    backend_ID = hash,
-                    remote_name = remote_name,
-                    nlines = 10000L,
-                    with_pk = FALSE,
-                    cores = cores,
-                    callback = callback,
-                    overwrite = overwrite)
+    fstreamToDB(path = matrix,
+                backend_ID = hash,
+                remote_name = remote_name,
+                nlines = 10000L,
+                with_pk = FALSE,
+                cores = cores,
+                callback = callback,
+                overwrite = overwrite)
     # matrix = readMatrixR(matrix)
   }
 
@@ -198,8 +198,8 @@ createDBMatrix = function(matrix,
   on.exit(try(pool::poolReturn(conn), silent = TRUE))
 
   mtx_tbl = dplyr::tbl(conn, remote_name)
-  r_names = mtx_tbl %>% dplyr::distinct(i) %>% dplyr::pull()
-  c_names = mtx_tbl %>% dplyr::distinct(j) %>% dplyr::pull()
+  r_names = mtx_tbl %>% dplyr::distinct(i) %>% dplyr::arrange(i) %>% dplyr::pull()
+  c_names = mtx_tbl %>% dplyr::distinct(j) %>% dplyr::arrange(j) %>% dplyr::pull()
 
   # create table with primary keys in i and j - nonfeasible too large
   # sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
@@ -290,8 +290,6 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
   conn = pool::poolCheckout(p)
   on.exit(try(pool::poolReturn(conn), silent = TRUE))
 
-  # create table with primary keys in i and j
-
   if(dbms(p) %in% c('duckdb', 'oracle')) {
     sql = dbplyr::build_sql(
       con = conn,
@@ -299,7 +297,7 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
       'i VARCHAR,',
       'j VARCHAR,',
       'x DOUBLE,', # will not be computing non numeric matrices
-      'PRIMARY KEY (i, j)',
+      # 'PRIMARY KEY (i, j)',
       '); ',
       'INSERT INTO ' , fnq, ' (i, j, x) ',
       dbplyr::sql_render(x[], con = conn), ';'
