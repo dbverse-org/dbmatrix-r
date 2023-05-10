@@ -4,6 +4,7 @@
 \alias{getBackendPool}
 \alias{getBackendInfo}
 \alias{getBackendConn}
+\alias{getBackendPath}
 \title{Get backend connection pool}
 \usage{
 getBackendPool(backend_ID)
@@ -11,6 +12,8 @@ getBackendPool(backend_ID)
 getBackendInfo(backend_ID)
 
 getBackendConn(backend_ID)
+
+getBackendPath(backend_ID)
 }
 \arguments{
 \item{backend_ID}{hashID generated from the dbpath (xxhash64) used as unique ID for
@@ -27,5 +30,7 @@ that contains all connection details needed to regenerate another connection
 
 \item \code{getBackendConn()}: Get a DBI connection object from pool.
 Provided for convenience. Must be returned using pool::poolReturn() after use.
+
+\item \code{getBackendPath()}: get filepath of backend
 
 }}

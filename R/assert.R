@@ -13,3 +13,9 @@ assert_DT = function(x) {
   stopifnot('Input is not a data.table' =
               inherits(x, 'data.table'))
 }
+
+assert_dbData = function(x) {
+  stopifnot('Input is not a GiottoDB object' =
+              inherits(x, 'dbData'))
+}
+

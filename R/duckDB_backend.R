@@ -319,15 +319,20 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
 
 
 
-appendPermanent = function(x, remote_name, ...) {
-  bID = backendID(x)
-  p = getBackendPool(backend_ID = bID)
-  fnq = get_full_table_name_quoted(p, remote_name)
-  # if table to append to does not exist, make
-  if(!existsTableBE(x = p, remote_name = remote_name)) {
-    return(compute_permanent(x = x, p = p, fnq = fnq, ...))
-  }
-}
+
+
+
+
+
+# appendPermanent = function(x, remote_name, ...) {
+#   bID = backendID(x)
+#   p = getBackendPool(backend_ID = bID)
+#   fnq = get_full_table_name_quoted(p, remote_name)
+#   # if table to append to does not exist, create it
+#   if(!existsTableBE(x = p, remote_name = remote_name)) {
+#     return(compute_permanent(x = x, p = p, fnq = fnq, ...))
+#   }
+# }
 
 
 
@@ -469,6 +474,11 @@ primaryKey = function(conn, remote_name) {
 
 
 
+# data removal ####
+
+
+
+
 #' @name dropTableBE
 #' @title Drop a table from the database
 #' @param conn connection object or pool
@@ -486,6 +496,26 @@ dropTableBE = function(conn, remote_name) {
 
 
 
+
+#' @name deleteTableRow
+#' @title Delete row from table
+#' @param x dbData object
+#' @param y data.table of values (by column) to remove from x by matching
+#' @param verbose be verbose
+deleteTableRow = function(x, y, verbose = TRUE) {
+  assert_dbData(x)
+  assert_DT(y)
+
+  p = cPool(x)
+  quoted_name = DBI::dbQuoteIdentifier(remoteName(x))
+
+}
+
+# DBI::dbExecute(p, paste0('DELETE FROM ', 'cell_rna_raw', ' WHERE (j = \'AATK\' AND i = \'ID_1_0\')'))
+
+
+
+# data coercion ####
 
 
 

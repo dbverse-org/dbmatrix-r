@@ -14,7 +14,9 @@ setMethod('queryStack', signature(x = 'dbData'), function(x) {
 
 #' @rdname queryStack-generic
 #' @export
-setMethod('queryStack', signature(x = 'tbl_lazy'), function(x) {
+setMethod('queryStack', signature(x = 'ANY'), function(x) {
+  stopifnot('Unable to find an inherited method for \'queryStack\'' =
+              inherits(x, 'tbl_lazy'))
   x$lazy_query
 })
 
@@ -27,7 +29,9 @@ setMethod('queryStack<-', signature(x = 'dbData'), function(x, value) {
 
 #' @rdname queryStack-generic
 #' @export
-setMethod('queryStack<-', signature(x = 'tbl_lazy'), function(x, value) {
+setMethod('queryStack<-', signature(x = 'ANY'), function(x, value) {
+  stopifnot('Unable to find an inherited method for \'queryStack\'' =
+              inherits(x, 'tbl_lazy'))
   x@lazy_query = value
   x
 })

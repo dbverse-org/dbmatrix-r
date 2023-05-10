@@ -24,13 +24,13 @@ Depends:
     R (>= 3.5.0),
     methods,
 Imports:
-    arkdb,
     data.table (>= 1.12.2),
     DBI,
     digest,
     duckdb,
     dplyr,
     fpeek,
+    fs,
     Matrix,
     magrittr,
     pool,
@@ -55,4 +55,5 @@ Collate:
     'duckDB_backend.R'
     'operations.R'
     'utils.R'
+    'workflow_giotto.R'
     'zzz.R'

@@ -191,6 +191,7 @@ callback_formatIJX = function(x, group_by = 1) {
   data.table::setnames(x, new = c('i', 'j', 'x'))
   x[, i := as.character(i)]
   x[, j := as.character(j)]
+  x[, x := as.numeric(x)]
   return(x)
 }
 

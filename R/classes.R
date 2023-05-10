@@ -142,8 +142,8 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   rown = dimn[[1]]
   coln = dimn[[2]]
 
-  # class and dim #
-  # ------------- #
+  # print class and dims #
+  # -------------------- #
 
   if(identical(object@dims,  c(0L, 0L))) {
     cat('0 x 0 matrix of class "dbMatrix"\n')
@@ -156,7 +156,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   # preview print #
   # ------------- #
 
-  # colnames
+  # print colnames
   colname_show_n = object@dims[[2]] - 6L
   if(colname_show_n < 0L) {
     message('Colnames: ', vector_to_string(coln))
@@ -170,7 +170,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     )
   }
 
-  # matrix
+  # get matrix i and j to print
   p_coln = head(coln, 10L)
   if(object@dims[[1L]] - 6L > 0L) {
     p_rown = c(head(rown, 3L), tail(rown, 3L))
@@ -178,15 +178,16 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     p_rown = rown
   }
 
-  conn = cPool(object) %>% pool::poolCheckout()
+  # prepare subset to print
+  conn = cPool(object) %>% pool::poolCheckout() # conn needed for compute()
   on.exit(pool::poolReturn(conn))
+
   preview = object
-  cPool(preview) = conn
+  cPool(preview) = conn # set conn as src
   preview_dt = preview@data %>%
     dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
-    dplyr::mutate(j = paste0("col_", j)) %>% # forces type to be character
+    dplyr::arrange(i, j) %>%
     dplyr::compute() %>%
-    # dplyr::arrange(i, j) %>%
     tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
   data.table::setkeyv(preview_dt, names(preview_dt)[1L]) # enforce ordering
