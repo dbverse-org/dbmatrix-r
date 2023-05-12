@@ -54,7 +54,9 @@ setClass('dbData',
            remote_name = NA_character_
          ))
 
-
+# related class union 'index' (similar to Matrix package's implementation)
+# used in signatures for `[` subsetting
+setClassUnion('index', c('logical', 'numeric', 'integer', 'character'))
 
 
 # dbMatrix Class ####
@@ -228,3 +230,82 @@ dbDataFrame = setClass(
   'dbDataFrame',
   contains = 'dbData'
 )
+
+
+
+
+
+
+# dbPolygonProxy class ####
+#' @title S4 dbPolygonProxy class
+#' @description
+#' Representation of polygon information using an on-disk database. Intended to
+#' be used to store information that can be pulled into terra polygon SpatVectors
+#' @slot attributes dbDataFrame of attributes information
+#' @slot n_poly number of polygons
+#' @slot extent extent of polygons
+#' @importClassesFrom terra SpatExtent
+#' @export
+dbPolygonProxy = setClass(
+  'dbPolygonProxy',
+  contains = 'dbData',
+  slots = list(
+    attributes = 'dbDataFrame',
+    n_poly = 'numeric',
+    extent = 'SpatExtent'
+  ),
+  prototype = list(
+    n_poly = NA_integer_,
+    extent = terra::ext(0,0,0,0)
+  )
+)
+
+
+
+setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
+  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('dimensions : ', paste(object@n_poly, ncol(object@attributes), collapse = ', '),
+      ' (geometries, attributes)\n')
+  cat('extent     : ', paste(object@extent[], collapse = ', '),
+      ' (', paste(names(object@extent[]), collapse = ', '), ')',
+      sep = '')
+})
+
+
+
+# dbPoints class ####
+#' @title S4 dbPointsProxy class
+#' @description
+#' Representation of point information using an on-disk database. Intended to
+#' be used to store information that can be pulled into terra point SpatVectors
+#' @slot attributes dbDataFrame of attributes information
+#' @slot n_points number of points
+#' @slot extent extent of points
+#' @importClassesFrom terra SpatExtent
+#' @export
+dbPointsProxy = setClass(
+  'dbPointsProxy',
+  contains = 'dbData',
+  slots = list(
+    attributes = 'dbDataFrame',
+    n_point = 'numeric',
+    extent = 'SpatExtent'
+  ),
+  prototype = list(
+    n_point = NA_integer_,
+    extent = terra::ext(0,0,0,0)
+  )
+)
+
+
+
+setMethod('show', signature(object = 'dbPointsProxy'), function(object) {
+  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('dimensions : ', paste(object@n_point, ncol(object@attributes), collapse = ', '),
+      ' (points, attributes)\n')
+  cat('extent     : ', paste(object@extent[], collapse = ', '),
+      ' (', paste(names(object@extent[]), collapse = ', '), ')',
+      sep = '')
+})
+
+

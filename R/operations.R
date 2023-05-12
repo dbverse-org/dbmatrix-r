@@ -11,6 +11,38 @@
 # Ops ####
 #' @rdname hidden_aliases
 #' @export
+setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
+{
+  e1 = reconnect(e1)
+
+  e1[] = e1[] %>% dplyr::mutate(x = as.numeric(x))
+  e2 = as.numeric(e2)
+
+  build_call = str2lang(paste0('e1[] %>% dplyr::mutate(x = `',
+                               as.character(.Generic)
+                               ,'`(x, e2))'))
+  e1[] = eval(build_call)
+  e1
+})
+
+#' @rdname hidden_aliases
+#' @export
+setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
+{
+  e2 = reconnect(e2)
+
+  e1 = as.numeric(e1)
+  e2[] = e2[] %>% dplyr::mutate(x = as.numeric(x))
+
+  build_call = str2lang(paste0('e2[] %>% dplyr::mutate(x = `',
+                               as.character(.Generic)
+                               ,'`(e1, x))'))
+  e2[] = eval(build_call)
+  e2
+})
+
+#' @rdname hidden_aliases
+#' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
   e1 = reconnect(e1)
@@ -33,6 +65,26 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
                                ,'`(e1, x))'))
   e2[] = eval(build_call)
   e2
+})
+
+#' @rdname hidden_aliases
+#' @export
+setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
+{
+  e1 = reconnect(e1)
+  e2 = reconnect(e2)
+
+  if(!identical(e1@dims, e2@dims)) stopf('non-conformable arrays')
+
+  e1[] = e1[] %>% dplyr::mutate(x = as.numeric(x))
+  e2[] = e2[] %>% dplyr::mutate(x = as.numeric(x))
+
+  build_call = str2lang(paste0("e1[] %>%
+    dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) %>%
+    dplyr::mutate(x = `", as.character(.Generic), "`(x, x.y)) %>%
+    dplyr::select(c('i', 'j', 'x'))"))
+  e1[] = eval(build_call)
+  e1
 })
 
 #' @rdname hidden_aliases
@@ -64,11 +116,16 @@ setMethod('rowSums', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
-            x[] %>%
+
+            val_names = rownames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(i) %>%
               dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
               dplyr::arrange(i) %>%
               dplyr::pull(sum_x)
+            names(vals) = val_names
+            vals
           })
 # colSums ####
 #' @rdname hidden_aliases
@@ -78,11 +135,15 @@ setMethod('colSums', signature(x = 'dbMatrix'),
           {
             x = reconnect(x)
 
-            x[] %>%
+            val_names = colnames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(j) %>%
               dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
               dplyr::pull(sum_x)
+            names(vals) = val_names
+            vals
           })
 # rowMeans ####
 #' @rdname hidden_aliases
@@ -91,11 +152,16 @@ setMethod('rowMeans', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
-            x[] %>%
+
+            val_names = rownames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(i) %>%
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
               dplyr::arrange(i) %>%
               dplyr::pull(mean_x)
+            names(vals) = val_names
+            vals
           })
 # colMeans ####
 #' @rdname hidden_aliases
@@ -104,11 +170,16 @@ setMethod('colMeans', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
-            x[] %>%
+
+            val_names = colnames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(j) %>%
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
               dplyr::pull(mean_x)
+            names(vals) = val_names
+            vals
           })
 
 
@@ -137,7 +208,9 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
   x = reconnect(x)
 
-  x[] %>% dplyr::summarise(mean_x = mean(x)) %>%
+  x[] %>%
+    dplyr::mutate(x = as.numeric(x)) %>%
+    dplyr::summarise(mean_x = mean(x)) %>%
     dplyr::pull(mean_x)
 })
 
@@ -348,9 +421,14 @@ setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 
 # as.matrix ####
 
-# setMethod('as.matrix', signature(x = 'dbMatrix'), function(x) {
+# methods::setAs(from = 'dbMatrix', to = 'matrix',
+# function(x, ...) {
 #
 # })
+
+
+
+
 
 
 

@@ -48,6 +48,9 @@ setMethod('initialize', signature(.Object = 'dbData'),
               }
             }
 
+            if(is.null(.Object@data)) {
+              stopf('data slot must contain a dplyr lazy table connected to the database backend')
+            }
             if(!inherits(.Object@data, 'tbl_Pool')) {
               stopf('data slot only accepts dplyr class "tbl_Pool"')
             }
@@ -173,15 +176,16 @@ createDBMatrix = function(matrix,
 
   # read matrix if needed
   if(is.character(matrix)) {
-    fstreamToDB(path = matrix,
-                backend_ID = hash,
-                remote_name = remote_name,
-                nlines = 10000L,
-                with_pk = FALSE,
-                cores = cores,
-                callback = callback,
-                overwrite = overwrite)
-    # matrix = readMatrixR(matrix)
+    # dimnames =
+      fstreamToDB(path = matrix,
+                           backend_ID = hash,
+                           remote_name = remote_name,
+                           # indices = c('i', 'j'),
+                           nlines = 10000L,
+                           with_pk = FALSE,
+                           cores = cores,
+                           callback = callback,
+                           overwrite = overwrite)
   }
 
   # convert to IJX format if needed Matrix

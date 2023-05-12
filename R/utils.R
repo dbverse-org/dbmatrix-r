@@ -278,6 +278,7 @@ dbMemoryLimit = function(x, limit, ...) {
 #' @param threads numeric or integer. Number of threads to use.
 #' If missing, will get the current setting. If 'RESET' will reset to default.
 #' @param ... additional params to pass
+#' @export
 dbThreads = function(x, threads, ...) {
   if(missing(threads)) {
     return(dbSettings(x = x, setting = 'threads'))
