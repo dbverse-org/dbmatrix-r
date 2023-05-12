@@ -54,9 +54,18 @@ setClass('dbData',
            remote_name = NA_character_
          ))
 
-# related class union 'index' (similar to Matrix package's implementation)
-# used in signatures for `[` subsetting
-setClassUnion('index', c('logical', 'numeric', 'integer', 'character'))
+# index Class Union ####
+#' @title Virtual Class "gdbIndex" - Simple Class for GiottoDB indices
+#' @name gdbIndex
+#' @description
+#' This is a virtual class used for indices (in signatures) for indexing
+#' and sub-assignment of 'GiottoDB' objects. Simple class union of 'logical',
+#' 'numeric', 'integer', and  'character'.
+#' Based on the 'index' class implemented in \pkg{Matrix}
+#' @keywords internal
+#' @noRd
+setClassUnion('gdbIndex',
+              members = c('logical', 'numeric', 'integer', 'character'))
 
 
 # dbMatrix Class ####

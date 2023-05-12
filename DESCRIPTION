@@ -19,13 +19,13 @@ BugReports: https://github.com/drieslab/Giotto/issues
 RoxygenNote: 7.2.3
 Depends:
     base (>= 3.5.0),
-    dbplyr,
     utils (>= 3.5.0),
     R (>= 3.5.0),
     methods,
 Imports:
     data.table (>= 1.12.2),
     DBI,
+    dbplyr,
     digest,
     duckdb,
     dplyr,
