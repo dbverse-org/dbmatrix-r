@@ -1,6 +1,6 @@
 Package: GiottoDB
 Title: Database Backend for Giotto
-Version: 0.1.1
+Version: 0.1.2
 Authors@R: c(
 	person("Ruben", "Dries", email = "rubendries@gmail.com",
 		 role = c("aut", "cre")),
@@ -24,16 +24,17 @@ Depends:
     R (>= 3.5.0),
     methods,
 Imports:
-    arkdb,
     data.table (>= 1.12.2),
     DBI,
     digest,
     duckdb,
     dplyr,
     fpeek,
+    fs,
     Matrix,
     magrittr,
     pool,
+    terra,
     tidyr
 Suggests:
     arrow,
@@ -55,4 +56,5 @@ Collate:
     'duckDB_backend.R'
     'operations.R'
     'utils.R'
+    'workflow_giotto.R'
     'zzz.R'

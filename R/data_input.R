@@ -59,6 +59,11 @@ readMatrixDT = function(path,
 #' @param path path to the matrix file
 #' @param backend_ID ID of the backend to use
 #' @param remote_name name to assign table of read in values in database
+#' @param indices (optional) if provided, specified columns (after all callbacks
+#' complete) will have dictionaries generated, meaning a separate character vector
+#' will be created holding only the unique values, where the ordering of this vector
+#' is the mapped representative integer within the database table. These character
+#' vectors are invisibly returned as a named list.
 #' @param nlines integer. Number of lines to read per chunk
 #' @param cores fread cores to use
 #' @param callback callback functions to apply to each data chunk before it is
@@ -71,12 +76,14 @@ readMatrixDT = function(path,
 fstreamToDB = function(path,
                        backend_ID,
                        remote_name = 'test',
+                       indices = NULL,
                        nlines = 10000L,
                        cores = 1L,
                        callback = NULL,
                        overwrite = FALSE,
                        with_pk = FALSE,
                        ...) {
+  if(!is.null(indices)) stopifnot(is.character(indices))
   stopifnot(is.character(remote_name))
   stopifnot(is.character(backend_ID))
   stopifnot(is.numeric(nlines), length(nlines) == 1L)
@@ -107,6 +114,7 @@ fstreamToDB = function(path,
   n_rows = fpeek::peek_count_lines(path = path)
   c_names_cache = data.table::fread(input = path, nrows = 0L) %>%
     colnames()
+  idx_list = NULL
   repeat {
     chunk_num = chunk_num + 1
     nskip = (chunk_num - 1) * nlines + 1
@@ -129,6 +137,15 @@ fstreamToDB = function(path,
       chunk = callback(chunk)
     }
 
+    # indices generation
+    if(!is.null(indices)) {
+      for(idx in indices) {
+        idx_list[[idx]] = unique(idx_list[[idx]], chunk[[idx]])
+        chunk[, (idx) := lapply(get(idx), function(x) which(x == idx_list[[idx]]))]
+      }
+    }
+
+
     pool::dbWriteTable(conn = p,
                        name = fnq,
                        value = chunk,
@@ -136,6 +153,7 @@ fstreamToDB = function(path,
                        temporary = FALSE)
   }
 
+  return(invisible(idx_list))
 }
 
 
@@ -191,6 +209,7 @@ callback_formatIJX = function(x, group_by = 1) {
   data.table::setnames(x, new = c('i', 'j', 'x'))
   x[, i := as.character(i)]
   x[, j := as.character(j)]
+  x[, x := as.numeric(x)]
   return(x)
 }
 

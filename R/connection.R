@@ -80,9 +80,10 @@ setMethod('cPool<-', signature(x = 'dbData'), function(x, value) {
 #' @inheritParams db_params
 #' @export
 setMethod('remoteName', signature(x = 'dbData'), function(x) {
-  slot(x, 'data') %>%
-    dbplyr::remote_name() %>%
-    as.character()
+  slot(x, 'remote_name')
+  # slot(x, 'data') %>%
+  #   dbplyr::remote_name() %>%
+  #   as.character()
 })
 
 
@@ -333,6 +334,17 @@ getBackendInfo = function(backend_ID) {
 getBackendConn = function(backend_ID) {
   p = getBackendPool(backend_ID)
   pool::poolCheckout(p)
+}
+
+
+
+
+#' @describeIn getBackendPool get filepath of backend
+#' @export
+getBackendPath = function(backend_ID) {
+  conn = evaluate_conn(conn = backend_ID, mode = 'conn')
+  on.exit(pool::poolReturn(conn))
+  conn@driver@dbdir
 }
 
 

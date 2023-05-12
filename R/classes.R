@@ -54,7 +54,9 @@ setClass('dbData',
            remote_name = NA_character_
          ))
 
-
+# related class union 'index' (similar to Matrix package's implementation)
+# used in signatures for `[` subsetting
+setClassUnion('index', c('logical', 'numeric', 'integer', 'character'))
 
 
 # dbMatrix Class ####
@@ -142,8 +144,8 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   rown = dimn[[1]]
   coln = dimn[[2]]
 
-  # class and dim #
-  # ------------- #
+  # print class and dims #
+  # -------------------- #
 
   if(identical(object@dims,  c(0L, 0L))) {
     cat('0 x 0 matrix of class "dbMatrix"\n')
@@ -156,7 +158,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   # preview print #
   # ------------- #
 
-  # colnames
+  # print colnames
   colname_show_n = object@dims[[2]] - 6L
   if(colname_show_n < 0L) {
     message('Colnames: ', vector_to_string(coln))
@@ -170,7 +172,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     )
   }
 
-  # matrix
+  # get matrix i and j to print
   p_coln = head(coln, 10L)
   if(object@dims[[1L]] - 6L > 0L) {
     p_rown = c(head(rown, 3L), tail(rown, 3L))
@@ -178,15 +180,16 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
     p_rown = rown
   }
 
-  conn = cPool(object) %>% pool::poolCheckout()
+  # prepare subset to print
+  conn = cPool(object) %>% pool::poolCheckout() # conn needed for compute()
   on.exit(pool::poolReturn(conn))
+
   preview = object
-  cPool(preview) = conn
+  cPool(preview) = conn # set conn as src
   preview_dt = preview@data %>%
     dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
-    dplyr::mutate(j = paste0("col_", j)) %>% # forces type to be character
+    dplyr::arrange(i, j) %>%
     dplyr::compute() %>%
-    # dplyr::arrange(i, j) %>%
     tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
   data.table::setkeyv(preview_dt, names(preview_dt)[1L]) # enforce ordering
@@ -227,3 +230,82 @@ dbDataFrame = setClass(
   'dbDataFrame',
   contains = 'dbData'
 )
+
+
+
+
+
+
+# dbPolygonProxy class ####
+#' @title S4 dbPolygonProxy class
+#' @description
+#' Representation of polygon information using an on-disk database. Intended to
+#' be used to store information that can be pulled into terra polygon SpatVectors
+#' @slot attributes dbDataFrame of attributes information
+#' @slot n_poly number of polygons
+#' @slot extent extent of polygons
+#' @importClassesFrom terra SpatExtent
+#' @export
+dbPolygonProxy = setClass(
+  'dbPolygonProxy',
+  contains = 'dbData',
+  slots = list(
+    attributes = 'dbDataFrame',
+    n_poly = 'numeric',
+    extent = 'SpatExtent'
+  ),
+  prototype = list(
+    n_poly = NA_integer_,
+    extent = terra::ext(0,0,0,0)
+  )
+)
+
+
+
+setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
+  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('dimensions : ', paste(object@n_poly, ncol(object@attributes), collapse = ', '),
+      ' (geometries, attributes)\n')
+  cat('extent     : ', paste(object@extent[], collapse = ', '),
+      ' (', paste(names(object@extent[]), collapse = ', '), ')',
+      sep = '')
+})
+
+
+
+# dbPoints class ####
+#' @title S4 dbPointsProxy class
+#' @description
+#' Representation of point information using an on-disk database. Intended to
+#' be used to store information that can be pulled into terra point SpatVectors
+#' @slot attributes dbDataFrame of attributes information
+#' @slot n_points number of points
+#' @slot extent extent of points
+#' @importClassesFrom terra SpatExtent
+#' @export
+dbPointsProxy = setClass(
+  'dbPointsProxy',
+  contains = 'dbData',
+  slots = list(
+    attributes = 'dbDataFrame',
+    n_point = 'numeric',
+    extent = 'SpatExtent'
+  ),
+  prototype = list(
+    n_point = NA_integer_,
+    extent = terra::ext(0,0,0,0)
+  )
+)
+
+
+
+setMethod('show', signature(object = 'dbPointsProxy'), function(object) {
+  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('dimensions : ', paste(object@n_point, ncol(object@attributes), collapse = ', '),
+      ' (points, attributes)\n')
+  cat('extent     : ', paste(object@extent[], collapse = ', '),
+      ' (', paste(names(object@extent[]), collapse = ', '), ')',
+      sep = '')
+})
+
+
