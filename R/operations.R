@@ -8,37 +8,91 @@
 #   e1
 # })
 
+
+
+# Ops helpers ####
+
+#' @noRd
+ops_ordered_args_vect = function(dbm_narg, a, b) {
+  switch(
+    dbm_narg,
+    paste0('`(', a, ', ', b, '))'),
+    paste0('`(', b, ', ', a, '))')
+  )
+}
+
+#' @noRd
+arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
+
+  # order matters
+  ordered_args = ops_ordered_args_vect(dbm_narg, 'x', 'num_vect')
+
+  if(length(num_vect > 1L))
+    return(arith_call_dbm_vect_multi(dbm, num_vect, generic_char, ordered_args))
+
+  build_call =
+    paste0('dbm[] %>% dplyr::mutate(x = `', generic_char, ordered_args)
+
+  dbm[] = eval(str2lang(build_call))
+  dbm
+}
+
+#' @noRd
+arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
+
+  p = cPool(dbm)
+  conn = pool::localCheckout(p) # create connection to allow temp tables
+  cPool(dbm) = conn
+
+  r_names = rownames(dbm)
+  vect_tbl = dplyr::tibble(i = r_names, num_vect = num_vect)
+
+  build_call = paste0(
+    'dbm[] %>% ',
+    'dplyr::inner_join(vect_tbl, by = \'i\', copy = TRUE) %>% ',
+    'dplyr::mutate(x = `', generic_char, ordered_args,' %>% ',
+    'dplyr::select(i, j, x)'
+  )
+
+  dbm[] = eval(str2lang(build_call))
+  cPool(dbm) = p # return to pool connector
+  dbm
+}
+
+
 # Ops ####
 #' @rdname hidden_aliases
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
-  e1 = reconnect(e1)
+  dbm = reconnect(e1)
 
-  e1[] = e1[] %>% dplyr::mutate(x = as.numeric(x))
-  e2 = as.numeric(e2)
+  dbm[] = dbm[] %>% dplyr::mutate(x = as.numeric(x))
+  num_vect = as.numeric(e2)
 
-  build_call = str2lang(paste0('e1[] %>% dplyr::mutate(x = `',
-                               as.character(.Generic)
-                               ,'`(x, e2))'))
-  e1[] = eval(build_call)
-  e1
+  arith_call_dbm(
+    dbm_narg = 1L,
+    dbm = dbm,
+    num_vect = num_vect,
+    generic_char = as.character(.Generic)
+  )
 })
 
 #' @rdname hidden_aliases
 #' @export
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 {
-  e2 = reconnect(e2)
+  dbm = reconnect(e2)
 
-  e1 = as.numeric(e1)
-  e2[] = e2[] %>% dplyr::mutate(x = as.numeric(x))
+  num_vect = as.numeric(e1)
+  dbm[] = dbm[] %>% dplyr::mutate(x = as.numeric(x))
 
-  build_call = str2lang(paste0('e2[] %>% dplyr::mutate(x = `',
-                               as.character(.Generic)
-                               ,'`(e1, x))'))
-  e2[] = eval(build_call)
-  e2
+  arith_call_dbm(
+    dbm_narg = 2L,
+    dbm = dbm,
+    num_vect = num_vect,
+    generic_char = as.character(.Generic)
+  )
 })
 
 #' @rdname hidden_aliases
