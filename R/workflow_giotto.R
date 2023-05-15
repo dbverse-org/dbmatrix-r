@@ -37,3 +37,16 @@ giotto_libNorm_dbMatrix = function(dbMatrix, scalefactor) {
   dbMatrix[] = dplyr::tbl(src = p, dbplyr::sql(sql_query))
   return(dbMatrix)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
