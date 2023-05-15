@@ -239,6 +239,48 @@ setMethod('colMeans', signature(x = 'dbMatrix'),
 
 
 
+# colSds ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('colSds', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+
+            val_names = colnames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
+              dplyr::group_by(j) %>%
+              dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) %>%
+              dplyr::arrange(j) %>%
+              dplyr::pull(sd_x)
+            names(vals) = val_names
+            vals
+          })
+
+
+
+
+# rowSds ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('rowSds', signature(x = 'dbMatrix'),
+          function(x, ...)
+          {
+            x = reconnect(x)
+
+            val_names = rownames(x)
+            vals = x[] %>%
+              dplyr::mutate(x = as.numeric(x)) %>%
+              dplyr::group_by(i) %>%
+              dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) %>%
+              dplyr::arrange(j) %>%
+              dplyr::pull(sd_x)
+            names(vals) = val_names
+            vals
+          })
+
+
 
 # t ####
 #' @rdname hidden_aliases

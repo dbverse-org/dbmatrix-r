@@ -13,7 +13,7 @@ setMethod('Math', signature(x = 'dbMatrix'), function(x)
                                  as.character(.Generic),
                                  '`(x))'))
     x[] = eval(build_call)
-    print(x[])
+    # print(x[])
   } else {
     stopf('Not currently supported\n')
   }

@@ -22,6 +22,10 @@ setGeneric('evaluate_conn', function(conn, ...) standardGeneric('evaluate_conn')
 setGeneric('dbSettings', function(x, setting, value, ...) standardGeneric('dbSettings'))
 # setGeneric('setRemoteKey', function(x, remote_name, primary_key, ...) standardGeneric('setRemoteKey'))
 
+# dbMatrix specific ####
+setGeneric('colSds', function(x, ...) standardGeneric('colSds'))
+setGeneric('rowSds', function(x, ...) standardGeneric('rowSds'))
+
 # base ####
 if(!isGeneric('t')) setOldClass('t')
 if(!isGeneric('mean')) setOldClass('mean')
