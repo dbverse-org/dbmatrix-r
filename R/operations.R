@@ -67,8 +67,8 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
   dbm = reconnect(e1)
 
-  dbm[] = dbm[] %>% dplyr::mutate(x = as.numeric(x))
-  num_vect = as.numeric(e2)
+  dbm = castNumeric(dbm)
+  num_vect = if(typeof(e2) != 'double') as.numeric(e2) else e2
 
   arith_call_dbm(
     dbm_narg = 1L,
@@ -84,8 +84,8 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 {
   dbm = reconnect(e2)
 
-  num_vect = as.numeric(e1)
-  dbm[] = dbm[] %>% dplyr::mutate(x = as.numeric(x))
+  num_vect = if(typeof(e1) != 'double') as.numeric(e1) else e1
+  dbm = castNumeric(dbm)
 
   arith_call_dbm(
     dbm_narg = 2L,
@@ -130,8 +130,8 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 
   if(!identical(e1@dims, e2@dims)) stopf('non-conformable arrays')
 
-  e1[] = e1[] %>% dplyr::mutate(x = as.numeric(x))
-  e2[] = e2[] %>% dplyr::mutate(x = as.numeric(x))
+  e1 = castNumeric(e1)
+  e2 = castNumeric(e2)
 
   build_call = str2lang(paste0("e1[] %>%
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) %>%
@@ -170,13 +170,14 @@ setMethod('rowSums', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = rownames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(i) %>%
               dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
               dplyr::arrange(i) %>%
+              dplyr::collapse() %>%
               dplyr::pull(sum_x)
             names(vals) = val_names
             vals
@@ -188,13 +189,14 @@ setMethod('colSums', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = colnames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(j) %>%
               dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
+              dplyr::collapse() %>%
               dplyr::pull(sum_x)
             names(vals) = val_names
             vals
@@ -206,13 +208,14 @@ setMethod('rowMeans', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = rownames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(i) %>%
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
               dplyr::arrange(i) %>%
+              dplyr::collapse() %>%
               dplyr::pull(mean_x)
             names(vals) = val_names
             vals
@@ -224,13 +227,14 @@ setMethod('colMeans', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = colnames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(j) %>%
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
+              dplyr::collapse() %>%
               dplyr::pull(mean_x)
             names(vals) = val_names
             vals
@@ -246,13 +250,14 @@ setMethod('colSds', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = colnames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(j) %>%
               dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
+              dplyr::collapse() %>%
               dplyr::pull(sd_x)
             names(vals) = val_names
             vals
@@ -268,13 +273,14 @@ setMethod('rowSds', signature(x = 'dbMatrix'),
           function(x, ...)
           {
             x = reconnect(x)
+            x = castNumeric(x)
 
             val_names = rownames(x)
             vals = x[] %>%
-              dplyr::mutate(x = as.numeric(x)) %>%
               dplyr::group_by(i) %>%
               dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) %>%
               dplyr::arrange(j) %>%
+              dplyr::collapse() %>%
               dplyr::pull(sd_x)
             names(vals) = val_names
             vals
@@ -303,9 +309,9 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 #' @export
 setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
   x = reconnect(x)
+  x = castNumeric(x)
 
   x[] %>%
-    dplyr::mutate(x = as.numeric(x)) %>%
     dplyr::summarise(mean_x = mean(x)) %>%
     dplyr::pull(mean_x)
 })
@@ -455,20 +461,55 @@ setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
 })
 
 
-# col classes ####
+# column data types ####
+# Due to how these functions will be commonly seen within other functions, a
+# call to `reconnect()` is omitted.
 
-# Internal function for finding the classes of each of the columns of a lazy
-# table
-#' @param x lazy table
-#' @noRd
-remote_col_classes = function(x) {
-  x = reconnect(x)
+## colTypes ####
 
-  x %>%
-    head(1L) %>%
-    dplyr::collect() %>%
-    sapply(class)
-}
+#' @name colTypes
+#' @title Column data types of GiottoDB objects
+#' @description
+#' Get the column data types of objects that inherit from \code{'dbData'}
+#' @param x GiottoDB data object
+#' @param ... additional params to pass
+#' @export
+setMethod('colTypes', signature(x = 'dbData'), function(x, ...) {
+  vapply(data.table::as.data.table(head(x[], 1L)), typeof, character(1L))
+})
+
+
+## castNumeric ####
+
+#' @name castNumeric
+#' @title Set a column to numeric
+#' @description
+#' Sets a column to numeric after first checking the column data type. Does
+#' nothing if the column is already a \code{double}
+#' This precaution is to avoid truncation of values.
+#' @param x GiottoDB data object
+#' @param col column to cast to numeric
+#' @param ... additional params to pass
+#' @export
+setMethod('castNumeric', signature(x = 'dbData', col = 'character'), function(x, col, ...) {
+  if(colTypes(x)[col] != 'double') {
+    sym_col = dplyr::sym(col)
+    x[] = x[] %>% dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
+  }
+  x
+})
+
+#' @rdname castNumeric
+#' @export
+setMethod('castNumeric', signature(x = 'dbMatrix', col = 'missing'), function(x, ...) {
+  if(colTypes(x)['x'] != 'double') {
+    x[] = x[] %>% dplyr::mutate(x := as.numeric(x))
+  }
+  x
+})
+
+
+
 
 
 
