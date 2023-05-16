@@ -461,6 +461,27 @@ setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
 })
 
 
+
+
+# dimnames ####
+#' @rdname hidden_aliases
+#' @export
+setMethod('dimnames', signature(x = 'dbMatrix'), function(x) {
+  x = reconnect(x)
+  x@dim_names
+})
+
+#' @rdname hidden_aliases
+#' @export
+setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'), function(x, value) {
+  x = reconnect(x)
+  x@dim_names = value
+  x
+})
+
+
+
+
 # column data types ####
 # Due to how these functions will be commonly seen within other functions, a
 # call to `reconnect()` is omitted.
