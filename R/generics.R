@@ -9,6 +9,8 @@ setGeneric('disconnect', function(x, ...) standardGeneric('disconnect'))
 setGeneric('queryStack', function(x, ...) standardGeneric('queryStack'))
 setGeneric('queryStack<-', function(x, ..., value) standardGeneric('queryStack<-'))
 setGeneric('query', function(x, statement, ...) standardGeneric('query'))
+setGeneric('colTypes', function(x, ...) standardGeneric('colTypes'))
+setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
 
 # backend system interactions ####
 setGeneric('validBE', function(x, ...) standardGeneric('validBE'))
