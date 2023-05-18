@@ -15,7 +15,7 @@ giotto_libNorm_dbMatrix = function(dbMatrix, scalefactor) {
   p = dbMatrix[]$src$con
   conn = pool::poolCheckout(p)
   on.exit(pool::poolReturn(conn))
-  # browser()
+
   quoted_scalefactor = DBI::dbQuoteLiteral(p, scalefactor)
   sql_query = paste0(
     'SELECT a.i, a.j, a.x/b.sum_x * ', quoted_scalefactor,' AS x

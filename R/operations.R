@@ -413,71 +413,18 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 
 
 
-# TODO ensure these match the row / col operations
-# rownames ####
-#' @rdname hidden_aliases
-#' @export
-setMethod('rownames', signature(x = 'dbData'), function(x) {
-  x = reconnect(x)
-  rownames(x@data)
-})
-#' @rdname hidden_aliases
-#' @export
-setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
-  x = reconnect(x)
-  x@dim_names[[1]]
-})
-#' @rdname hidden_aliases
-#' @export
-setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
-  x = reconnect(x)
-  if(x@dims[1] != length(value)) stopf('length of rownames to set does not equal number of rows')
-  x@dim_names[[1]] = value
-  x
-})
-
-
-
-# colnames ####
-#' @rdname hidden_aliases
-#' @export
-setMethod('colnames', signature(x = 'dbData'), function(x) {
-  x = reconnect(x)
-  colnames(x@data)
-})
-#' @rdname hidden_aliases
-#' @export
-setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
-  x = reconnect(x)
-  x@dim_names[[2]]
-})
-#' @rdname hidden_aliases
-#' @export
-setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
-  x = reconnect(x)
-  if(x@dims[2] != length(value)) stopf('length of colnames to set does not equal number of columns')
-  x@dim_names[[2]] = value
-  x
-})
 
 
 
 
-# dimnames ####
-#' @rdname hidden_aliases
-#' @export
-setMethod('dimnames', signature(x = 'dbMatrix'), function(x) {
-  x = reconnect(x)
-  x@dim_names
-})
 
-#' @rdname hidden_aliases
-#' @export
-setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'), function(x, value) {
-  x = reconnect(x)
-  x@dim_names = value
-  x
-})
+
+# drop ####
+# @rdname hidden_aliases
+# @export
+# setMethod('drop', signature(x = 'dbMatrix'), function(x) {
+#
+# })
 
 
 
@@ -574,15 +521,6 @@ setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 
 
 
-
-
-
-# as.matrix ####
-
-# methods::setAs(from = 'dbMatrix', to = 'matrix',
-# function(x, ...) {
-#
-# })
 
 
 

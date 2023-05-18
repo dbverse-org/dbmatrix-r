@@ -92,16 +92,7 @@ setMethod(
     # generate default DB connection if no input provided #
     # --------------------------------------------------- #
     if(is.null(.Object@data)) {
-      # test_table = data.table::data.table(i = 'a', j = 'b', x = NA_integer_) # TODO update if matrix uses integer indexing
-      #
-      # con = DBI::dbConnect(drv = eval(.Object@dvr_call), dbdir = .Object@path)
-      # DBI::dbCreateTable(conn = con,
-      #                    name = .Object@remote_name,
-      #                    fields = test_table)
-      # .Object@data = dplyr::tbl(con, .Object@remote_name)
-      #
-      # .Object@dim = c(1L, 1L)
-      # .Object@dim_names = list('a', 'b')
+
       .Object@dims = c(0L, 0L)
       .Object@dim_names = list(NULL, NULL)
     }
@@ -128,8 +119,6 @@ setMethod(
 
 
 # Basic function to generate a dbMatrix object given an input to the matrix param.
-# boot_calls are for reconnecting any connections that are not directly from
-# a file. One example is data loaded in via arrow
 
 #' @title Create a matrix with database backend
 #' @name createDBMatrix
@@ -323,6 +312,29 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
 
 
 
+#' @name create_index
+#' @title Create an index on specified columns
+#' @param x dbData object
+#' @param name character. Name of index to create
+#' @param column character. Name(s) of columns to set as the index
+#' @param unique logical. Default = FALSE, Whether unique constraint can be applied
+#' to specified column
+#' @param ... additional params to pass
+#' @keywords internal
+#' @noRd
+setMethod('create_index', signature(x = 'dbData', name = 'character',
+                                    column = 'character', unique = 'logical'),
+          function(x, name, column, unique = FALSE, ...) {
+            x = reconnect(x)
+            p = cPool(x)
+            q = lapply(list(name = name, remote = remoteName(x), col = column),
+                       function(ids) DBI::dbQuoteIdentifier(p, ids))
+            statement = paste0('CREATE INDEX ', q$name, ' ON ', q$remote,
+                               ' (', paste(q$col, collapse = ', '), ')')
+            if(isTRUE(unique)) statement =
+              gsub('CREATE INDEX', 'CREATE UNIQUE INDEX', statement)
+            DBI::dbExecute(p, statement = statement)
+          })
 
 
 
@@ -500,20 +512,20 @@ dropTableBE = function(conn, remote_name) {
 
 
 
-
-#' @name deleteTableRow
-#' @title Delete row from table
-#' @param x dbData object
-#' @param y data.table of values (by column) to remove from x by matching
-#' @param verbose be verbose
-deleteTableRow = function(x, y, verbose = TRUE) {
-  assert_dbData(x)
-  assert_DT(y)
-
-  p = cPool(x)
-  quoted_name = DBI::dbQuoteIdentifier(remoteName(x))
-
-}
+# TODO implement row deletion
+# @name deleteTableRow
+# @title Delete row from table
+# @param x dbData object
+# @param y data.table of values (by column) to remove from x by matching
+# @param verbose be verbose
+# deleteTableRow = function(x, y, verbose = TRUE) {
+#   assert_dbData(x)
+#   assert_DT(y)
+#
+#   p = cPool(x)
+#   quoted_name = DBI::dbQuoteIdentifier(remoteName(x))
+#
+# }
 
 # DBI::dbExecute(p, paste0('DELETE FROM ', 'cell_rna_raw', ' WHERE (j = \'AATK\' AND i = \'ID_1_0\')'))
 

@@ -8,9 +8,13 @@ setGeneric('reconnect', function(x, ...) standardGeneric('reconnect'))
 setGeneric('disconnect', function(x, ...) standardGeneric('disconnect'))
 setGeneric('queryStack', function(x, ...) standardGeneric('queryStack'))
 setGeneric('queryStack<-', function(x, ..., value) standardGeneric('queryStack<-'))
-setGeneric('query', function(x, statement, ...) standardGeneric('query'))
+setGeneric('sql_query', function(x, statement, ...) standardGeneric('sql_query'))
 setGeneric('colTypes', function(x, ...) standardGeneric('colTypes'))
 setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
+setGeneric('create_index', function(x, name, column, unique, ...) standardGeneric('create_index'))
+
+# dbSpatProxyData object interactions ####
+setGeneric('doSpatChunk', function(x, what, args, extent, ...) standardGeneric('doSpatChunk'))
 
 # backend system interactions ####
 setGeneric('validBE', function(x, ...) standardGeneric('validBE'))
