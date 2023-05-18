@@ -16,6 +16,8 @@ be used to store information that can be pulled into terra point SpatVectors
 
 \item{\code{n_points}}{number of points}
 
+\item{\code{feat_ID}}{feature IDs}
+
 \item{\code{extent}}{extent of points}
 }}
 

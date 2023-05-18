@@ -12,9 +12,16 @@ be used to store information that can be pulled into terra polygon SpatVectors
 \section{Slots}{
 
 \describe{
-\item{\code{attributes}}{dbDataFrame of attributes information}
+\item{\code{data}}{lazy table containing geometry information with columns geom, part,
+x, y, and hole}
+
+\item{\code{attributes}}{dbDataFrame of attributes information, one of which (usually
+the first) being 'ID' that can be joined/matched against the 'geom' values in
+\code{attributes}}
 
 \item{\code{n_poly}}{number of polygons}
+
+\item{\code{poly_ID}}{polygon IDs}
 
 \item{\code{extent}}{extent of polygons}
 }}

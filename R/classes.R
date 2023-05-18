@@ -1,8 +1,52 @@
 
 
+#' @importClassesFrom terra SpatExtent
+#' @keywords internal
+NULL
 
 
-# backendInfo Class ####
+
+
+
+
+# Virtual parent non-spatial classes ####
+
+## dbData ####
+
+#' @name dbData
+#' @title dbData
+#' @description Framework for objects that link to the database backend
+#' @slot data dplyr tbl that represents the database data
+#' @slot hash unique hash ID for backend
+#' @slot remote_name name of table within database that contains the data
+#' @noRd
+setClass('dbData',
+         contains = 'VIRTUAL',
+         slots = list(
+           data = 'ANY',
+           hash = 'character',
+           remote_name = 'character'
+         ),
+         prototype = list(
+           data = NULL,
+           hash = NA_character_,
+           remote_name = NA_character_
+         ))
+
+
+
+
+
+
+
+
+
+
+
+
+# Backend specific ####
+
+## backendInfo ####
 #' @name backendInfo
 #' @title backendInfo
 #' @description
@@ -30,93 +74,9 @@ setClass('backendInfo',
 
 
 
+# Data Container Classes ####
 
-
-# dbData Class ####
-
-#' @name dbData
-#' @title dbData
-#' @description Framework for objects that link to the database backend
-#' @slot data dplyr tbl that represents the database data
-#' @slot hash unique hash ID for backend
-#' @slot remote_name name of table within database that contains the data
-#' @noRd
-setClass('dbData',
-         contains = 'VIRTUAL',
-         slots = list(
-           data = 'ANY',
-           hash = 'character',
-           remote_name = 'character'
-         ),
-         prototype = list(
-           data = NULL,
-           hash = NA_character_,
-           remote_name = NA_character_
-         ))
-
-# index Class Union ####
-#' @title Virtual Class "gdbIndex" - Simple Class for GiottoDB indices
-#' @name gdbIndex
-#' @description
-#' This is a virtual class used for indices (in signatures) for indexing
-#' and sub-assignment of 'GiottoDB' objects. Simple class union of 'logical',
-#' 'numeric', 'integer', and  'character'.
-#' Based on the 'index' class implemented in \pkg{Matrix}
-#' @keywords internal
-#' @noRd
-setClassUnion('gdbIndex',
-              members = c('logical', 'numeric', 'integer', 'character'))
-
-
-# dbMatrix Class ####
-
-# check_dbMatrix = function(object) {
-#   errors = character()
-#
-#   if(!is.na(object@connect_type)) {
-#     if(!object@connect_type %in% c('default', 'custom')) {
-#       msg = 'Invalid connect_type. Must be either "default" or "custom"\n'
-#       errors = c(errors, msg)
-#     }
-#
-#
-#     if(object@connect_type == 'default') {
-#       if(is.na(object@remote_name)) {
-#         msg = 'Name of table within DB to link to must be supplied\n use remoteName()<- to set\n'
-#         errors = c(errors, msg)
-#       }
-#     }
-#
-#     if(object@connect_type == 'custom') {
-#       if(is.null(custom_call)) {
-#         msg = 'custom_call is missing.\n'
-#         errors = c(errors, msg)
-#       }
-#     }
-#   }
-#
-#   if(is.null(object@data)) {
-#     msg = 'Missing DB connection table\n Run initialize() on this object\n'
-#     errors = c(errors, msg)
-#   } else if(!inherits(object@data, 'tbl_dbi')) {
-#     msg = 'Only class of "tbl_dbi" allowed in data slot\n'
-#     errors = c(errors, msg)
-#   } else if(!DBI::dbIsValid(object@data$src$con)) {
-#     msg = 'Invalid or disconnected DB connection\n Run reconnect() on this object\n'
-#     errors = c(errors, msg)
-#   }
-#
-#   if(is.null(object@dim_names)) {
-#     # dim names are needed as long as i and j are character
-#     msg = 'dim_names must be provided for dbMatrix'
-#     errors = c(errors, msg)
-#   }
-#
-#
-#   if(length(errors) == 0) TRUE else errors
-# }
-
-
+## dbMatrix ####
 
 
 #' @title S4 dbMatrix class
@@ -224,7 +184,7 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
 
 
 
-# dbDataFrame Class ####
+## dbDataFrame ####
 
 
 #' @title S4 dbDataFrame class
@@ -245,27 +205,55 @@ dbDataFrame = setClass(
 
 
 
-# dbPolygonProxy class ####
+
+# Virtual parent spatial classes ####
+
+## dbSpatProxyData ####
+#' @name dbSpatProxyData
+#' @title dbSpatProxyData
+#' @description Framework for terra SpatVector database backend proxy objects
+#' @slot data dplyr tbl that represents the database data
+#' @slot hash unique hash ID for backend
+#' @slot remote_name name of table within database that contains the data
+#' @slot attributes dbDataFrame of attributes information
+#' @slot extent spatial extent
+#' @noRd
+setClass('dbSpatProxyData',
+         contains = c('dbData', 'VIRTUAL'),
+         slots = list(
+           attributes = 'dbDataFrame',
+           extent = 'SpatExtent'
+         ),
+         prototype = list(
+           extent = terra::ext(0,0,0,0)
+         ))
+
+# Spatial Data Container Classes ####
+
+## dbPolygonProxy ####
 #' @title S4 dbPolygonProxy class
 #' @description
 #' Representation of polygon information using an on-disk database. Intended to
 #' be used to store information that can be pulled into terra polygon SpatVectors
-#' @slot attributes dbDataFrame of attributes information
+#' @slot data lazy table containing geometry information with columns geom, part,
+#' x, y, and hole
+#' @slot attributes dbDataFrame of attributes information, one of which (usually
+#' the first) being 'ID' that can be joined/matched against the 'geom' values in
+#' \code{attributes}
 #' @slot n_poly number of polygons
+#' @slot poly_ID polygon IDs
 #' @slot extent extent of polygons
-#' @importClassesFrom terra SpatExtent
 #' @export
 dbPolygonProxy = setClass(
   'dbPolygonProxy',
-  contains = 'dbData',
+  contains = 'dbSpatProxyData',
   slots = list(
-    attributes = 'dbDataFrame',
     n_poly = 'numeric',
-    extent = 'SpatExtent'
+    poly_ID = 'character'
   ),
   prototype = list(
     n_poly = NA_integer_,
-    extent = terra::ext(0,0,0,0)
+    poly_ID = NA_character_
   )
 )
 
@@ -282,27 +270,27 @@ setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
 
 
 
-# dbPoints class ####
+## dbPointsProxy ####
 #' @title S4 dbPointsProxy class
 #' @description
 #' Representation of point information using an on-disk database. Intended to
 #' be used to store information that can be pulled into terra point SpatVectors
 #' @slot attributes dbDataFrame of attributes information
 #' @slot n_points number of points
+#' @slot feat_ID feature IDs
 #' @slot extent extent of points
 #' @importClassesFrom terra SpatExtent
 #' @export
 dbPointsProxy = setClass(
   'dbPointsProxy',
-  contains = 'dbData',
+  contains = 'dbSpatProxyData',
   slots = list(
-    attributes = 'dbDataFrame',
     n_point = 'numeric',
-    extent = 'SpatExtent'
+    feat_ID = 'character'
   ),
   prototype = list(
     n_point = NA_integer_,
-    extent = terra::ext(0,0,0,0)
+    feat_ID = NA_character_
   )
 )
 
@@ -316,5 +304,49 @@ setMethod('show', signature(object = 'dbPointsProxy'), function(object) {
       ' (', paste(names(object@extent[]), collapse = ', '), ')',
       sep = '')
 })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Virtual Class Unions ####
+
+## dgbIndex ####
+#' @title Virtual Class "gdbIndex" - Simple Class for GiottoDB indices
+#' @name gdbIndex
+#' @description
+#' This is a virtual class used for indices (in signatures) for indexing
+#' and sub-assignment of 'GiottoDB' objects. Simple class union of 'logical',
+#' 'numeric', 'integer', and  'character'.
+#' Based on the 'index' class implemented in \pkg{Matrix}
+#' @keywords internal
+#' @noRd
+setClassUnion('gdbIndex',
+              members = c('logical', 'numeric', 'integer', 'character'))
+
+## dbMF ####
+#' @title Virtual Class "dbMFData" - Simple class for GiottoDB matrix and dataframes
+#' @name dbMFData
+#' @description
+#' This is a virtual class used to refer to dbMatrix and dbDataFrame objects as
+#' a single signature.
+#' @keywords internal
+#' @noRd
+setClassUnion('dbMFData',
+              members = c('dbMatrix', 'dbDataFrame'))
+
+
+
+
+
 
 

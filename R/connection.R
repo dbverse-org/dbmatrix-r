@@ -54,13 +54,6 @@ setMethod('backendID<-', signature(x = 'dbData', value = 'character'),
 setMethod('cPool', signature(x = 'dbData'), function(x) {
   dbplyr::remote_con(x[])
 })
-
-#' @rdname cPool-generic
-#' @export
-connection.tbl_Pool = function(x) {
-  dbplyr::remote_con(x)
-}
-
 #' @rdname cPool-generic
 #' @export
 setMethod('cPool<-', signature(x = 'dbData'), function(x, value) {
@@ -68,6 +61,24 @@ setMethod('cPool<-', signature(x = 'dbData'), function(x, value) {
   dbtbl$src$con = value
   initialize(x, data = dbtbl)
 })
+
+#' @rdname cPool-generic
+#' @export
+setMethod('cPool', signature(x = 'ANY'), function(x) {
+  stopifnot(inherits(x, 'tbl_sql'))
+  dbplyr::remote_con(x)
+})
+#' @rdname cPool-generic
+#' @export
+setMethod('cPool<-', signature(x = 'ANY'), function(x, value) {
+  stopifnot(inherits(x, 'tbl_sql'))
+  x$src$con = value
+  x
+})
+
+
+
+
 
 
 
