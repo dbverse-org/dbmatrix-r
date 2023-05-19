@@ -7,9 +7,9 @@ Class diagram
 classDiagram
 class GiottoDB {[VIRTUAL]}
 class backendInfo {
-  +driver_call: character,
+  +driver_call: character
   +db_path: character
-  +hash = character
+  +hash: character
 }
 class dbData {
   [VIRTUAL]
