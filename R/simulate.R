@@ -27,5 +27,5 @@ simulate_duckdb = function(data = iris) {
 simulate_dbDataFrame = function(data = simulate_duckdb()) {
   if(!inherits(data, 'tbl_lazy'))
     data = simulate_duckdb(data = data)
-  dbDataFrame(data = data, remote_name = 'test')
+  dbDataFrame(data = data, remote_name = 'df_test', hash = 'ID_dummy')
 }

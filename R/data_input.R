@@ -94,15 +94,7 @@ fstreamToDB = function(path,
   fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
 
   # overwrite if necessary
-  if(existsTableBE(x = p, remote_name = remote_name)) {
-    if(isTRUE(overwrite)) {
-      DBI::dbRemoveTable(p, DBI::SQL(fnq))
-    }
-    else {
-      stopf(fnq, 'already exists.
-          Set overwrite = TRUE to recreate it.')
-    }
-  }
+  overwrite_handler(p = p, remote_name = remoteName, overwrite = overwrite)
 
   # create new ijx table with primary key if desired
   if(isTRUE(with_pk)) {

@@ -56,7 +56,7 @@ Collate:
     'dbDataFrame.R'
     'matrix_to_dt.R'
     'dbMatrix.R'
-    'dbPolygonProxy.R'
+    'dbSpatProxy.R'
     'dd.R'
     'names.R'
     'operations.R'

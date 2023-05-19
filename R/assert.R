@@ -19,3 +19,20 @@ assert_dbData = function(x) {
               inherits(x, 'dbData'))
 }
 
+#' @param x input dplyr tbl to check
+#' @param p Pool connection object to check against
+#' @noRd
+assert_in_backend = function(x, p) {
+  rn = as.character(dbplyr::remote_name(x))
+  t_exist = DBI::dbExistsTable(p, rn)
+  is_pool = inherits(x, 'tbl_Pool')
+
+  if(!all(t_exist, is_pool)) {
+    stopf(
+      '\ndplyr tbl input must be connected to the database specified by provided database path and be a \'tbl_Pool\'
+      Use getBackendPool() to retrieve an appropriate Pool connection object.'
+    )
+  }
+}
+
+
