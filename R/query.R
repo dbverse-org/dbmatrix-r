@@ -6,7 +6,6 @@
 #' @title Get and set the queryStack for a db backend object
 #' @inheritParams db_params
 #' @aliases queryStack, queryStack<-
-#' @include generics.R
 #' @export
 setMethod('queryStack', signature(x = 'dbData'), function(x) {
   x@data$lazy_query
@@ -117,18 +116,20 @@ setMethod('values', signature(x = 'dbSpatProxyData'),
 
 
 
-# TODO `output` modes for either pulling all matching records or only the relevant IDs
+# Filter the data based on provided SpatExtent. Output is the geom indices provided
+# If drop = TRUE (default) then the output will be a bare lazy table
 #' @keywords internal
 #' @noRd
-extent_filter = function(x, extent, output = c('')) {
+extent_filter = function(x, extent, drop = TRUE) {
   stopifnot(inherits(extent, 'SpatExtent'))
-  x[] = x[] %>%
+  x@data = x@data %>%
     dplyr::filter(x > !!as.numeric(extent[]['xmin'])) %>%
     dplyr::filter(x < !!as.numeric(extent[]['xmax'])) %>%
     dplyr::filter(y > !!as.numeric(extent[]['ymin'])) %>%
     dplyr::filter(y < !!as.numeric(extent[]['ymax'])) %>%
-    dplyr::collapse()
-  x
+    dplyr::collapse() %>%
+    dplyr::select('geom')
+  ifelse(drop, yes = x@data, no = x)
 }
 
 
@@ -189,7 +190,7 @@ setMethod('query', signature(x = 'dbSpatProxyData'),
               else stopf('filter accepts either SpatVector or giottoPolygon only')
               x = extent_filter(x = x, extent = e)
 
-
+              # remaining polygon filtering steps can be done by terra::vect()
 
             }
 
