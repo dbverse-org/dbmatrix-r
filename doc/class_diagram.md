@@ -10,13 +10,14 @@ class backendInfo {
   +driver_call: character
   +db_path: character
   +hash: character
+  -reconnectBackend()
 }
 class dbData {
   [VIRTUAL]
-  
   +data: ANY
   +hash: character
   +remote_name: character
+  -reconnect()
 }
 class dbMatrix {
   +data: ANY
@@ -24,6 +25,12 @@ class dbMatrix {
   +remote_name: character
   +dim_names: list
   +dims: integer
+  -Arith()
+  -Ops()
+  -Math()
+  -col*()
+  -row*()
+  -t()
 }
 class dbDataFrame {
   +data: ANY
@@ -32,12 +39,12 @@ class dbDataFrame {
 }
 class dbSpatProxyData {
   [VIRTUAL]
-  
   +data: ANY
   +hash: character
   +remote_name: character
   +attribute: dbDataFrame
   +extent: SpatExtent
+  -spatialquery()
 }
 class dbPolygonProxy {
   +data: ANY
