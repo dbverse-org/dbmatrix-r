@@ -1,20 +1,15 @@
----
-title: Class diagram
-format: gfm
----
-
-
+Class diagram
+================
 
 ## Class diagram and inheritance
 
-
-```{mermaid}
+``` mermaid
 classDiagram
 class GiottoDB {[VIRTUAL]}
 class backendInfo {
-  +driver_call: 'character',
-  +db_path: 'character',
-  +hash = 'character'
+  +driver_call: &#39;character&#39;,
+  +db_path: &#39;character&#39;,
+  +hash = &#39;character&#39;
 }
 class dbData {
   [VIRTUAL]
@@ -61,12 +56,11 @@ class dbPointsProxy {
   +n_point: integer
 }
 
-GiottoDB --> dbData
-GiottoDB --> backendInfo
-dbData --> dbDataFrame
-dbData --> dbMatrix
-dbData --> dbSpatProxyData
-dbSpatProxyData --> dbPolygonProxy
-dbSpatProxyData --> dbPointsProxy
+GiottoDB --&gt; dbData
+GiottoDB --&gt; backendInfo
+dbData --&gt; dbDataFrame
+dbData --&gt; dbMatrix
+dbData --&gt; dbSpatProxyData
+dbSpatProxyData --&gt; dbPolygonProxy
+dbSpatProxyData --&gt; dbPointsProxy
 ```
-
