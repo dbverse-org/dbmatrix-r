@@ -11,6 +11,14 @@ NULL
 
 # Virtual parent non-spatial classes ####
 
+
+## GiottoDB ####
+# Overarching package class
+#' @noRd
+setClass('GiottoDB', contains = 'VIRTUAL')
+
+
+
 ## dbData ####
 
 #' @name dbData
@@ -21,7 +29,8 @@ NULL
 #' @slot remote_name name of table within database that contains the data
 #' @noRd
 setClass('dbData',
-         contains = 'VIRTUAL',
+         contains = c('GiottoDB',
+                      'VIRTUAL'),
          slots = list(
            data = 'ANY',
            hash = 'character',
@@ -32,11 +41,6 @@ setClass('dbData',
            hash = NA_character_,
            remote_name = NA_character_
          ))
-
-
-
-
-
 
 
 
@@ -58,6 +62,7 @@ setClass('dbData',
 #' @slot hash xxhash64 hash of the db_path
 #' @export
 setClass('backendInfo',
+         contains = c('GiottoDB'),
          slots = list(
            driver_call = 'character',
            db_path = 'character',

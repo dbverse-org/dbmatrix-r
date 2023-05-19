@@ -80,8 +80,6 @@ setMethod('cPool<-', signature(x = 'ANY'), function(x, value) {
 
 
 
-
-
 # remoteName ####
 #' @name remoteName-generic
 #' @title Database table name
@@ -92,9 +90,6 @@ setMethod('cPool<-', signature(x = 'ANY'), function(x, value) {
 #' @export
 setMethod('remoteName', signature(x = 'dbData'), function(x) {
   slot(x, 'remote_name')
-  # slot(x, 'data') %>%
-  #   dbplyr::remote_name() %>%
-  #   as.character()
 })
 
 
