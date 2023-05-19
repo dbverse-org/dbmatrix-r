@@ -7,9 +7,9 @@ Class diagram
 classDiagram
 class GiottoDB {[VIRTUAL]}
 class backendInfo {
-  +driver_call: &#39;character&#39;,
-  +db_path: &#39;character&#39;,
-  +hash = &#39;character&#39;
+  +driver_call: character,
+  +db_path: character
+  +hash = character
 }
 class dbData {
   [VIRTUAL]
@@ -56,11 +56,11 @@ class dbPointsProxy {
   +n_point: integer
 }
 
-GiottoDB --&gt; dbData
-GiottoDB --&gt; backendInfo
-dbData --&gt; dbDataFrame
-dbData --&gt; dbMatrix
-dbData --&gt; dbSpatProxyData
-dbSpatProxyData --&gt; dbPolygonProxy
-dbSpatProxyData --&gt; dbPointsProxy
+GiottoDB --> dbData
+GiottoDB --> backendInfo
+dbData --> dbDataFrame
+dbData --> dbMatrix
+dbData --> dbSpatProxyData
+dbSpatProxyData --> dbPolygonProxy
+dbSpatProxyData --> dbPointsProxy
 ```
