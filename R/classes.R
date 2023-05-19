@@ -114,6 +114,9 @@ dbMatrix = setClass(
 
 setMethod('show', signature(object = 'dbMatrix'), function(object) {
 
+  cat('backend_ID : ', object@hash, '\n')
+  cat('name       : \'', object@remote_name, '\'\n', sep = '')
+
   dimn = slot(object, 'dim_names')
   rown = dimn[[1]]
   coln = dimn[[2]]
@@ -205,9 +208,28 @@ dbDataFrame = setClass(
   contains = 'dbData'
 )
 
+setMethod('show', signature('dbDataFrame'), function(object) {
+  print_dbDataFrame(object, 6)
+})
 
+setMethod('print', signature('dbDataFrame'), function(x, n = 6) {
+  print_dbDataFrame(x, n)
+})
 
+print_dbDataFrame = function(x, n) {
+  df_dim = dim(x@data)
+  dfp = capture.output(print(x@data, n = n))
+  nr = df_dim[1L]
+  nc = df_dim[2L]
+  nr = as.character(ifelse(is.na(nr), '??', nr))
+  db = gsub('# Database:', 'database   :', dfp[2L])
 
+  cat('An object of class \'', class(x), '\'\n', sep = '')
+  cat('backend_ID : ', x@hash, '\n', sep = '')
+  cat('name       : \'', x@remote_name, '\' [', nr,' x ', nc,']', '\n', sep = '')
+  cat(db, '\n\n')
+  writeLines(dfp[-(1:2)])
+}
 
 
 
@@ -253,19 +275,19 @@ dbPolygonProxy = setClass(
   'dbPolygonProxy',
   contains = 'dbSpatProxyData',
   slots = list(
-    n_poly = 'numeric',
-    poly_ID = 'character'
+    n_poly = 'numeric'
   ),
   prototype = list(
-    n_poly = NA_integer_,
-    poly_ID = NA_character_
+    n_poly = NA_integer_
   )
 )
 
 
 
 setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
-  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('An object of class \'', class(x), '\'\n', sep = '')
+  cat('backend_ID : ', object@hash, '\n')
+  cat('name       : \'', object@remote_name, '\'\n', sep = '')
   cat('dimensions : ', paste(object@n_poly, ncol(object@attributes), collapse = ', '),
       ' (geometries, attributes)\n')
   cat('extent     : ', paste(object@extent[], collapse = ', '),
@@ -290,19 +312,19 @@ dbPointsProxy = setClass(
   'dbPointsProxy',
   contains = 'dbSpatProxyData',
   slots = list(
-    n_point = 'numeric',
-    feat_ID = 'character'
+    n_point = 'numeric'
   ),
   prototype = list(
-    n_point = NA_integer_,
-    feat_ID = NA_character_
+    n_point = NA_integer_
   )
 )
 
 
 
 setMethod('show', signature(object = 'dbPointsProxy'), function(object) {
-  cat('An object of class "', class(object), '"\n', sep = '')
+  cat('An object of class \'', class(x), '\'\n', sep = '')
+  cat('backend_ID : ', object@hash, '\n')
+  cat('name       : \'', object@remote_name, '\'\n', sep = '')
   cat('dimensions : ', paste(object@n_point, ncol(object@attributes), collapse = ', '),
       ' (points, attributes)\n')
   cat('extent     : ', paste(object@extent[], collapse = ', '),

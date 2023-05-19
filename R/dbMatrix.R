@@ -56,74 +56,81 @@ setMethod(
 #' The data for the matrix is either written to a specified database file or
 #' could also be read in from files on disk
 #' @param matrix object coercible to matrix or filepath to matrix data accessible
-#' by one of the read functions
+#' by one of the read functions. Can also be a pre-prepared tbl_sql to compatible
+#' database table
 #' @param remote_name name to assign within database
 #' @param db_path path to database on disk
 #' @param dim_names list of rownames and colnames of the matrix (optional)
 #' @param dims dimensions of the matrix (optional)
-#' @param cores number of cores to use if reading into R
 #' @param overwrite whether to overwrite if table already exists in database
+#' @param cores number of cores to use if reading into database
+#' @param nlines number of lines to read per chunk if reading into database
 #' @param callback callback functions to apply to each data chunk before it is
 #' sent to the database backend
 #' @param ... additional params to pass
+#' @details Information is only read into the database during this process. Based
+#' on the \code{remote_name} and \code{db_path} a lazy connection is then made
+#' downstream during \code{dbData} initialization and appended to the object.
+#' If a dplyr tbl is provided as pre-made input then it is evaluated for whether
+#' it is a \code{tbl_Pool} and whether the table exists within the specified
+#' backend then directly passed downstream.
 #' @include matrix_to_dt.R
 #' @export
 createDBMatrix = function(matrix,
-                          remote_name = 'test',
+                          remote_name = 'mat_test',
                           db_path = ':temp:',
                           dim_names,
                           dims,
-                          cores = 1L,
                           overwrite = FALSE,
+                          cores = 1L,
+                          nlines = 10000L,
                           callback = callback_formatIJX(),
                           ...) {
   db_path = getDBPath(db_path)
-  hash = calculate_backend_id(db_path)
-  p = getBackendPool(hash)
+  backend_ID = calculate_backend_id(db_path)
+  p = getBackendPool(backend_ID)
+  if(inherits(matrix, 'tbl')) assert_in_backend(x = matrix, p = p)
   fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
 
-  if(existsTableBE(x = p, remote_name = remote_name)) {
-    if(isTRUE(overwrite)) {
-      DBI::dbRemoveTable(p, DBI::SQL(fnq))
+  data = NULL
+  if(inherits(matrix, 'tbl_Pool')) { # data is already in DB and tbl is provided
+    data = matrix
+  } else { # data must be read in
+
+    # database input #
+    overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
+
+    # read matrix if needed
+    if(is.character(matrix)) {
+      fstreamToDB(path = matrix,
+                  backend_ID = backend_ID,
+                  remote_name = remote_name,
+                  # indices = c('i', 'j'),
+                  nlines = nlines,
+                  with_pk = FALSE,
+                  cores = cores,
+                  callback = callback,
+                  overwrite = overwrite)
     }
-    else {
-      stopf(fnq, 'already exists.
-          Set overwrite = TRUE to recreate it.')
+
+    # convert to Matrix to IJX format if needed
+    if(inherits(matrix, 'Matrix')) {
+      ijx = get_ijx_zero_dt(matrix)
+      DBI::dbWriteTable(conn = p,
+                        name = remote_name,
+                        value = ijx,
+                        ...)
     }
   }
 
-  # read matrix if needed
-  if(is.character(matrix)) {
-    # dimnames =
-    fstreamToDB(path = matrix,
-                backend_ID = hash,
-                remote_name = remote_name,
-                # indices = c('i', 'j'),
-                nlines = 10000L,
-                with_pk = FALSE,
-                cores = cores,
-                callback = callback,
-                overwrite = overwrite)
-  }
 
-  # convert to IJX format if needed Matrix
-  if(inherits(matrix, 'Matrix')) {
-    ijx = get_ijx_zero_dt(matrix)
-    DBI::dbWriteTable(conn = p,
-                      name = remote_name,
-                      value = ijx,
-                      ...)
-  }
-
-
-  conn = pool::poolCheckout(p)
-  on.exit(try(pool::poolReturn(conn), silent = TRUE))
-
-  mtx_tbl = dplyr::tbl(conn, remote_name)
+  # set dim names #
+  mtx_tbl = dplyr::tbl(p, remote_name)
   r_names = mtx_tbl %>% dplyr::distinct(i) %>% dplyr::arrange(i) %>% dplyr::pull()
   c_names = mtx_tbl %>% dplyr::distinct(j) %>% dplyr::arrange(j) %>% dplyr::pull()
 
-  # create table with primary keys in i and j - nonfeasible too large
+  # table creation #
+  # primary keys in i and j - nonfeasible too large
   # sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
   # DBI::dbExecute(conn, sql_create)
   # pool::poolReturn(conn)
@@ -136,7 +143,8 @@ createDBMatrix = function(matrix,
 
 
   dbMat = new('dbMatrix',
-              hash = hash,
+              data = data,
+              hash = backend_ID,
               remote_name = remote_name,
               dim_names = list(r_names,
                                c_names),
