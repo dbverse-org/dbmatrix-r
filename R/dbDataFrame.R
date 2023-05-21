@@ -89,15 +89,15 @@ createDBDataFrame = function(df,
 evaluate_dbdataframe = function(input, p, backend_ID, remote_name, nlines,
                                 cores, callback, overwrite = FALSE) {
   data = NULL
-  if(inherits(matrix, 'tbl_Pool')) { # data is already in DB and tbl is provided
-    data = matrix
+  if(inherits(input, 'tbl_Pool')) { # data is already in DB and tbl is provided
+    data = input
   } else { # data must be read in
 
     # database input #
     overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
 
-    # read matrix if needed
-    if(is.character(matrix)) {
+    # read input if needed
+    if(is.character(input)) {
       fstreamToDB(path = input,
                   backend_ID = backend_ID,
                   remote_name = remote_name,

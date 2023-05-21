@@ -244,15 +244,18 @@ print_dbDataFrame = function(x, n) {
 #' @slot remote_name name of table within database that contains the data
 #' @slot attributes dbDataFrame of attributes information
 #' @slot extent spatial extent
+#' @slot filter optional. SpatVector polygon to filter data with.
 #' @noRd
 setClass('dbSpatProxyData',
          contains = c('dbData', 'VIRTUAL'),
          slots = list(
            attributes = 'dbDataFrame',
-           extent = 'SpatExtent'
+           extent = 'SpatExtent',
+           filter = 'ANY'
          ),
          prototype = list(
-           extent = terra::ext(0,0,0,0)
+           extent = terra::ext(0,0,0,0),
+           filter = NULL
          ))
 
 # Spatial Data Container Classes ####

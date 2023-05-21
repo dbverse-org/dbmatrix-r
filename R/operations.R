@@ -350,14 +350,8 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
   x = reconnect(x)
 
-  if(is.na(x@dims[1L])) {
-    conn = pool::localCheckout(cPool(x))
-    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT COUNT(*) AS n FROM %s',
-                                               remoteName(x)))
-  } else {
-    return(x@dims[1L])
-  }
-
+  res = DBI::dbGetQuery(cPool(x), sprintf('SELECT COUNT(*) AS n FROM %s',
+                                          remoteName(x)))
   return(as.integer(res))
 })
 
@@ -369,7 +363,7 @@ setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 
 # ncol ####
 
-#' @rdname nrow
+#' @rdname hidden_aliases
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   x = reconnect(x)
@@ -385,8 +379,12 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
-
-
+#' @rdname hidden_aliases
+#' @export
+setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
+  x = reconnect(x)
+  ncol(x@data)
+})
 
 
 
@@ -396,8 +394,7 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 # dim ####
 
 
-#' @name dim
-#' @title Dimensions of an object
+#' @rdname hidden_aliases
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
   x = reconnect(x)
@@ -409,7 +406,12 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
   }
 })
 
-
+#' @rdname hidden_aliases
+#' @export
+setMethod('dim', signature(x = 'dbDataFrame'), function(x) {
+  x = reconnect(x)
+  c(nrow(x), ncol(x))
+})
 
 
 
