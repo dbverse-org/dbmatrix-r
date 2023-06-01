@@ -12,12 +12,12 @@ be used to store information that can be pulled into terra point SpatVectors
 \section{Slots}{
 
 \describe{
-\item{\code{attributes}}{dbDataFrame of attributes information}
-
 \item{\code{n_points}}{number of points}
 
 \item{\code{feat_ID}}{feature IDs}
 
 \item{\code{extent}}{extent of points}
+
+\item{\code{poly_filter}}{polygon SpatVector that is used to filter values on read-in}
 }}
 

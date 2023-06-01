@@ -9,21 +9,33 @@
 # NOTE: numeric names are currently not allowed
 # Setting as NULL is also not supported yet
 dplyr_set_colnames = function(x, value) {
-  stopifnot(inherits(x, 'dbData'))
   stopifnot('Replacement names are not the same length as the number of columns' =
-              length(value) == ncol(x[]))
+              length(value) == ncol(x@data))
 
-  c_names = colnames(x[])
+  c_names = colnames(x@data)
   for(n_i in seq_along(c_names)) {
     cn = c_names[n_i]
     vn = as.name(value[n_i])
-    x[] = x[] %>% dplyr::rename(!!vn := cn)
+    x@data = x@data %>% dplyr::rename(!!vn := cn)
   }
-  x[] = x[] %>% dplyr::collapse()
+  x@data = x@data %>% dplyr::collapse()
   x
 }
 
+dplyr_set_colnames_dbpointproxy = function(x, value) {
+  stopifnot('Replacement names are not the same length as the number of columns' =
+              length(value) == ncol(x@data) - 2L) # account for intervening xy cols
 
+  c_names = colnames(x@data)
+  c_names = c_names[-which(c_names %in% c('x', 'y'))]
+  for(n_i in seq_along(c_names)) {
+    cn = c_names[n_i]
+    vn = as.name(value[n_i])
+    x@data = x@data %>% dplyr::rename(!!vn := cn)
+  }
+  x@data = x@data %>% dplyr::collapse()
+  x
+}
 
 
 
@@ -46,16 +58,32 @@ setMethod('names<-', signature(x = 'dbDataFrame', value = 'gdbIndex'), function(
 
 #' @rdname hidden_aliases
 #' @export
-setMethod('names', signature(x = 'dbSpatProxyData'), function(x) {
+setMethod('names', signature(x = 'dbPolygonProxy'), function(x) {
   x = reconnect(x)
   names(x@attributes)
 })
 #' @rdname hidden_aliases
 #' @export
-setMethod('names<-', signature(x = 'dbSpatProxyData', value = 'gdbIndex'), function(x, value) {
+setMethod('names<-', signature(x = 'dbPolygonProxy', value = 'gdbIndex'), function(x, value) {
   x = reconnect(x)
   names(x@attributes) = value
   x
+})
+
+# Unlike the other classes, dbPointsProxy has to pretend that its attributes table
+# is fully separate
+#' @rdname hidden_aliases
+#' @export
+setMethod('names', signature(x = 'dbPointsProxy'), function(x) {
+  x = reconnect(x)
+  full_names = names(x@data)
+  full_names[-which(full_names %in% c('x', 'y'))]
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('names<-', signature(x = 'dbPointsProxy', value = 'gdbIndex'), function(x, value) {
+  x = reconnect(x)
+  dplyr_set_colnames_dbpointproxy(x, value = as.character(value))
 })
 
 

@@ -3,15 +3,9 @@
 \name{nrow}
 \alias{nrow}
 \alias{ncol}
-\alias{nrow,dbDataFrame-method}
-\alias{ncol,dbMatrix-method}
 \title{The number of rows/cols}
 \usage{
 \S4method{nrow}{dbMatrix}(x)
-
-\S4method{nrow}{dbDataFrame}(x)
-
-\S4method{ncol}{dbMatrix}(x)
 }
 \description{
 \code{nrow} and \code{ncol} return the number of rows or columns present in

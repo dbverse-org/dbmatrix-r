@@ -38,33 +38,49 @@ setMethod('queryStack<-', signature(x = 'ANY'), function(x, value) {
 
 
 
+# Internal function #
+# Accepts tbl_Pool objects #
+# Simple SQL querying that allows usage of SELECT and WHERE. Accepts inputs
+# for those fields through character string inputs.
+# Intended mainly for use through the exported query() generic
+# Works with dplyr chains.
+
+#' @param x tbl_Pool object
+#' @param select character. See \code{query} documentation below
+#' @param where character. See \code{query} documentation below
+#' @keywords internal
+#' @noRd
 sql_gen_simple_filter = function(x, select, where, ...) {
-  x = reconnect(x)
-  p = cPool(x)
+  checkmate::assert_class(x, 'tbl_Pool')
 
   # SELECT #
   if(missing(select)) select = 'SELECT *'
   else {
-    stopifnot(is.character(select))
+    checkmate::assert_character(select)
     select = paste0('SELECT ', '\"', paste(select,  collapse = '\", \"'), '\"')
   }
 
   # FROM #
-  from = paste0('FROM (', dbplyr::sql_render(x[]), ')')
+  conn = pool::poolCheckout(cPool(x))
+  on.exit(try(pool::poolReturn(conn), silent = TRUE))
+  from = paste0('FROM (', dbplyr::sql_render(query = x, con = conn), ')')
+  pool::poolReturn(conn)
 
   # WHERE #
   if(missing(where)) where = ''
   else {
-    stopifnot(is.character('where'))
+    checkmate::assert_character(where)
     where = paste('WHERE (', paste(where, collapse = ') AND ('), ')')
   }
 
   statement = paste(select, from, where)
-  x[] = dplyr::tbl(src = p, dbplyr::sql(statement))
-  x
+  dplyr::tbl(src = cPool(x), dbplyr::sql(statement))
 }
 
 
+
+
+# sql_query ####
 #' @name sql_query-generic
 #' @title Query a database object
 #' @description
@@ -84,11 +100,14 @@ setMethod('sql_query', signature(x = 'dbData', statement = 'character'),
           function(x, statement, ...) {
             x = reconnect(x)
             p = cPool(x)
+            conn = pool::poolCheckout(p)
+            on.exit(try(pool::poolReturn(conn), silent = TRUE))
 
             statement = gsub(pattern = ':data:',
-                             replacement = paste0('(', dbplyr::sql_render(x[]), ')'),
+                             replacement = paste0('(', dbplyr::sql_render(query  = x[], con = conn), ')'),
                              x = statement,
                              fixed = TRUE)
+            pool::poolReturn(conn)
 
             x[] = dplyr::tbl(src = p, dbplyr::sql(statement))
             x
@@ -97,40 +116,6 @@ setMethod('sql_query', signature(x = 'dbData', statement = 'character'),
 
 
 
-
-# values ####
-#' @rdname hidden_aliases
-#' @importMethodsFrom terra values
-#' @description
-#' Get cell values from a SpatRaster or attributes from a SpatRaster or dbSpatProxyData
-#' Values are only returned as a \code{dbDataFrame} from dbSpatProxyData
-#' @param x Spat* object
-#' @param ... additional params to pass
-#' @export
-setMethod('values', signature(x = 'dbSpatProxyData'),
-          function(x, ...) {
-            x = reconnect(x)
-            x@attributes
-          })
-
-
-
-
-# Filter the data based on provided SpatExtent. Output is the geom indices provided
-# If drop = TRUE (default) then the output will be a bare lazy table
-#' @keywords internal
-#' @noRd
-extent_filter = function(x, extent, drop = TRUE) {
-  stopifnot(inherits(extent, 'SpatExtent'))
-  x@data = x@data %>%
-    dplyr::filter(x > !!as.numeric(extent[]['xmin'])) %>%
-    dplyr::filter(x < !!as.numeric(extent[]['xmax'])) %>%
-    dplyr::filter(y > !!as.numeric(extent[]['ymin'])) %>%
-    dplyr::filter(y < !!as.numeric(extent[]['ymax'])) %>%
-    dplyr::collapse() %>%
-    dplyr::select('geom')
-  ifelse(drop, yes = x@data, no = x)
-}
 
 
 
@@ -151,38 +136,43 @@ extent_filter = function(x, extent, drop = TRUE) {
 #' to subset records.
 #' @param extent Spat* object. The extent of the object is used as a spatial
 #' filter to select the geometries to read. Ignored if filter is not NULL.
-#' @param filter SpatVector. Used as a spatial filter to select geometries to
-#' read
+#' @param filter terra SpatVector (optional) that can be used to filter the data
 #' @param select_centroid logical. (default = FALSE) whether spatial filtering
 #' through extent or SpatVector is performed based on centroid values
+#' @param spatvector if TRUE, return as a terra spatvector
 #' @param ... additional params to pass
+#' @return SpatVector
 #' @noRd
 setMethod('query', signature(x = 'dbSpatProxyData'),
-          function(x, vars = NULL, where = NULL, extent = NULL, filter = NULL, ...) {
+          function(x, vars = NULL, where = NULL, extent = NULL, filter = NULL,
+                   spatvector = FALSE, ...) {
             x = reconnect(x)
 
-            # extent subsetting
+            # extent subsetting #
             if(!is.null(extent)) {
-              stopifnot(inherits(extent, 'SpatExtent'))
+              checkmate::assert_class(extent, 'SpatVector')
               x = extent_filter(x = x, extent = extent)
             }
 
+            # attribute table subsetting and records selection by manual input #
+
             subset_args = list()
-            # attribute table subsetting and records selection
             if(!is.null(vars)) {
-              stopifnot(is.character(vars))
+              checkmate::assert_character(vars)
               subset_args$select = vars
             }
             if(!is.null(where)) {
-              stopifnot(is.character(where))
+              checkmate::assert_character(where)
               subset_args$where = where
             }
-            if(!is.null(subset_args) > 0L) {
-              subset_args(x = values(x))
-              x@attributes = do.call('sql_gen_simple_filter', args = subset_args)
+            if(length(subset_args) > 0L) {
+              x = filter_dbspat(x, by_value = function(dbspd) {
+                subset_args$x = dbspd
+                do.call('sql_gen_simple_filter', args = subset_args)
+              })
             }
 
-            # filter subsetting
+            # filter subsetting #
             if(!is.null(filter)) {
               # first filter by extent
               if(inherits(filter, 'giottoPolygon')) filter = filter@spatVector
@@ -190,19 +180,60 @@ setMethod('query', signature(x = 'dbSpatProxyData'),
               else stopf('filter accepts either SpatVector or giottoPolygon only')
               x = extent_filter(x = x, extent = e)
 
-              # remaining polygon filtering steps can be done by terra::vect()
-
+              # remaining polygon filtering steps can be done after pulling in data
             }
 
+            # pull values into memory as SpatVector
+            v = dbspat_to_sv(x)
+            if(!is.null(filter)) {
+              v = terra::crop(v, filter)
+            }
 
-
+            return(v)
           })
 
 
 
 
+# simple queries ####
 
 
+sql_nrow = function(conn, remote_name) {
+  checkmate::assert_character(remote_name, len = 1L)
+  p = evaluate_conn(conn, mode = 'pool')
+  table_quoted = pool::dbQuoteIdentifier(p, remote_name)
+
+  as.integer(pool::dbGetQuery(
+    p,
+    paste('SELECT COUNT(*) FROM', table_quoted)
+  ))
+}
+
+
+
+
+sql_max = function(conn, remote_name, col) {
+  checkmate::assert_character(remote_name, len = 1L)
+  checkmate::assert_character(col, len = 1L)
+  p = evaluate_conn(conn, mode = 'pool')
+  table_quoted = pool::dbQuoteIdentifier(p, remote_name)
+  col_quoted = pool::dbQuoteIdentifier(p, col)
+
+  as.integer(pool::dbGetQuery(
+    p, paste('SELECT MAX(', col_quoted, ') FROM', table_quoted)
+  ))
+}
+sql_min = function(conn, remote_name, col) {
+  checkmate::assert_character(remote_name, len = 1L)
+  checkmate::assert_character(col, len = 1L)
+  p = evaluate_conn(conn, mode = 'pool')
+  table_quoted = pool::dbQuoteIdentifier(p, remote_name)
+  col_quoted = pool::dbQuoteIdentifier(p, col)
+
+  as.integer(pool::dbGetQuery(
+    p, paste('SELECT MIN(', col_quoted, ') FROM', table_quoted)
+  ))
+}
 
 
 

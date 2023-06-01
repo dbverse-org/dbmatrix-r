@@ -21,23 +21,27 @@ Depends:
     base (>= 3.5.0),
     utils (>= 3.5.0),
     R (>= 3.5.0),
-    methods,
 Imports:
+    arrow (>= 12.0.0),
+    checkmate,
     data.table (>= 1.12.2),
     DBI,
     dbplyr,
     digest,
-    duckdb,
+    duckdb (>= 0.7),
     dplyr,
     fpeek,
     fs,
     Matrix,
     magrittr,
+    methods,
     pool,
-    terra,
+    terra (>= 1.7),
     tidyr
 Suggests:
-    arrow,
+    future,
+    future.apply,
+    future.callr,
     HDF5Array (>= 1.18.1),
     hdf5r,
     rstudioapi,
@@ -58,6 +62,7 @@ Collate:
     'dbMatrix.R'
     'dbSpatProxy.R'
     'dd.R'
+    'fields_preset.R'
     'names.R'
     'operations.R'
     'simulate.R'

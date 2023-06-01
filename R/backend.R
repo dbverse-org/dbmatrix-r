@@ -36,12 +36,13 @@ setMethod('initialize', signature(.Object = 'backendInfo'),
 # NOTE: DB table writing is handled externally to this initialize function.
 # see the relevant create_ functions
 setMethod('initialize', signature(.Object = 'dbData'),
-          function(.Object, data, hash, remote_name, ...) {
+          function(.Object, data, hash, remote_name, init, ...) {
 
             # data input
             if(!missing(remote_name)) .Object@remote_name = remote_name
             if(!missing(hash)) .Object@hash = hash
             if(!missing(data)) .Object@data = data
+            if(!missing(init)) .Object@init = init
 
             # try to generate if lazy table does not exist
             # the hash and remote_name are needed for this
@@ -50,6 +51,7 @@ setMethod('initialize', signature(.Object = 'dbData'),
                 p = getBackendPool(backend_ID = .Object@hash)
                 tBE = tableBE(cPool = p, remote_name = remote_name)
                 .Object@data = tBE
+                .Object@init = TRUE # flag as fully initialized
               }
             }
 
@@ -72,7 +74,8 @@ setMethod('initialize', signature(.Object = 'dbData'),
 # Determine if table already exists. If it does then send an error if overwrite
 # FALSE or remove the table if overwrite is TRUE in preparation for recreation
 overwrite_handler = function(p, remote_name, overwrite = FALSE) {
-  stopifnot(is.character(remote_name) & length(remote_name) == 1L)
+  checkmate::assert_character(remote_name, len = 1L)
+  checkmate::assert_logical(overwrite, len = 1L)
   p = evaluate_conn(p, mode = 'pool')
 
   # overwrite
@@ -171,17 +174,6 @@ setMethod('create_index', signature(x = 'dbData', name = 'character',
 
 
 
-# appendPermanent = function(x, remote_name, ...) {
-#   bID = backendID(x)
-#   p = getBackendPool(backend_ID = bID)
-#   fnq = get_full_table_name_quoted(p, remote_name)
-#   # if table to append to does not exist, create it
-#   if(!existsTableBE(x = p, remote_name = remote_name)) {
-#     return(compute_permanent(x = x, p = p, fnq = fnq, ...))
-#   }
-# }
-
-
 
 
 
@@ -250,22 +242,51 @@ get_full_table_name_quoted = function(conn, remote_name) {
 
 
 #' @name tableInfo
-#' @title Get information about the table
-#' @param conn hashID of backend, DBI connection or pool
-#' @param remote_name name of table on DB
-#' @return a data.table of information about the existing DB tables
-tableInfo = function(conn, remote_name) {
-  conn = evaluate_conn(conn, mode = 'conn')
-  on.exit(pool::poolReturn(conn))
-  sql_statement = dbplyr::build_sql(
-    con = conn,
-    'PRAGMA table_info(', remote_name,')'
-  )
-  res = DBI::dbGetQuery(conn = conn, statement = sql_statement)
-  res = data.table::setDT(res)
+#' @title Get information about the database table
+#' @param x connector object (hashID of backend, DBI connection, pool), or a
+#' GiottoDB object
+#' @param remote_name (only needed if x is a connection object) name of table on DB
+#' @return a data.table of information about the specified table on the database
+#' @examples
+#' dbpoly = simulate_dbPolygonProxy()
+#' tableInfo(dbpoly)
+#'
+#' dbpoints = simulate_dbPointsProxy()
+#' tableInfo(dbpoints)
+#'
+#' dbDF = simulate_dbDataFrame()
+#' tableInfo(dbDF)
+#' @export
+setMethod('tableInfo', signature(x = 'ANY', remote_name = 'character'),
+          function(x, remote_name, ...) {
+            conn = evaluate_conn(x, mode = 'conn')
+            on.exit(pool::poolReturn(conn))
+            sql_statement = dbplyr::build_sql(
+              con = conn,
+              'PRAGMA table_info(', remote_name,')'
+            )
+            res = DBI::dbGetQuery(conn = conn, statement = sql_statement)
+            res = data.table::setDT(res)
 
-  return(res)
-}
+            return(res)
+          })
+#' @rdname tableInfo
+#' @export
+setMethod('tableInfo', signature(x = 'dbData', remote_name = 'missing'),
+          function(x, ...) {
+            tableInfo(x = cPool(x), remote_name = remoteName(x))
+          })
+#' @rdname tableInfo
+#' @export
+setMethod('tableInfo', signature(x = 'dbPolygonProxy', remote_name = 'missing'),
+          function(x, ...) {
+            list(DATA = tableInfo(x = cPool(x), remote_name = remoteName(x)),
+                 ATTRIBUTES = tableInfo(x = cPool(x), remote_name = remoteName(x@attributes)))
+          })
+
+
+
+
 
 
 

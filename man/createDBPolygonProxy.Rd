@@ -8,15 +8,51 @@ createDBPolygonProxy(
   SpatVector,
   remote_name = "poly_test",
   db_path = ":temp:",
-  attributes,
-  extent,
-  n_poly,
+  id_col = "poly_ID",
+  xy_col = c("x", "y"),
+  extent = NULL,
+  overwrite = FALSE,
+  chunk_size = 10000L,
+  callback = NULL,
+  custom_table_fields = NULL,
+  custom_table_fields_attr = NULL,
+  attributes = NULL,
   ...
 )
 }
 \arguments{
 \item{SpatVector}{object coercible to SpatVector or filepath to spatial data
 readable by \code{\link[terra]{vect}}}
+
+\item{remote_name}{name of remote table on database backend}
+
+\item{db_path}{filepath to the database backend}
+
+\item{id_col}{column in data to read in that contains the polygon id information}
+
+\item{xy_col}{columns in data to read in that contain the x and y vertex info}
+
+\item{extent}{terra SpatExtent (optional) that can be used to subset the data
+to read in before it is saved to database}
+
+\item{overwrite}{whether to overwrite if \code{remote_name} already exists on
+the database}
+
+\item{chunk_size}{the number of polygons to read in per chunk read}
+
+\item{callback}{data formatting and manipulations to perform chunkwise before the data
+is saved to database. Instructions should be provided as a function that takes
+an input of a data.table and returns a data.table}
+
+\item{custom_table_fields}{(optional) custom table field SQL settings to use
+during table creation for the spatial geometry table}
+
+\item{custom_table_fields_attr}{(optional) custom table field SQL settings to
+use during table creation for the attributes table}
+
+\item{attributes}{(optional) a \code{tbl_sql} connected to the database backend
+that contains the associated attributes table. Only used if a pre-made \code{tbl_sql}
+is also provided to \code{SpatVector} param}
 }
 \description{
 Create an S4 dbPolygonProxy object that is composed of two database tables.

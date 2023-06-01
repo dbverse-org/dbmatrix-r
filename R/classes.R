@@ -1,6 +1,8 @@
 
 
 #' @importClassesFrom terra SpatExtent
+#' @importFrom methods as callNextMethod initialize new slot slot<- validObject
+#' @importFrom utils capture.output
 #' @keywords internal
 NULL
 
@@ -27,6 +29,7 @@ setClass('GiottoDB', contains = 'VIRTUAL')
 #' @slot data dplyr tbl that represents the database data
 #' @slot hash unique hash ID for backend
 #' @slot remote_name name of table within database that contains the data
+#' @slot init logical. Whether the object is fully initialized
 #' @noRd
 setClass('dbData',
          contains = c('GiottoDB',
@@ -34,12 +37,14 @@ setClass('dbData',
          slots = list(
            data = 'ANY',
            hash = 'character',
-           remote_name = 'character'
+           remote_name = 'character',
+           init = 'logical'
          ),
          prototype = list(
            data = NULL,
            hash = NA_character_,
-           remote_name = NA_character_
+           remote_name = NA_character_,
+           init = FALSE
          ))
 
 
@@ -202,23 +207,30 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
 #' @slot data dplyr tbl that represents the database data
 #' @slot hash unique hash ID for backend
 #' @slot remote_name name of table within database that contains the data
+#' @slot key column to set as key for ordering and subsetting on i
 #' @export
 dbDataFrame = setClass(
   'dbDataFrame',
-  contains = 'dbData'
+  contains = 'dbData',
+  slots = list(
+    key = 'character'
+  ),
+  prototype = list(
+    key = NA_character_
+  )
 )
 
 setMethod('show', signature('dbDataFrame'), function(object) {
   print_dbDataFrame(object, 6)
 })
 
-setMethod('print', signature('dbDataFrame'), function(x, n = 6) {
-  print_dbDataFrame(x, n)
+setMethod('print', signature('dbDataFrame'), function(x, n = 6, ...) {
+  print_dbDataFrame(x, n, ...)
 })
 
-print_dbDataFrame = function(x, n) {
+print_dbDataFrame = function(x, n, ...) {
   df_dim = dim(x@data)
-  dfp = capture.output(print(x@data, n = n))
+  dfp = capture.output(print(x@data, n = n, na.print = NULL, ...))
   nr = df_dim[1L]
   nc = df_dim[2L]
   nr = as.character(ifelse(is.na(nr), '??', nr))
@@ -242,17 +254,18 @@ print_dbDataFrame = function(x, n) {
 #' @slot data dplyr tbl that represents the database data
 #' @slot hash unique hash ID for backend
 #' @slot remote_name name of table within database that contains the data
-#' @slot attributes dbDataFrame of attributes information
 #' @slot extent spatial extent
+#' @slot poly_filter polygon SpatVector that is used to filter values on read-in
 #' @noRd
 setClass('dbSpatProxyData',
          contains = c('dbData', 'VIRTUAL'),
          slots = list(
-           attributes = 'dbDataFrame',
-           extent = 'SpatExtent'
+           extent = 'SpatExtent',
+           poly_filter = 'ANY'
          ),
          prototype = list(
-           extent = terra::ext(0,0,0,0)
+           extent = terra::ext(0, 0, 0 ,0),
+           poly_filter = NULL
          ))
 
 # Spatial Data Container Classes ####
@@ -270,11 +283,13 @@ setClass('dbSpatProxyData',
 #' @slot n_poly number of polygons
 #' @slot poly_ID polygon IDs
 #' @slot extent extent of polygons
+#' @slot poly_filter polygon SpatVector that is used to filter values on read-in
 #' @export
 dbPolygonProxy = setClass(
   'dbPolygonProxy',
   contains = 'dbSpatProxyData',
   slots = list(
+    attributes = 'dbDataFrame',
     n_poly = 'numeric'
   ),
   prototype = list(
@@ -285,15 +300,44 @@ dbPolygonProxy = setClass(
 
 
 setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
-  cat('An object of class \'', class(x), '\'\n', sep = '')
-  cat('backend_ID : ', object@hash, '\n')
-  cat('name       : \'', object@remote_name, '\'\n', sep = '')
-  cat('dimensions : ', paste(object@n_poly, ncol(object@attributes), collapse = ', '),
-      ' (geometries, attributes)\n')
-  cat('extent     : ', paste(object@extent[], collapse = ', '),
-      ' (', paste(names(object@extent[]), collapse = ', '), ')',
-      sep = '')
+  print(object)
 })
+
+setMethod('print', signature(x = 'dbPolygonProxy'), function(x, n = 3, ...) {
+  print_dbPolygonProxy(x = x, n = n, ...)
+})
+
+
+print_dbPolygonProxy = function(x, n, ...) {
+  refresh = getOption('gdb.update_show', FALSE)
+  p = capture.output(print(dplyr::select(x@attributes@data, -c('geom')), n = n,
+                           na.print = NULL, max_footer_lines = 0L,
+                           width = getOption('width') - 12L, ...))
+  db = gsub('# Database:', 'database   :', p[2L])
+  vs = paste0('\nvalues     : ', p[3L], '\n')
+  indent = '            '
+  # update values
+  if(refresh) ex = extent_calculate(x)
+  else ex = '??'
+  ex = paste0(
+    paste(ex[], collapse = ', '), ' (',
+    paste(c('xmin', 'xmax', 'ymin', 'ymax'), collapse = ', '), ')'
+  )
+  ds = if(refresh) paste(dim(x), collapse = ', ')
+  else paste('??', ncol(x), sep = ', ')
+
+  cat('An object of class \'', class(x), '\'\n', sep = '')
+  cat('backend    : ', x@hash, '\n', sep = '')
+  cat('table      : \'', x@remote_name, '\'\n', sep = '')
+  cat(db, '\n')
+  cat('dimensions :', ds, ' (points, attributes)\n')
+  cat('extent     : ', ex, sep = '')
+  cat(vs)
+  writeLines(paste(indent, p[-(1:3)])) # skip first header lines
+  if(!refresh) cat('\n# set options(gdb.update_show = TRUE) to calculate ??')
+}
+
+
 
 
 
@@ -302,10 +346,10 @@ setMethod('show', signature(object = 'dbPolygonProxy'), function(object) {
 #' @description
 #' Representation of point information using an on-disk database. Intended to
 #' be used to store information that can be pulled into terra point SpatVectors
-#' @slot attributes dbDataFrame of attributes information
 #' @slot n_points number of points
 #' @slot feat_ID feature IDs
 #' @slot extent extent of points
+#' @slot poly_filter polygon SpatVector that is used to filter values on read-in
 #' @importClassesFrom terra SpatExtent
 #' @export
 dbPointsProxy = setClass(
@@ -322,18 +366,42 @@ dbPointsProxy = setClass(
 
 
 setMethod('show', signature(object = 'dbPointsProxy'), function(object) {
-  cat('An object of class \'', class(x), '\'\n', sep = '')
-  cat('backend_ID : ', object@hash, '\n')
-  cat('name       : \'', object@remote_name, '\'\n', sep = '')
-  cat('dimensions : ', paste(object@n_point, ncol(object@attributes), collapse = ', '),
-      ' (points, attributes)\n')
-  cat('extent     : ', paste(object@extent[], collapse = ', '),
-      ' (', paste(names(object@extent[]), collapse = ', '), ')',
-      sep = '')
+  print(object, n = 3)
 })
 
+setMethod('print', signature(x = 'dbPointsProxy'), function(x, n = 3, ...) {
+  print_dbPointsProxy(x = x, n = n, ...)
+})
+
+print_dbPointsProxy = function(x, n, ...) {
+  refresh = getOption('gdb.update_show', FALSE)
+  p = capture.output(print(dplyr::select(x@data, -c('x', 'y')), n = n,
+                           na.print = NULL, max_footer_lines = 0L,
+                           width = getOption('width') - 12L, ...))
+  db = gsub('# Database:', 'database   :', p[2L])
+  vs = paste0('\nvalues     : ', p[3L], '\n')
+  indent = '            '
+  # update values
+  if(refresh) ex = extent_calculate(x)
+  else ex = '??'
+  ex = paste0(
+    paste(ex[], collapse = ', '), ' (',
+    paste(c('xmin', 'xmax', 'ymin', 'ymax'), collapse = ', '), ')'
+  )
+  ds = if(refresh) paste(dim(x), collapse = ', ')
+  else paste('??', ncol(x), sep = ', ')
 
 
+  cat('An object of class \'', class(x), '\'\n', sep = '')
+  cat('backend    : ', x@hash, '\n', sep = '')
+  cat('table      : \'', x@remote_name, '\'\n', sep = '')
+  cat(db, '\n')
+  cat('dimensions :', ds, ' (points, attributes)\n')
+  cat('extent     : ', ex, sep = '')
+  cat(vs)
+  writeLines(paste(indent, p[-(1:3)])) # skip first header lines
+  if(!refresh) cat('\n# set options(gdb.update_show = TRUE) to calculate ??')
+}
 
 
 

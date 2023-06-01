@@ -24,5 +24,7 @@ the first) being 'ID' that can be joined/matched against the 'geom' values in
 \item{\code{poly_ID}}{polygon IDs}
 
 \item{\code{extent}}{extent of polygons}
+
+\item{\code{poly_filter}}{polygon SpatVector that is used to filter values on read-in}
 }}
 
