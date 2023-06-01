@@ -32,11 +32,11 @@ class dbMatrix {
 class dbDataFrame 
 class dbSpatProxyData {
   [VIRTUAL]
-  +attribute: dbDataFrame
   +extent: SpatExtent
   -spatialquery()
 }
 class dbPolygonProxy {
+  +attribute: dbDataFrame
   +n_poly: integer
 }
 class dbPointsProxy {
