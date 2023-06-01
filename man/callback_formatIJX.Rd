@@ -9,8 +9,8 @@ callback_formatIJX(x, group_by = 1)
 \arguments{
 \item{x}{data.table}
 
-\item{group_by}{numeric or character designating which column to set as i.
-Default = 1st column}
+\item{group_by}{numeric or character designating which column of current data
+to set as i. Default = 1st column}
 }
 \value{
 data.table in ijx format

@@ -1,10 +1,14 @@
 
 
 
-setMethod('initialize', signature('dbDataFrame'), function(.Object, ...) {
+setMethod('initialize', signature('dbDataFrame'), function(.Object, key, ...) {
 
   # call dbData initialize
   .Object = methods::callNextMethod(.Object, ...)
+
+  # dbDataFrame specific data input #
+  # ------------------------------- #
+  if(!missing(key)) .Object@key = key
 
   # check and return #
   # ---------------- #
@@ -97,20 +101,48 @@ evaluate_dbdataframe = function(input, p, backend_ID, remote_name, nlines,
     overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
 
     # read input if needed
-    if(is.character(input)) {
-      fstreamToDB(path = input,
-                  backend_ID = backend_ID,
-                  remote_name = remote_name,
-                  # indices = c('i', 'j'),
-                  nlines = nlines,
-                  with_pk = FALSE,
-                  cores = cores,
-                  callback = callback,
-                  overwrite = overwrite)
+    if(is.character(matrix)) {
+      streamToDB_fread(path = input,
+                       backend_ID = backend_ID,
+                       remote_name = remote_name,
+                       nlines = nlines,
+                       cores = cores,
+                       callback = callback,
+                       overwrite = overwrite)
     }
   }
   data
 }
+
+
+# keyCol ####
+#' @name keyCol
+#' @title Get and set a key column
+#' @description
+#' Set a column as key in order to sort and subset by rows with dbDataFrame.
+#' More than one column can be set at the same time, which will sort the table
+#' by multiple columns (ascending), starting with the first specified.
+#' @param x dbDataFrame
+#' @param value character. Column to set as key
+#' @examples
+#' d <- simulate_dbDataFrame()
+#' keyCol(d) <- c('Sepal.Length', 'Sepal.Width')
+#' d[1:6,]
+#' @export
+setMethod('keyCol', signature('dbDataFrame'),
+          function(x, ...) {
+            x@key
+          })
+#' @rdname keyCol
+#' @export
+setMethod('keyCol<-', signature(x = 'dbDataFrame', value = 'character'),
+          function(x, ..., value) {
+            checkmate::assert_true(
+              all(value %in% names(x)),
+              .var.name = 'key to set is in dbDataFrame colnames')
+            x@key = value
+            x
+          })
 
 
 

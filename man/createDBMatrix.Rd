@@ -8,12 +8,13 @@ createDBMatrix(
   matrix,
   remote_name = "mat_test",
   db_path = ":temp:",
-  dim_names,
-  dims,
   overwrite = FALSE,
   cores = 1L,
   nlines = 10000L,
   callback = callback_formatIJX(),
+  custom_table_fields = fields_preset$dbMatrix_ijx,
+  dims,
+  dim_names,
   ...
 )
 }
@@ -26,10 +27,6 @@ database table}
 
 \item{db_path}{path to database on disk}
 
-\item{dim_names}{list of rownames and colnames of the matrix (optional)}
-
-\item{dims}{dimensions of the matrix (optional)}
-
 \item{overwrite}{whether to overwrite if table already exists in database}
 
 \item{cores}{number of cores to use if reading into database}
@@ -38,6 +35,10 @@ database table}
 
 \item{callback}{callback functions to apply to each data chunk before it is
 sent to the database backend}
+
+\item{dims}{dimensions of the matrix (optional)}
+
+\item{dim_names}{list of rownames and colnames of the matrix (optional)}
 
 \item{...}{additional params to pass}
 }

@@ -17,5 +17,7 @@ is used as a connection to a single table that exists within the database.
 \item{\code{hash}}{unique hash ID for backend}
 
 \item{\code{remote_name}}{name of table within database that contains the data}
+
+\item{\code{key}}{column to set as key for ordering and subsetting on i}
 }}
 

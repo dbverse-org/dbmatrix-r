@@ -12,12 +12,19 @@ setGeneric('sql_query', function(x, statement, ...) standardGeneric('sql_query')
 setGeneric('colTypes', function(x, ...) standardGeneric('colTypes'))
 setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
 setGeneric('create_index', function(x, name, column, unique, ...) standardGeneric('create_index'))
+setGeneric('is_init', function(x, ...) standardGeneric('is_init'))
 
 # dbSpatProxyData object interactions ####
-setGeneric('doSpatChunk', function(x, what, args, extent, ...) standardGeneric('doSpatChunk'))
+setGeneric('chunkSpatApply', function(x, y, fun, extent, ...) standardGeneric('chunkSpatApply'))
+setGeneric('extent_calculate', function(x, ...) standardGeneric('extent_calculate'))
+setGeneric('extent_filter', function(x, extent, include, ...) standardGeneric('extent_filter'))
+setGeneric('filter_dbspat', function(x, by_geom, by_value, ...) standardGeneric('filter_dbspat'))
+setGeneric('dbspat_to_sv', function(x, ...) standardGeneric('dbspat_to_sv'))
 
 # backend system interactions ####
+setGeneric('append')
 setGeneric('validBE', function(x, ...) standardGeneric('validBE'))
+setGeneric('tableInfo', function(x, remote_name, ...) standardGeneric('tableInfo'))
 setGeneric('listTablesBE', function(x, ...) standardGeneric('listTablesBE'))
 setGeneric('existsTableBE', function(x, remote_name, ...) standardGeneric('existsTableBE'))
 setGeneric('backendID', function(x, ...) standardGeneric('backendID'))
@@ -31,5 +38,9 @@ setGeneric('dbSettings', function(x, setting, value, ...) standardGeneric('dbSet
 # dbMatrix specific ####
 setGeneric('colSds', function(x, ...) standardGeneric('colSds'))
 setGeneric('rowSds', function(x, ...) standardGeneric('rowSds'))
+
+# extract ####
+setGeneric('keyCol', function(x, ...) standardGeneric('keyCol'))
+setGeneric('keyCol<-', function(x, ..., value) standardGeneric('keyCol<-'))
 
 

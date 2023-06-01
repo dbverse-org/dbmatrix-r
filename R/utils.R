@@ -292,6 +292,29 @@ dbThreads = function(x, threads, ...) {
 
 
 
+#' @name file_extension
+#' @title Get file extension(s)
+#' @param file filepath
+#' @keywords internal
+file_extension = function(file)
+{
+    ex = strsplit(basename(file), split = ".", fixed = TRUE)[[1L]]
+    return(ex[-1])
+}
+
+
+
+
+
+
+# https://stackoverflow.com/a/25902379
+#' @name result_count
+#' @title Create a counter
+#' @noRd
+result_count = function() {
+  paste0('gdb_', getOption('gdb.res_count')())
+}
+
 
 
 

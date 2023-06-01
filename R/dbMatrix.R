@@ -79,18 +79,18 @@ setMethod(
 createDBMatrix = function(matrix,
                           remote_name = 'mat_test',
                           db_path = ':temp:',
-                          dim_names,
-                          dims,
                           overwrite = FALSE,
                           cores = 1L,
                           nlines = 10000L,
                           callback = callback_formatIJX(),
+                          custom_table_fields = fields_preset$dbMatrix_ijx,
+                          dims,
+                          dim_names,
                           ...) {
   db_path = getDBPath(db_path)
   backend_ID = calculate_backend_id(db_path)
   p = getBackendPool(backend_ID)
   if(inherits(matrix, 'tbl')) assert_in_backend(x = matrix, p = p)
-  fnq = get_full_table_name_quoted(conn = p, remote_name = remote_name)
 
   data = NULL
   if(inherits(matrix, 'tbl_Pool')) { # data is already in DB and tbl is provided
@@ -102,15 +102,16 @@ createDBMatrix = function(matrix,
 
     # read matrix if needed
     if(is.character(matrix)) {
-      fstreamToDB(path = matrix,
-                  backend_ID = backend_ID,
-                  remote_name = remote_name,
-                  # indices = c('i', 'j'),
-                  nlines = nlines,
-                  with_pk = FALSE,
-                  cores = cores,
-                  callback = callback,
-                  overwrite = overwrite)
+      streamToDB_fread(path = matrix,
+                       backend_ID = backend_ID,
+                       remote_name = remote_name,
+                       # indices = c('i', 'j'),
+                       nlines = nlines,
+                       cores = cores,
+                       callback = callback,
+                       overwrite = overwrite,
+                       custom_table_fields = custom_table_fields,
+                       ...)
     }
 
     # convert to Matrix to IJX format if needed
@@ -128,18 +129,6 @@ createDBMatrix = function(matrix,
   mtx_tbl = dplyr::tbl(p, remote_name)
   r_names = mtx_tbl %>% dplyr::distinct(i) %>% dplyr::arrange(i) %>% dplyr::pull()
   c_names = mtx_tbl %>% dplyr::distinct(j) %>% dplyr::arrange(j) %>% dplyr::pull()
-
-  # table creation #
-  # primary keys in i and j - nonfeasible too large
-  # sql_create = create_dbmatrix_sql(hash, full_name_quoted = fnq)
-  # DBI::dbExecute(conn, sql_create)
-  # pool::poolReturn(conn)
-  #
-  # ijx %>%
-  #   DBI::dbAppendTable(conn = p,
-  #                      name = remote_name,
-  #                      value = ijx,
-  #                      ...)
 
 
   dbMat = new('dbMatrix',
@@ -242,36 +231,36 @@ compute_dbmatrix_permanent = function(x, p, fnq, ...) {
 
 
 
-# Internal function to build SQL to create a table for a dbMatrix object with
-# columns i j and x. A primary key is defined on columns i and j
-#' @param conn DBI connection object, pool, or backend hashID
-#' @param full_name_quoted full name of table to create
-#' @keywords internal
-#' @noRd
-create_dbmatrix_sql = function(conn, full_name_quoted) {
-  p = evaluate_conn(conn, mode = 'pool')
-  conn = pool::poolCheckout(p)
-  tryCatch({
-
-    if(dbms(p) == 'duckdb') {
-      sql = dbplyr::build_sql(
-        'CREATE TABLE ', full_name_quoted, ' (',
-        'i VARCHAR,',
-        'j VARCHAR,',
-        'x DOUBLE,',
-        'PRIMARY KEY (i, j)',
-        ')',
-        con = conn)
-    }
-
-    return(sql)
-
-  },
-  finally = {
-    pool::poolReturn(conn)
-  })
-
-}
+#' # Internal function to build SQL to create a table for a dbMatrix object with
+#' # columns i j and x. A primary key is defined on columns i and j
+# @param conn DBI connection object, pool, or backend hashID
+# @param full_name_quoted full name of table to create
+# @keywords internal
+# @noRd
+#' create_dbmatrix_sql = function(conn, full_name_quoted) {
+#'   p = evaluate_conn(conn, mode = 'pool')
+#'   conn = pool::poolCheckout(p)
+#'   tryCatch({
+#'
+#'     if(dbms(p) == 'duckdb') {
+#'       sql = dbplyr::build_sql(
+#'         'CREATE TABLE ', full_name_quoted, ' (',
+#'         'i VARCHAR,',
+#'         'j VARCHAR,',
+#'         'x DOUBLE,',
+#'         'PRIMARY KEY (i, j)',
+#'         ')',
+#'         con = conn)
+#'     }
+#'
+#'     return(sql)
+#'
+#'   },
+#'   finally = {
+#'     pool::poolReturn(conn)
+#'   })
+#'
+#' }
 
 
 

@@ -11,6 +11,7 @@ NULL
 
 # Internal for hiding S4 methods that need to be documented but only clutter the index
 #' @name hidden_aliases
+#' @title hidden_aliases
 #' @usage NULL
 #' @format NULL
 #' @keywords internal

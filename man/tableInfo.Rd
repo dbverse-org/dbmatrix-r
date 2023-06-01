@@ -2,18 +2,35 @@
 % Please edit documentation in R/backend.R
 \name{tableInfo}
 \alias{tableInfo}
-\title{Get information about the table}
+\alias{tableInfo,dbData,missing-method}
+\alias{tableInfo,dbPolygonProxy,missing-method}
+\title{Get information about the database table}
 \usage{
-tableInfo(conn, remote_name)
+\S4method{tableInfo}{ANY,character}(x, remote_name, ...)
+
+\S4method{tableInfo}{dbData,missing}(x, remote_name, ...)
+
+\S4method{tableInfo}{dbPolygonProxy,missing}(x, remote_name, ...)
 }
 \arguments{
-\item{conn}{hashID of backend, DBI connection or pool}
+\item{x}{connector object (hashID of backend, DBI connection, pool), or a
+GiottoDB object}
 
-\item{remote_name}{name of table on DB}
+\item{remote_name}{(only needed if x is a connection object) name of table on DB}
 }
 \value{
-a data.table of information about the existing DB tables
+a data.table of information about the specified table on the database
 }
 \description{
-Get information about the table
+Get information about the database table
+}
+\examples{
+dbpoly = simulate_dbPolygonProxy()
+tableInfo(dbpoly)
+
+dbpoints = simulate_dbPointsProxy()
+tableInfo(dbpoints)
+
+dbDF = simulate_dbDataFrame()
+tableInfo(dbDF)
 }

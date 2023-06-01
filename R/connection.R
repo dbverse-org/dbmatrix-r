@@ -95,6 +95,15 @@ setMethod('remoteName', signature(x = 'dbData'), function(x) {
 
 
 
+# is_init ####
+#' @name is_init-generic
+#' @title Determine if dbData object is initialized
+#' @param x dbData object
+#' @keywords internal
+setMethod('is_init', signature(x = 'dbData'), function(x, ...) {
+  slot(x, 'init')
+})
+
 
 
 
@@ -420,13 +429,14 @@ setMethod('evaluate_conn', signature(conn = 'DBIConnection'),
 #' @param ... additional params to pass
 #' for login info and/or prompt for password
 #' @export
-setMethod('reconnectBackend', signature('backendInfo'), function(x,
-                                                                 with_login = FALSE,
-                                                                 verbose = TRUE,
-                                                                 ...) {
+setMethod(
+  'reconnectBackend', signature('backendInfo'),
+  function(x, with_login = FALSE, verbose = TRUE, ...)
+{
   b_ID = backendID(x)
   # if already valid, exit
-  if(DBI::dbIsValid(.DB_ENV[[b_ID]]$pool)) return(invisible())
+  try_val = try(DBI::dbIsValid(.DB_ENV[[b_ID]]$pool), silent = TRUE)
+  if(isTRUE(try_val)) return(invisible())
 
 
   # assemble params

@@ -342,17 +342,23 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 
   return(base::nrow(res))
 })
-
-
-
-#' @rdname nrow
+#' @rdname hidden_aliases
 #' @export
 setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
   x = reconnect(x)
-
-  res = DBI::dbGetQuery(cPool(x), sprintf('SELECT COUNT(*) AS n FROM %s',
-                                          remoteName(x)))
-  return(as.integer(res))
+  dim(x)[1L]
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('nrow', signature(x = 'dbPointsProxy'), function(x) {
+  x = reconnect(x)
+  dim(x)[1L]
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('nrow', signature(x = 'dbPolygonProxy'), function(x) {
+  x = reconnect(x)
+  dim(x@attributes)[1L]
 })
 
 
@@ -378,6 +384,24 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 
   return(base::nrow(res))
 })
+#' @rdname hidden_aliases
+#' @export
+setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
+  x = reconnect(x)
+  ncol(x@data)
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('ncol', signature(x = 'dbPointsProxy'), function(x) {
+  x = reconnect(x)
+  ncol(x@data) - 2L # remove 2 for x and y cols
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('ncol', signature(x = 'dbPolygonProxy'), function(x) {
+  x = reconnect(x)
+  ncol(x@attributes@data) - 1L # remote one for geom col in attrs
+})
 
 #' @rdname hidden_aliases
 #' @export
@@ -393,7 +417,16 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
 
 # dim ####
 
-
+#' @rdname hidden_aliases
+#' @export
+setMethod('dim', signature('dbData'), function(x) {
+  x = reconnect(x)
+  nr = x@data %>%
+    dplyr::summarise(n()) %>%
+    dplyr::pull() %>%
+    as.integer()
+  c(nr, ncol(x@data))
+})
 #' @rdname hidden_aliases
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
@@ -405,28 +438,32 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
     res = x@dims
   }
 })
-
 #' @rdname hidden_aliases
 #' @export
-setMethod('dim', signature(x = 'dbDataFrame'), function(x) {
-  x = reconnect(x)
-  c(nrow(x), ncol(x))
+setMethod('dim', signature('dbPointsProxy'), function(x) {
+  res = callNextMethod(x)
+  res[2L] = res[2L] - 2L # hide ncols that include x and y cols
+  res
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('dim', signature('dbPolygonProxy'), function(x) {
+  nr = nrow(x@attributes) # use method for dbDataFrame on attr table
+  nc = ncol(x@attributes) - 1L # remove count for 'geom' col
+  c(nr, nc)
 })
 
 
 
 
+#' @rdname hidden_aliases
+#' @export
+setMethod('length', signature('dbSpatProxyData'), function(x) {
+  nrow(x)
+})
 
 
 
-
-
-# drop ####
-# @rdname hidden_aliases
-# @export
-# setMethod('drop', signature(x = 'dbMatrix'), function(x) {
-#
-# })
 
 
 
