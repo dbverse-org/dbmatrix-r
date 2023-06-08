@@ -166,7 +166,7 @@ streamToDB_fread = function(path,
                         value = chunk)
   }
 
-  return(invisible(idx_list))
+  return(invisible(n_rows))
 }
 
 

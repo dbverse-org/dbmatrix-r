@@ -42,8 +42,8 @@ raster_bin_data = function(data,
   checkmate::assert_class(data, 'dbPointsProxy')
 
   res = get_dim_n_chunks(n = resolution, e = extent)
-  px_x = res[[1L]]
-  px_y = res[[2L]]
+  px_y = res[[1L]]
+  px_x = res[[2L]]
   span_x = extent$xmax - extent$xmin ; names(span_x) = NULL
   span_y = extent$ymax - extent$ymin ; names(span_y) = NULL
   xmin = extent$xmin ; names(xmin) = NULL
@@ -71,7 +71,8 @@ raster_bin_data = function(data,
 #' internal function for rasterized rendering from matrix data
 render_image = function(mat,
                         cols = c("#002222", "white", "#800020"),
-                        axes = FALSE) {
+                        axes = FALSE,
+                        ...) {
   # save current values for reset at end
   op = par()$mar
   on.exit(par(mar = op))
@@ -83,16 +84,19 @@ render_image = function(mat,
     axes = axes,
     asp = 1L,
     col = shades(256),
-    useRaster = TRUE
+    useRaster = TRUE,
+    ...
   )
 }
 
 
 
 setMethod('plot', signature(x = 'dbPointsProxy', y = 'missing'), function(x, resolution = 5e6, ...) {
-  x %>%
-    raster_bin_data(extent = extent_calculate(x), resolution = resolution) %>%
-    render_image()
+  e = extent_calculate(x)
+  bin_mat = raster_bin_data(data = x, extent = e, resolution = resolution)
+  render_image(mat = bin_mat,
+               x = seq(e$xmin, e$xmax, length.out = ncol(bin_mat)),
+               y = seq(e$ymin, e$ymax, length.out = nrow(bin_mat)))
 })
 
 
