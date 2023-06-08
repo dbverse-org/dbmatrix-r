@@ -332,7 +332,7 @@ getBackendPool = function(backend_ID) {
 #' @export
 getBackendInfo = function(backend_ID) {
   i = try(.DB_ENV[[backend_ID]]$info, silent = TRUE)
-  if(is.null(i) | inherits(p, 'try-error')) {
+  if(is.null(i) | inherits(i, 'try-error')) {
     stopf('No associated backend found.
           Please create or reconnect the backend.')
   }

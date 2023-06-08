@@ -30,7 +30,6 @@ Imports:
     digest,
     duckdb (>= 0.7),
     dplyr,
-    fpeek,
     fs,
     Matrix,
     magrittr,

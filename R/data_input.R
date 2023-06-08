@@ -97,9 +97,15 @@ streamToDB_fread = function(path,
   overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
 
 
+  # get rows
+  fext = file_extension(path)
+  if('csv' %in% fext) file_format = 'csv'
+  if('tsv' %in% fext) file_format = 'tsv'
+  atab = arrow::open_dataset(path, format = fext)
+  n_rows = nrow(atab)
+
   # chunked reading
   chunk_num = idx_count = 0
-  n_rows = fpeek::peek_count_lines(path = path)
   c_names_cache = colnames(data.table::fread(input = path, nrows = 0L))
   idx_list = NULL
   extab = FALSE
