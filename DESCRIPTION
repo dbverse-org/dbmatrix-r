@@ -65,6 +65,7 @@ Collate:
     'fields_preset.R'
     'names.R'
     'operations.R'
+    'plot.R'
     'simulate.R'
     'spatial_chunking.R'
     'utils.R'
