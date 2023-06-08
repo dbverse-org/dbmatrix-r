@@ -17,6 +17,15 @@
 \alias{[,dbDataFrame,gdbIndex,gdbIndex,ANY-method}
 \alias{[,dbDataFrame,missing,missing,missing-method}
 \alias{[<-,dbDataFrame,missing,missing,ANY-method}
+\alias{[,dbPolygonProxy,character,missing,ANY-method}
+\alias{[,dbPointsProxy,character,missing,ANY-method}
+\alias{[,dbPointsProxy,numeric,missing,ANY-method}
+\alias{[,dbPointsProxy,logical,missing,ANY-method}
+\alias{[,dbPolygonProxy,missing,character,ANY-method}
+\alias{[,dbPointsProxy,missing,character,ANY-method}
+\alias{[,dbPointsProxy,missing,numeric,ANY-method}
+\alias{[,dbPointsProxy,missing,logical,ANY-method}
+\alias{[,dbPointsProxy,gdbIndexNonChar,gdbIndex,ANY-method}
 \alias{values,dbPolygonProxy-method}
 \alias{values,dbPointsProxy-method}
 \alias{hidden_aliases}
@@ -50,6 +59,8 @@
 \alias{colSds,dbMatrix-method}
 \alias{rowSds,dbMatrix-method}
 \alias{t,dbMatrix-method}
+\alias{t,dbPointsProxy-method}
+\alias{t,dbPolygonProxy-method}
 \alias{mean,dbMatrix-method}
 \alias{nrow,dbDataFrame-method}
 \alias{nrow,dbPointsProxy-method}
@@ -94,6 +105,24 @@
 \S4method{[}{dbDataFrame,missing,missing,missing}(x, i, j)
 
 \S4method{[}{dbDataFrame,missing,missing,ANY}(x, i, j) <- value
+
+\S4method{[}{dbPolygonProxy,character,missing,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,character,missing,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,numeric,missing,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,logical,missing,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPolygonProxy,missing,character,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,missing,character,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,missing,numeric,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,missing,logical,ANY}(x, i, j, ..., drop = TRUE)
+
+\S4method{[}{dbPointsProxy,gdbIndexNonChar,gdbIndex,ANY}(x, i, j, ..., drop = FALSE)
 
 \S4method{values}{dbPolygonProxy}(x, ...)
 
@@ -160,6 +189,10 @@
 \S4method{rowSds}{dbMatrix}(x, ...)
 
 \S4method{t}{dbMatrix}(x)
+
+\S4method{t}{dbPointsProxy}(x)
+
+\S4method{t}{dbPolygonProxy}(x)
 
 \S4method{mean}{dbMatrix}(x, ...)
 

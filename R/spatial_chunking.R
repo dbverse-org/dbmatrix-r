@@ -42,10 +42,12 @@ NULL
 #' @name chunkSpatApply
 #' @title Apply a function in a spatially chunked manner
 #' @description
-#' Split a function operation into multiple spatial chunks that is parallelized
-#' if desired using \code{future_lapply}. Results are appended back into the
-#' database as a new table. Use \code{chunkSpatApplyPoly} if the expected output
-#' is polygon information or \code{chunkSpatApplyPoints} if points.
+#' Split a function operation into multiple spatial chunks. Results are appended
+#' back into the database as a new table. This is not parallelized as some databases
+#' do not work with parallel writes, but are more performant with large single
+#' chunks of data. The functions that are provided, however, can be parallelized
+#' in their processing after the chunk has been pulled into memory and only needs
+#' to be combined into one before being written.
 #' @param x dbPolygonProxy or dbPointsProxy
 #' @param y missing/null if not needed. Otherwise accepts a dbPolygonProxy or
 #' dbPointsProxy object
@@ -58,6 +60,7 @@ NULL
 #' This value can be set globally using options(gdb.nperchunk = ?)
 #' @param remote_name name to assign the result in the database. Defaults to a
 #' generic incrementing 'gdb_nnn' if not given
+#' @param progress whether to plot the progress
 #' @param ... additional params to pass to GiottoDB object creation
 #' @return dbPolygonProxy or dbPointsProxy
 #' @export
@@ -68,6 +71,7 @@ chunkSpatApplyPoly = function(x = NULL,
                               extent = NULL,
                               n_per_chunk = getOption('gdb.nperchunk', 1e5),
                               remote_name = NULL,
+                              progress = TRUE,
                               ...) {
   chunk_spat_apply(x = x, y = y, chunk_y = chunk_y, fun = fun, extent = extent,
                    n_per_chunk = n_per_chunk, remote_name = remote_name,
@@ -81,7 +85,8 @@ chunkSpatApplyPoints = function(x = NULL,
                                 fun,
                                 extent = NULL,
                                 n_per_chunk = getOption('gdb.nperchunk', 1e5),
-                                remote_name = NULL) {
+                                remote_name = NULL,
+                                progress = TRUE) {
   chunk_spat_apply(x = x, y = y, chunk_y = chunk_y, fun = fun, extent = extent,
                    n_per_chunk = n_per_chunk, remote_name = remote_name,
                    output = 'dbPointsProxy', ...)
@@ -98,6 +103,7 @@ chunk_spat_apply = function(x = NULL,
                             n_per_chunk = 1e5,
                             remote_name = NULL,
                             output = c('tbl', 'dbPolygonProxy', 'dbPointsProxy'),
+                            progress = TRUE,
                             ...) {
   checkmate::assert_class(x, 'dbSpatProxyData')
   if(!is.null(y)) checkmate::assert_class(y, 'dbSpatProxyData')
@@ -140,8 +146,8 @@ chunk_spat_apply = function(x = NULL,
   chunk_x_list = chunk_x_list[not_empty]
   chunk_x_list_len = chunk_x_list_len[not_empty]
 
-  # debug
-  preview_chunk_plan(ext_list[not_empty])
+  # init progress
+  if(progress) preview_chunk_plan(ext_list[not_empty], mode = 'bound')
 
   # filter any y input (if needed) based on x
   chunk_y_input = NULL
@@ -149,8 +155,12 @@ chunk_spat_apply = function(x = NULL,
     if(isTRUE(chunk_y)) {
       ext_x_list = lapply(chunk_x_list, extent_calculate)
       # hard selections on all sides.
-      chunk_y_input = extent_filter(x = y, extent = ext_x_list,
-                                    include = rep(TRUE, 4))
+      chunk_y_input = lapply(
+        ext_x_list,
+        function(e) {
+          extent_filter(x = y, extent = e, include = rep(TRUE, 4L))
+        }
+      )
     } else {
       chunk_y_input = y
     }
@@ -163,31 +173,35 @@ chunk_spat_apply = function(x = NULL,
   n_chunks = length(chunk_x_list)
   progressr::with_progress({
     pb = progressr::progressor(steps = n_chunks)
-    chunk_outs = future.apply::future_lapply(
+    lapply(
       X = n_chunks,
-      future.packages = c('terra'),
-      function(chunk_x_list, chunk_y_input, fun, p, ..., chunk_i) {
+      function(chunk_x_list, chunk_y_input, fun, p, chunk_i) {
 
+        # convert x (and y if given) to terra
         # run function on x, and conditionally, y
+        chunk_x = as.spatvector(chunk_x_list[[chunk_i]])
         out = if(is.null(chunk_y_input)) {
           # x only
-          fun(x = chunk_x_list[[chunk_i]])
+          fun(x = chunk_x)
         } else {
           # x and y
-          if(length(chunk_y_input) == 1L) {
+          if(!inherits(chunk_y_input, 'list')) {
             # single y
-            fun(x = chunk_x_list[[chunk_i]],
+            fun(x = chunk_x,
                 y = chunk_y_input)
           } else {
             # chunked y values
-            fun(x = chunk_x_list[[chunk_i]],
-                y = chunk_y_input[[chunk_i]])
+            fun(x = chunk_x,
+                y = as.spatvector(chunk_y_input[[chunk_i]]))
           }
         }
 
         # write/append values ?
         # include expected geom values for polygons
-        # ... params go here
+        # TODO ... params go here
+        stream_to_db(p = p,
+                     remote_name = remote_name,
+                     x = out)
 
         # update progress and return
         pb()
@@ -196,25 +210,33 @@ chunk_spat_apply = function(x = NULL,
       chunk_x_list = chunk_x_list,
       chunk_y_input = chunk_y_input,
       fun = fun,
-      p = p,
-      ...
+      p = p
     )
   })
 
 
-
-
   # generate object #
   # --------------- #
+  res_tbl = dplyr::tbl(p, remote_name)
   out = switch(output,
                'tbl' = {
-
+                 return(res_tbl)
                },
                'dbPolygonProxy' = {
-
+                 return(
+                   dbPolygonProxy(attributes = dbDataFrame(key = 'geom',
+                                                           data = dplyr::tbl(p, paste0(remote_name, '_attr')),
+                                                           hash = x@hash,
+                                                           remote_name = paste0(remote_name, '_attr'),
+                                                           init = TRUE),
+                                  data = res_tbl,
+                                  hash = x@hash,
+                                  remote_name = remote_name,
+                                  init = TRUE)
+                 )
                },
                'dbPointsProxy' = {
-
+                 # TODO
                })
 
   return(out)
@@ -327,12 +349,28 @@ chunk_plan = function(extent, min_chunks = NULL, nrows = NULL, ncols = NULL) {
 #' of polygons
 #' @param extent_list list of extents from \code{chunk_plan}
 #' @keywords internal
-preview_chunk_plan = function(extent_list) {
+preview_chunk_plan = function(extent_list, mode = c('poly', 'bound')) {
   checkmate::assert_list(extent_list, types = 'SpatExtent')
-  poly_list = sapply(extent_list, terra::as.polygons)
-  poly_bind = do.call(rbind, poly_list)
-  terra::plot(poly_bind, values = as.factor(seq_along(poly_list)))
-  invisible(poly_bind)
+  mode = match.arg(mode, choices = c('poly', 'bound'))
+
+  switch(mode,
+         'poly' = {
+           poly_list = sapply(extent_list, terra::as.polygons)
+           poly_bind = do.call(rbind, poly_list)
+           terra::plot(poly_bind, values = as.factor(seq_along(poly_list)))
+           return(invisible(poly_bind))
+         },
+         'bound' = {
+           xlim = c(extent_list[[1]]$xmin, extent_list[[length(extent_list)]]$xmax)
+           ylim = c(extent_list[[1]]$ymin, extent_list[[length(extent_list)]]$ymax)
+           # initiate plot
+           plot(x = NULL, y = NULL, asp = 1L, xlim = xlim, ylim = ylim)
+           # plot extent bounds
+           for(e in extent_list) {
+             rect(e$xmin, e$ymin, e$xmax, e$ymax)
+           }
+           return(invisible())
+         })
 }
 
 

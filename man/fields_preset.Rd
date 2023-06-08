@@ -5,7 +5,7 @@
 \alias{fields_preset}
 \title{Table fields presets}
 \format{
-An object of class \code{list} of length 1.
+An object of class \code{list} of length 2.
 }
 \usage{
 fields_preset
@@ -13,5 +13,8 @@ fields_preset
 \description{
 Fields presets to use with DBI::dbCreateTable() to set up remote tables and
 their constraints
+}
+\details{
+Package presets for DB table fields that can be easily accessed
 }
 \keyword{datasets}

@@ -116,7 +116,7 @@ setMethod('is_init', signature(x = 'dbData'), function(x, ...) {
 setMethod('validBE', signature(x = 'dbData'), function(x) {
   con = cPool(x)
   if(is.null(con)) stop('No connection object found\n')
-  return(DBI::dbIsValid(con))
+  return(pool::dbIsValid(con))
 })
 
 
@@ -132,7 +132,7 @@ setMethod('validBE', signature(x = 'dbData'), function(x) {
 #' @export
 setMethod('listTablesBE', signature(x = 'dbData'), function(x, ...) {
   stopifnot(remoteValid(x))
-  DBI::dbListTables(cPool(x), ...)
+  pool::dbListTables(cPool(x), ...)
 })
 
 #' @rdname listTablesBE
@@ -142,15 +142,15 @@ setMethod('listTablesBE', signature(x = 'character'), function(x, ...) {
   if(inherits(x_pool, 'try-error')) {
     x_pool = getBackendID(x)
   }
-  stopifnot(DBI::dbIsValid(x_pool))
-  DBI::dbListTables(x_pool, ...)
+  stopifnot(pool::dbIsValid(x_pool))
+  pool::dbListTables(x_pool, ...)
 })
 
 #' @rdname listTablesBE
 #' @export
 setMethod('listTablesBE', signature(x = 'ANY'), function(x, ...) {
-  stopifnot(DBI::dbIsValid(x))
-  DBI::dbListTables(x, ...)
+  stopifnot(pool::dbIsValid(x))
+  pool::dbListTables(x, ...)
 })
 
 
@@ -168,7 +168,7 @@ setMethod('existsTableBE',
           signature(x = 'dbData', remote_name = 'character'),
           function(x, remote_name, ...) {
             stopifnot(remoteValid(x))
-            extabs = DBI::dbListTables(conn = cPool(x), ...)
+            extabs = pool::dbListTables(conn = cPool(x), ...)
             remote_name %in% extabs
           })
 
@@ -177,8 +177,8 @@ setMethod('existsTableBE',
 setMethod('existsTableBE',
           signature(x = 'ANY', remote_name = 'character'),
           function(x, remote_name, ...) {
-            stopifnot(DBI::dbIsValid(x))
-            extabs = DBI::dbListTables(conn = x, ...)
+            stopifnot(pool::dbIsValid(x))
+            extabs = pool::dbListTables(conn = x, ...)
             remote_name %in% extabs
           })
 

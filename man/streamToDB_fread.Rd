@@ -8,7 +8,8 @@ streamToDB_fread(
   path,
   backend_ID,
   remote_name = "test",
-  indices = NULL,
+  idx_col = NULL,
+  pk = NULL,
   nlines = 10000L,
   cores = 1L,
   callback = NULL,
@@ -24,11 +25,10 @@ streamToDB_fread(
 
 \item{remote_name}{name to assign table of read in values in database}
 
-\item{indices}{(optional) if provided, specified columns (after all callbacks
-complete) will have dictionaries generated, meaning a separate character vector
-will be created holding only the unique values, where the ordering of this vector
-is the mapped representative integer within the database table. These character
-vectors are invisibly returned as a named list.}
+\item{idx_col}{character. If not NULL, the specified column will be generated
+as unique ascending integers}
+
+\item{pk}{character. Which columns to use as primary key}
 
 \item{nlines}{integer. Number of lines to read per chunk}
 

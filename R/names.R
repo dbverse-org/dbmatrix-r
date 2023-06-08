@@ -24,10 +24,10 @@ dplyr_set_colnames = function(x, value) {
 
 dplyr_set_colnames_dbpointproxy = function(x, value) {
   stopifnot('Replacement names are not the same length as the number of columns' =
-              length(value) == ncol(x@data) - 2L) # account for intervening xy cols
+              length(value) == ncol(x@data) - 3L) # account for intervening uID and xy cols
 
   c_names = colnames(x@data)
-  c_names = c_names[-which(c_names %in% c('x', 'y'))]
+  c_names = c_names[-which(c_names %in% c('.uID', 'x', 'y'))]
   for(n_i in seq_along(c_names)) {
     cn = c_names[n_i]
     vn = as.name(value[n_i])
@@ -77,7 +77,7 @@ setMethod('names<-', signature(x = 'dbPolygonProxy', value = 'gdbIndex'), functi
 setMethod('names', signature(x = 'dbPointsProxy'), function(x) {
   x = reconnect(x)
   full_names = names(x@data)
-  full_names[-which(full_names %in% c('x', 'y'))]
+  full_names[-which(full_names %in% c('.uID', 'x', 'y'))]
 })
 #' @rdname hidden_aliases
 #' @export

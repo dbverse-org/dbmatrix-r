@@ -118,13 +118,14 @@ dbMatrix = setClass(
 
 
 setMethod('show', signature(object = 'dbMatrix'), function(object) {
+  object = reconnect(object)
 
   cat('backend_ID : ', object@hash, '\n')
   cat('name       : \'', object@remote_name, '\'\n', sep = '')
 
   dimn = slot(object, 'dim_names')
-  rown = dimn[[1]]
-  coln = dimn[[2]]
+  rown = dimn[[1L]]
+  coln = dimn[[2L]]
 
   # print class and dims #
   # -------------------- #
@@ -163,29 +164,27 @@ setMethod('show', signature(object = 'dbMatrix'), function(object) {
   }
 
   # prepare subset to print
-  conn = cPool(object) %>% pool::poolCheckout() # conn needed for compute()
+  conn = pool::poolCheckout(cPool(object)) # conn needed for compute()
   on.exit(pool::poolReturn(conn))
 
   preview = object
   cPool(preview) = conn # set conn as src
   preview_dt = preview@data %>%
     dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
-    dplyr::arrange(i, j) %>%
-    dplyr::compute() %>%
-    tidyr::pivot_wider(names_from = 'j', values_from = 'x') %>%
     data.table::as.data.table()
-  data.table::setkeyv(preview_dt, names(preview_dt)[1L]) # enforce ordering
+  data.table::setkeyv(preview_dt, c('i', 'j')) # enforce ordering
+  preview_dt = data.table::dcast(preview_dt, formula = i ~ j, value.var = 'x')
   colnames(preview_dt) = NULL
 
   if(nrow(preview_dt < 7L)) {
     print(preview_dt, digits = 5L, row.names = 'none')
   } else {
-    print(preview_dt[1:3,], digits = 5L, row.names = 'none')
+    print(preview_dt[1L:3L,], digits = 5L, row.names = 'none')
 
     sprintf(' ........suppressing %d columns and %d rows\n',
             object@dims[[2L]] - 10L, object@dims[[1L]] - 6L)
 
-    print(preview_dt[4:6,], digits = 5L, row.names = 'none')
+    print(preview_dt[4L:6L,], digits = 5L, row.names = 'none')
   }
 
   cat('\n')
@@ -375,7 +374,10 @@ setMethod('print', signature(x = 'dbPointsProxy'), function(x, n = 3, ...) {
 
 print_dbPointsProxy = function(x, n, ...) {
   refresh = getOption('gdb.update_show', FALSE)
-  p = capture.output(print(dplyr::select(x@data, -c('x', 'y')), n = n,
+  tbl_data = x@data %>%
+    dplyr::arrange(.uID) %>%
+    dplyr::select(-c('.uID', 'x', 'y'))
+  p = capture.output(print(tbl_data, n = n,
                            na.print = NULL, max_footer_lines = 0L,
                            width = getOption('width') - 12L, ...))
   db = gsub('# Database:', 'database   :', p[2L])
@@ -427,6 +429,17 @@ print_dbPointsProxy = function(x, n, ...) {
 #' @noRd
 setClassUnion('gdbIndex',
               members = c('logical', 'numeric', 'integer', 'character'))
+#' @title Virtual Class "gdbIndexNonChar" - Simple Class for GiottoDB indices
+#' @name gdbIndex
+#' @description
+#' This is a virtual class used for indices (in signatures) for indexing
+#' and sub-assignment of 'GiottoDB' objects. Simple class union of 'logical' and
+#' 'numeric'.
+#' Based on the 'index' class implemented in \pkg{Matrix}
+#' @keywords internal
+#' @noRd
+setClassUnion('gdbIndexNonChar',
+              members = c('logical', 'numeric'))
 
 ## dbMF ####
 #' @title Virtual Class "dbMFData" - Simple class for GiottoDB matrix and dataframes

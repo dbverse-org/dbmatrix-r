@@ -156,7 +156,7 @@ createDBPolygonProxy = function(SpatVector,
                                 overwrite = FALSE,
                                 chunk_size = 10000L,
                                 callback = NULL,
-                                custom_table_fields = NULL,
+                                custom_table_fields = fields_preset$dbPoly_geom,
                                 custom_table_fields_attr = NULL,
                                 attributes = NULL,
                                 ...) {
@@ -210,8 +210,84 @@ createDBPolygonProxy = function(SpatVector,
 
 
 
-createDBPointProxy = function(SpatVector) {
+createDBPointProxy = function(SpatVector,
+                              remote_name = 'pnt_test',
+                              db_path = ':temp:',
+                              xy_col = c('x', 'y'),
+                              extent = NULL,
+                              overwrite = FALSE,
+                              chunk_size = 10000L,
+                              callback = NULL,
+                              custom_table_fields = NULL,
+                              ...) {
+  db_path = getDBPath(db_path)
+  backend_ID = calculate_backend_id(db_path)
+  p = getBackendPool(backend_ID)
+  if(inherits(SpatVector, 'tbl')) assert_in_backend(x = SpatVector, p = p)
+  checkmate::assert_character(xy_col, len = 2L)
+  checkmate::assert_character(remote_name, len = 1L)
 
+  data = NULL
+  if(inherits(SpatVector, 'tbl_Pool')) { # data is already in DB and tbl is provided
+    data = SpatVector
+  } else { # data must be read in
+
+    # database input #
+    overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
+
+    # setup fields
+    if(is.character(custom_table_fields)) {
+      custom_table_fields[['.uID']] = 'UINTEGER NOT NULL'
+      custom_table_fields[['x']] = 'DOUBLE NOT NULL'
+      custom_table_fields[['y']] = 'DOUBLE NOT NULL'
+    }
+    if(is.null(custom_table_fields)) custom_table_fields = c(
+      .uID = 'UINTEGER NOT NULL',
+      x = 'DOUBLE NOT NULL',
+      y = 'DOUBLE NOT NULL'
+    )
+
+    # read data if needed #
+    if(is.character(SpatVector)) {
+      n_point = streamToDB_fread(
+        path = SpatVector,
+        backend_ID = backend_ID,
+        remote_name = remote_name,
+        idx_col = '.uID',
+        pk = '.uID',
+        nlines = chunk_size,
+        callback = function(x) {
+          x = callback(x)
+
+          # setup reserved cols #
+          # set idx_col name
+          if('.uID' %in% names(x)) stopf(
+            'colname \'.uID\' is reserved for dbPointProxy, but already exists'
+          )
+          # set xy_col
+          if(xy_col[[1L]] != 'x' & 'x' %in% names(x)) stopf(
+            'colname \'x\' is reserved for the coordinate info designated in param xy_col, but already exists'
+          )
+          if(xy_col[[1L]] != 'y' & 'y' %in% names(x)) stopf(
+            'colname \'y\' is reserved for the coordinate info designated in param xy_col, but already exists'
+          )
+          data.table::setnames(x, old = c(xy_col[[1L]]), new = c('x'))
+          data.table::setnames(x, old = c(xy_col[[2L]]), new = c('y'))
+          data.table::setcolorder(x, c('x', 'y'))
+        },
+        custom_table_fields = custom_table_fields,
+        ...
+      )
+    }
+  }
+
+  # create object #
+  dbpoint = dbPointsProxy(
+    n_point = n_point,
+    data = data,
+    hash = backend_ID,
+    remote_name = remote_name
+  )
 }
 
 
@@ -578,6 +654,77 @@ svpoint_to_dt = function (spatvector, include_values = TRUE)
 
 
 
+
+
+
+# parallelization ####
+
+#' EXPERIMENTAL
+#' Starting from a terra SpatVector, distribute chunks to be processed to parallel
+#' processes via future.lapply(). The results are then put back in the original
+#' session and rbinded together into a new terra SpatVector
+#' - All steps are in-memory
+#' - Requires a lot of wrap() serialization
+#' - much SLOWER than serial processing in a small dataset
+#' @name sv_lapply_parallel
+#' @title Apply a function on a SpatVector in parallel
+#' @param ... additional params passed to future.lapply
+#' @keywords internal
+#' @noRd
+sv_lapply_parallel = function(X,
+                             FUN,
+                             n_chunk = NULL,
+                             n_per_chunk = 2e5,
+                             ...) {
+  checkmate::assert_class(X, 'SpatVector')
+  checkmate::assert_function(FUN)
+  checkmate::assert_numeric(n_per_chunk)
+  if(is.null(n_chunk)) n_chunk = as.integer(nrow(X) / n_per_chunk)
+
+  # generate stops indices
+  stops_idx = chunk_ranges(start = 1, stop = nrow(X), n_chunks = n_chunk)
+
+  # split SpatVector and wrap
+  sv_wrap_list = lapply(stops_idx, function(chunk_range) {
+    terra::wrap(X[chunk_range[1L]:chunk_range[2L]])
+  })
+
+  # parallelized function
+  wrapped_out = future.apply::future_lapply(
+    sv_wrap_list,
+    future.seed = TRUE,
+    function(passed_fun, x) {
+      x = terra::vect(x)
+      x = passed_fun(x)
+      terra::wrap(x)
+    },
+    passed_fun = FUN,
+    ...)
+
+  # unwrap
+  out = lapply(wrapped_out, function(sv_wrapped) {
+    terra::vect(sv_wrapped)
+  })
+
+  # combine
+  do.call(rbind, out)
+}
+
+
+
+
+
+#' EXPERIMENTAL
+#' Chunk an operation by spatially tiling a dbSpatVectorProxy. The tiles are
+#' pulled into memory in parallel processes where they are then run. Results
+#' are then either returned
+# dbspat_tile_lapply_parallel = function() {
+#
+# }
+
+
+#' EXPERIMENTAL
+#' Chunk an operation by splitting a
 
 
 

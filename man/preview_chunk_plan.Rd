@@ -4,7 +4,7 @@
 \alias{preview_chunk_plan}
 \title{Plot a preview of the chunk plan}
 \usage{
-preview_chunk_plan(extent_list)
+preview_chunk_plan(extent_list, mode = c("poly", "bound"))
 }
 \arguments{
 \item{extent_list}{list of extents from \code{chunk_plan}}
