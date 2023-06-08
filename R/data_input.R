@@ -101,7 +101,7 @@ streamToDB_fread = function(path,
   fext = file_extension(path)
   if('csv' %in% fext) file_format = 'csv'
   if('tsv' %in% fext) file_format = 'tsv'
-  atab = arrow::open_dataset(path, format = fext)
+  atab = arrow::open_dataset(path, format = file_format)
   n_rows = nrow(atab)
 
   # chunked reading
