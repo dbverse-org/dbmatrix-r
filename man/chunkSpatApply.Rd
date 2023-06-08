@@ -14,6 +14,7 @@ chunkSpatApplyPoly(
   extent = NULL,
   n_per_chunk = getOption("gdb.nperchunk", 1e+05),
   remote_name = NULL,
+  progress = TRUE,
   ...
 )
 
@@ -24,7 +25,8 @@ chunkSpatApplyPoints(
   fun,
   extent = NULL,
   n_per_chunk = getOption("gdb.nperchunk", 1e+05),
-  remote_name = NULL
+  remote_name = NULL,
+  progress = TRUE
 )
 }
 \arguments{
@@ -47,14 +49,18 @@ This value can be set globally using options(gdb.nperchunk = ?)}
 \item{remote_name}{name to assign the result in the database. Defaults to a
 generic incrementing 'gdb_nnn' if not given}
 
+\item{progress}{whether to plot the progress}
+
 \item{...}{additional params to pass to GiottoDB object creation}
 }
 \value{
 dbPolygonProxy or dbPointsProxy
 }
 \description{
-Split a function operation into multiple spatial chunks that is parallelized
-if desired using \code{future_lapply}. Results are appended back into the
-database as a new table. Use \code{chunkSpatApplyPoly} if the expected output
-is polygon information or \code{chunkSpatApplyPoints} if points.
+Split a function operation into multiple spatial chunks. Results are appended
+back into the database as a new table. This is not parallelized as some databases
+do not work with parallel writes, but are more performant with large single
+chunks of data. The functions that are provided, however, can be parallelized
+in their processing after the chunk has been pulled into memory and only needs
+to be combined into one before being written.
 }

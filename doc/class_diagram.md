@@ -17,6 +17,7 @@ class dbData {
   +data: tbl_Pool
   +hash: character
   +remote_name: character
+  +init: logical
   -reconnect()
 }
 class dbMatrix {
@@ -29,7 +30,9 @@ class dbMatrix {
   -row*()
   -t()
 }
-class dbDataFrame 
+class dbDataFrame {
+  +key
+}
 class dbSpatProxyData {
   [VIRTUAL]
   +extent: SpatExtent

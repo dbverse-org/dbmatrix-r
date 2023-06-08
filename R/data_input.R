@@ -61,11 +61,9 @@ readMatrixDT = function(path,
 #' @param path path to the matrix file
 #' @param backend_ID ID of the backend to use
 #' @param remote_name name to assign table of read in values in database
-#' @param indices (optional) if provided, specified columns (after all callbacks
-#' complete) will have dictionaries generated, meaning a separate character vector
-#' will be created holding only the unique values, where the ordering of this vector
-#' is the mapped representative integer within the database table. These character
-#' vectors are invisibly returned as a named list.
+#' @param idx_col character. If not NULL, the specified column will be generated
+#' as unique ascending integers
+#' @param pk character. Which columns to use as primary key
 #' @param nlines integer. Number of lines to read per chunk
 #' @param cores fread cores to use
 #' @param callback callback functions to apply to each data chunk before it is
@@ -78,44 +76,33 @@ readMatrixDT = function(path,
 streamToDB_fread = function(path,
                             backend_ID,
                             remote_name = 'test',
-                            indices = NULL,
+                            idx_col = NULL,
+                            pk = NULL,
                             nlines = 10000L,
                             cores = 1L,
                             callback = NULL,
                             overwrite = FALSE,
                             custom_table_fields = NULL,
                             ...) {
-  stopifnot(file.exists(path))
-  stopifnot(is.character(remote_name))
-  stopifnot(is.character(backend_ID))
-  stopifnot(is.numeric(nlines), length(nlines) == 1L)
+  checkmate::assert_file_exists(path)
+  checkmate::assert_character(remote_name)
+  checkmate::assert_numeric(nlines, len = 1L)
   if(!is.integer(nlines)) nlines = as.integer(nlines)
-  if(!is.null(indices)) stopifnot(is.character(indices))
+  if(!is.null(idx_col)) checkmate::assert_character(idx_col, len = 1L)
   if(!is.null(custom_table_fields)) stopifnot(is.character(custom_table_fields))
+  p = evaluate_conn(backend_ID, mode = 'pool')
 
-  p = getBackendPool(backend_ID = backend_ID)
 
   # overwrite if necessary
   overwrite_handler(p = p, remote_name = remote_name, overwrite = overwrite)
 
-  # custom table creation
-  # allows setting of specific data types (that do not conflict with data)
-  # allows setting of keys and certain constraints
-  if(!is.null(custom_table_fields)) {
-    DBI::dbCreateTable(
-      conn = p,
-      name = remote_name,
-      fields = custom_table_fields,
-      row.names = NULL,
-      temporary = FALSE
-    )
-  }
 
   # chunked reading
-  chunk_num = 0
+  chunk_num = idx_count = 0
   n_rows = fpeek::peek_count_lines(path = path)
   c_names_cache = colnames(data.table::fread(input = path, nrows = 0L))
   idx_list = NULL
+  extab = FALSE
   repeat {
     chunk_num = chunk_num + 1
     nskip = (chunk_num - 1) * nlines + 1
@@ -139,20 +126,38 @@ streamToDB_fread = function(path,
       chunk = callback(chunk)
     }
 
-    # indices generation
-    if(!is.null(indices)) {
-      for(idx in indices) {
-        idx_list[[idx]] = unique(idx_list[[idx]], chunk[[idx]])
-        chunk[, (idx) := lapply(get(idx), function(x) which(x == idx_list[[idx]]))]
+    # index col generation
+    if(!is.null(idx_col)) {
+      if(idx_col %in% names(chunk)) {
+        warning('idx_col already exists as a column.\n The unique index will not be generated')
+        idx_col = NULL # set to null so warns only once
+      } else {
+        chunk[, (idx_col) := seq(.N) + idx_count]
+        idx_count = chunk[, max(.SD), .SDcols = idx_col]
+        data.table::setcolorder(chunk, idx_col)
       }
     }
 
+    if(!extab) {
+      # custom table creation
+      # allows setting of specific data types (that do not conflict with data)
+      # allows setting of keys and certain constraints
+      createTableBE(
+        conn = p,
+        name = remote_name,
+        fields_df = chunk,
+        fields_custom = custom_table_fields,
+        pk = pk,
+        row.names = NULL,
+        temporary = FALSE
+      )
+      extab = TRUE
+    }
+
     # append data (create if necessary)
-    pool::dbWriteTable(conn = p,
-                       name = remote_name,
-                       value = chunk,
-                       append = TRUE,
-                       temporary = FALSE)
+    pool::dbAppendTable(conn = p,
+                        name = remote_name,
+                        value = chunk)
   }
 
   return(invisible(idx_list))
@@ -475,103 +480,197 @@ callback_swapCols = function(x, c1, c2) {
 # data appending ####
 # TODO
 
-#' @name append_permanent
-#' @title Append values to database
-#' @description
-#' Writes values to database in an appending manner. As such, it does not check
-#' if there is already an existing table.
-#' @param p Pool connection object
-#' @param x data to append, given as a data.frame-like object
-#' @param remote_name name to assign the object on the database
-#' @param data_type type of data that is being appended to
-#' @param fields additional fields constraints that might be desired if the table
-#' is being newly generated
-#' @param ... additional params to pass to \code{\link[DBI]{dbCreateTable}}
-append_permanent = function(p,
-                            x,
-                            remote_name,
-                            data_type = c('matrix', 'df', 'polygon', 'points'),
-                            fields = NULL,
-                            ...) {
+
+
+
+# @name writeAsGDB
+# @title Write an object into the database backend as a GiottoDB object
+# @description
+# Given a matrix, data.frame-like object, or SpatVector polygon or points,
+# write the values to database. Supports appending of information in case this
+# data should be added iteratively into the database (such as when operations
+# are parallelized). Returns a GiottoDB object of the analogous class.
+# @param backend_ID backend_ID, or pool object with which to associate this object
+# to a specific database backend
+# @param x object to write
+# @param append whether to append the values
+# @param remote_name name to assign in the database
+# @param ... additional params to pass
+# setMethod('writeAsGDB', signature('data.frame'), function(backend_ID, x, append = FALSE, ...) {
+#   p = evaluate_conn(backend_ID, mode = 'pool')
+#   checkmate::assert_logical(append)
+#
+#   dbDataFrame(key = ,data = ,hash = ,remote_name = )
+# })
+
+
+
+
+
+
+# @name append_permanent
+# @title Append values to database
+# @description
+# Writes values to database in an appending manner. As such, it does not check
+# if there is already an existing table.
+# @param p Pool connection object
+# @param x data to append, given as a data.frame-like object
+# @param remote_name name to assign the object on the database
+# @param data_type type of data that is being appended to
+# @param fields additional fields constraints that might be desired if the table
+# is being newly generated
+# @param ... additional params to pass to \code{\link[DBI]{dbCreateTable}}
+# append_permanent = function(p,
+#                             x,
+#                             remote_name,
+#                             data_type = c('matrix', 'df', 'polygon', 'points'),
+#                             fields = NULL,
+#                             ...) {
+#   checkmate::assert_class(p, 'Pool')
+#   checkmate::assert_character(remote_name)
+#   checkmate::assert_character(data_type)
+#
+#   # create table if fields constraints are provided and table does not exist
+#   if(!is.null(fields) & !existsTableBE(p, remote_name)) {
+#     switch(data_type,
+#            'matrix' = {
+#              pool::dbCreateTable(conn = p,
+#                                  name = remote_name,
+#                                  fields = fields,
+#                                  row.names = NA,
+#                                  temporary = FALSE)
+#            },
+#            'df' = {
+#              pool::dbCreateTable(conn = p,
+#                                  name = remote_name,
+#                                  fields = fields,
+#                                  row.names = NA,
+#                                  temporary = FALSE)
+#            },
+#            'polygon' = {
+#              pool::dbCreateTable(conn = p,
+#                                  name = remote_name,
+#                                  fields = fields[[1L]],
+#                                  row.names = NA,
+#                                  temporary = FALSE)
+#              if(!is.null(fields[[2L]])) {
+#                pool::dbCreateTable(conn = p,
+#                                    name = paste0(remote_name, '_attr'),
+#                                    fields = fields[[2L]],
+#                                    row.names = NA,
+#                                    temporary = FALSE)
+#              }
+#            },
+#            'points' = {
+#              pool::dbCreateTable(conn = p,
+#                                  name = remote_name,
+#                                  fields = fields,
+#                                  row.names = NA,
+#                                  temporary = FALSE)
+#            })
+#   }
+#
+#   # append in data
+#   # assumes input is from terra::geom() and terra::values()
+#   switch(data_type,
+#          'matrix' = {
+#
+#          },
+#          'df' = {
+#          },
+#          'polygon' = {
+#
+#          },
+#          'points' = {
+#          })
+# }
+
+
+
+
+
+
+
+
+# internal function to stream specific data types into the database backend.
+# if custom_table_fields is provided and the table does not yet exist then
+# a specific DB table will be created with constraints. In all cases,
+# values will be fed to `dbWriteTable` with `append = TRUE` so that the values
+# will be appended, and if a specific table does not yet exist, it will be created.
+# Right now this is mainly intended only for spatial objects since they are the
+# only ones that require in-memory chunked processing
+setMethod('stream_to_db', signature(p = 'Pool', remote_name = 'character', x = 'SpatVector'), function(p, remote_name, x, ...) {
+  switch(terra::geomtype(x),
+         'polygons' = append_permanent_dbpoly(p = p, remote_name = remote_name, SpatVector = x, ...),
+         'points' = append_permanent_dbpoints(p = p, remote_name = remote_name, SpatVector = x, ...))
+})
+
+
+
+append_permanent_dbpoly = function(p,
+                                   SpatVector,
+                                   remote_name,
+                                   start_index = NULL,
+                                   custom_table_fields = NULL,
+                                   custom_table_fields_attr = NULL,
+                                   ...) {
   checkmate::assert_class(p, 'Pool')
-  checkmate::assert_character(remote_name)
-  checkmate::assert_character(data_type)
+  checkmate::assert_character(remote_name, len = 1L)
+  checkmate::assert_class(SpatVector, 'SpatVector')
+  checkmate::assert_true(terra::geomtype(SpatVector) == 'polygons')
+  if(!is.null(custom_table_fields)) checkmate::assert_character(custom_table_fields)
+  if(!is.null(custom_table_fields_attr)) checkmate::assert_character(custom_table_fields_attr)
+  attr_name = paste0(remote_name, '_attr')
 
-  # create table if fields constraints are provided and table does not exist
-  if(!is.null(fields) & !existsTableBE(p, remote_name)) {
-    switch(data_type,
-           'matrix' = {
-             pool::dbCreateTable(conn = p,
-                                 name = remote_name,
-                                 fields = fields,
-                                 row.names = NA,
-                                 temporary = FALSE)
-           },
-           'df' = {
-             pool::dbCreateTable(conn = p,
-                                 name = remote_name,
-                                 fields = fields,
-                                 row.names = NA,
-                                 temporary = FALSE)
-           },
-           'polygon' = {
-             pool::dbCreateTable(conn = p,
-                                 name = remote_name,
-                                 fields = fields[[1L]],
-                                 row.names = NA,
-                                 temporary = FALSE)
-             if(!is.null(fields[[2L]])) {
-               pool::dbCreateTable(conn = p,
-                                   name = paste0(remote_name, '_attr'),
-                                   fields = fields[[2L]],
-                                   row.names = NA,
-                                   temporary = FALSE)
-             }
-           },
-           'points' = {
-             pool::dbCreateTable(conn = p,
-                                 name = remote_name,
-                                 fields = fields,
-                                 row.names = NA,
-                                 temporary = FALSE)
-           })
+  # custom table creation
+  # allows setting of specific data types (that do not conflict with data)
+  # allows setting of keys and certain constraints
+  if(!existsTableBE(x = p, remote_name = remote_name)) {
+    if(!is.null(custom_table_fields)) {
+      pool::dbCreateTable(
+        conn = p,
+        name = remote_name,
+        fields = custom_table_fields,
+        row.names = NA,
+        temporary = FALSE
+      )
+    }
+    if(!is.null(custom_table_fields_attr)) {
+      pool::dbCreateTable(
+        conn = p,
+        name = attr_name,
+        fields = custom_table_fields_attr,
+        row.names = NA,
+        temporary = FALSE
+      )
+    }
+    start_index = 0L
+  } else {
+    start_index = sql_max(p, attr_name, 'geom')
   }
 
-  # append in data
-  # assumes input is from terra::geom() and terra::values()
-  switch(data_type,
-         'matrix' = {
 
-         },
-         'df' = {
-         },
-         'polygon' = {
+  # extract info
+  geom_DT = terra::geom(SpatVector, df = TRUE) %>%
+    data.table::setDT()
+  atts_DT = terra::values(SpatVector) %>%
+    data.table::setDT()
+  # assign common geom col to atts table
+  atts_DT[, geom := unique(geom_DT$geom)]
 
-         },
-         'points' = {
-         })
-}
+  # increment indices
+  geom_DT[, geom := geom + start_index]
+  atts_DT[, geom := geom + start_index]
 
-
-
-# TODO
-
-# must already know which geom values it can have
-append_permanent_dbpoly = function() {
-  if(length(x) == 2L) {
-    checkmate::assert_subset(c('geom', 'part', 'x', 'y', 'hole'),
-                             names(x[[1L]]))
-    checkmate::assert_subset(c('geom', 'part', 'x', 'y', 'hole'),
-                             names(x[[1L]]))
-  }
+  # append/write info
   pool::dbWriteTable(conn = p,
                      name = remote_name,
-                     value = x,
+                     value = geom_DT,
                      append = TRUE,
                      temporary = FALSE)
   pool::dbWriteTable(conn = p,
-                     name = paste0(remote_name, '_attr'),
-                     value = x,
+                     name = attr_name,
+                     value = atts_DT,
                      append = TRUE,
                      temporary = FALSE)
 }
@@ -579,11 +678,77 @@ append_permanent_dbpoly = function() {
 
 
 
+append_permanent_dbpoints = function(p,
+                                     SpatVector,
+                                     remote_name,
+                                     custom_table_fields = NULL,
+                                     ...) {
+  checkmate::assert_class(p, 'Pool')
+  checkmate::assert_character(remote_name, len = 1L)
+  checkmate::assert_class(SpatVector, 'SpatVector')
+  checkmate::assert_true(terra::geomtype(SpatVector) == 'points')
+  if(!is.null(custom_table_fields)) checkmate::assert_character(custom_table_fields)
+
+  # custom table creation
+  # allows setting of specific data types (that do not conflict with data)
+  # allows setting of keys and certain constraints
+  if(!existsTableBE(x = p, remote_name = remote_name)) {
+    if(!is.null(custom_table_fields)) {
+      pool::dbCreateTable(
+        conn = p,
+        name = remote_name,
+        fields = custom_table_fields,
+        row.names = NA,
+        temporary = FALSE
+      )
+    }
+  }
+
+
+  # extract info
+  geom_DT = data.table::setDT(terra::geom(SpatVector, df = TRUE))
+  atts_DT = data.table::setDT(terra::values(SpatVector))
+  chunk = cbind(geom_DT[, .(x, y)], atts_DT)
+
+  # append/write info
+  pool::dbWriteTable(conn = p,
+                     name = remote_name,
+                     value = chunk,
+                     append = TRUE,
+                     temporary = FALSE)
+}
 
 
 
+setMethod(
+  'stream_to_db',
+  signature(p = 'Pool', remote_name = 'character', x = 'data.frame'),
+  function(p, remote_name, x, custom_table_fields = NULL, ...) {
+    checkmate::assert_class(p, 'Pool')
+    checkmate::assert_character(remote_name, len = 1L)
 
+    # custom table creation
+    # allows setting of specific data types (that do not conflict with data)
+    # allows setting of keys and certain constraints
+    if(!existsTableBE(x = p, remote_name = remote_name)) {
+      if(!is.null(custom_table_fields)) {
+        pool::dbCreateTable(
+          conn = p,
+          name = remote_name,
+          fields = custom_table_fields,
+          row.names = NA,
+          temporary = FALSE
+        )
+      }
+    }
 
+    # append/write info
+    pool::dbWriteTable(conn = p,
+                       name = remote_name,
+                       value = x,
+                       append = TRUE,
+                       temporary = FALSE)
+  })
 
 
 

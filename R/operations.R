@@ -301,6 +301,25 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 })
 
 
+#' @rdname hidden_aliases
+#' @export
+setMethod('t', signature(x = 'dbPointsProxy'), function(x) {
+  x = reconnect(x)
+  x@data = x@data %>% dplyr::select(x = y, y = x, dplyr::everything())
+  e = x@extent
+  x@extent = terra::ext(e$ymin, e$ymax, e$xmin, e$xmax)
+  x
+})
+#' @rdname hidden_aliases
+#' @export
+setMethod('t', signature(x = 'dbPolygonProxy'), function(x) {
+  x = reconnect(x)
+  x@data = x@data %>% dplyr::select(geom, part, x = y, y = x, hole)
+  e = x@extent
+  x@extent = terra::ext(e$ymin, e$ymax, e$xmin, e$xmax)
+  x
+})
+
 
 
 
@@ -394,7 +413,7 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
 #' @export
 setMethod('ncol', signature(x = 'dbPointsProxy'), function(x) {
   x = reconnect(x)
-  ncol(x@data) - 2L # remove 2 for x and y cols
+  ncol(x@data) - 3L # remove 3 for .uID,  x, and y cols
 })
 #' @rdname hidden_aliases
 #' @export
@@ -442,7 +461,7 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 #' @export
 setMethod('dim', signature('dbPointsProxy'), function(x) {
   res = callNextMethod(x)
-  res[2L] = res[2L] - 2L # hide ncols that include x and y cols
+  res[2L] = res[2L] - 3L # hide ncols that include .uID, x, and y cols
   res
 })
 #' @rdname hidden_aliases

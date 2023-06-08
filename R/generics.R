@@ -20,9 +20,10 @@ setGeneric('extent_calculate', function(x, ...) standardGeneric('extent_calculat
 setGeneric('extent_filter', function(x, extent, include, ...) standardGeneric('extent_filter'))
 setGeneric('filter_dbspat', function(x, by_geom, by_value, ...) standardGeneric('filter_dbspat'))
 setGeneric('dbspat_to_sv', function(x, ...) standardGeneric('dbspat_to_sv'))
+setGeneric('as.spatvector', function(x, ...) standardGeneric('as.spatvector'))
 
 # backend system interactions ####
-setGeneric('append')
+setGeneric('stream_to_db', function(p, remote_name, x, ...) standardGeneric('stream_to_db'))
 setGeneric('validBE', function(x, ...) standardGeneric('validBE'))
 setGeneric('tableInfo', function(x, remote_name, ...) standardGeneric('tableInfo'))
 setGeneric('listTablesBE', function(x, ...) standardGeneric('listTablesBE'))

@@ -10,12 +10,7 @@
   assign(".DB_ENV", new.env(), envir = asNamespace(pkgname))
 
   # setup result ID counter
-  options(gdb.res_count = local({
-    idCounter <- -1L
-    function(){
-      idCounter <<- idCounter + 1L                     # increment
-      formatC(idCounter, width=3, flag=0, format="d")  # format & return
-    }}))
+  options(gdb.res_count = 1L)
 
   reg.finalizer(
     e = .DB_ENV,

@@ -69,6 +69,25 @@ vector_to_string = function(x) {
 
 
 
+# chunking ####
+
+# find chunk ranges to use. Returns as a list
+#' @keywords internal
+#' @noRd
+chunk_ranges = function(start, stop, n_chunks) {
+  stops = floor(seq(start, stop, length.out = n_chunks + 1L))
+  stops_idx = lapply(seq(n_chunks), function(i) {
+    c(stops[[i]], stops[[i + 1]] - 1)
+  })
+  stops_idx[[length(stops_idx)]][2] = stops_idx[[length(stops_idx)]][2] + 1L
+  stops_idx
+}
+
+
+
+
+
+
 # DB characteristics ####
 
 
@@ -312,7 +331,9 @@ file_extension = function(file)
 #' @title Create a counter
 #' @noRd
 result_count = function() {
-  paste0('gdb_', getOption('gdb.res_count')())
+  count = sprintf('%03d', getOption('gdb.res_count'))
+  options(gdb.res_count = count + 1L)
+  paste0('gdb_', count)
 }
 
 

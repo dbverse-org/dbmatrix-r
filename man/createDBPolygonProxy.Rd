@@ -14,7 +14,7 @@ createDBPolygonProxy(
   overwrite = FALSE,
   chunk_size = 10000L,
   callback = NULL,
-  custom_table_fields = NULL,
+  custom_table_fields = fields_preset$dbPoly_geom,
   custom_table_fields_attr = NULL,
   attributes = NULL,
   ...

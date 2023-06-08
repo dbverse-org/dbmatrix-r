@@ -20,6 +20,7 @@ chunk_spat_apply(
   n_per_chunk = 1e+05,
   remote_name = NULL,
   output = c("tbl", "dbPolygonProxy", "dbPointsProxy"),
+  progress = TRUE,
   ...
 )
 }

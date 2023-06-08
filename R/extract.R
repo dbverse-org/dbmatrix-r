@@ -154,3 +154,130 @@ flex_window_order = function(x, order_cols) {
   call_str = paste0('x %>% dbplyr::window_order(', keys, ')')
   eval(str2lang(call_str))
 }
+
+
+
+
+
+# dbSpatProxyData ####
+
+## rows only ####
+# character input subsets the attribute table
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPolygonProxy', i = 'character', j = 'missing', drop = 'ANY'),
+  function(x, i, ..., drop = FALSE) {
+    x = reconnect(x)
+    x@attributes@data = x@attributes@data %>%
+      dplyr::select(i)
+    x
+  }
+)
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'character', j = 'missing', drop = 'ANY'),
+  function(x, i, ..., drop = FALSE) {
+    x = reconnect(x)
+    x@data = x@data %>%
+      dplyr::select(c(.uID, x, y, i))
+    x
+  }
+)
+# numeric input subsets by row index
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'numeric', j = 'missing', drop = 'ANY'),
+  function(x, i, ..., drop = FALSE) {
+    x = reconnect(x)
+    x@data = x@data %>%
+      dplyr::filter(.uID %in% i)
+    x
+  }
+)
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'logical', j = 'missing', drop = 'ANY'),
+  function(x, i, ..., drop = FALSE) {
+    x = reconnect(x)
+    uIDs = x@data %>%
+      dplyr::pull(.uID)
+    bool_vect = uIDs[i]
+    x@data = x@data %>%
+      dplyr::filter(.uID %in% bool_vect)
+    x
+  }
+)
+## cols only ####
+# character input subsets the attribute table
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPolygonProxy', i = 'missing', j = 'character', drop = 'ANY'),
+  function(x, j, ..., drop = FALSE) {
+    x = reconnect(x)
+    x@attributes@data = x@attributes@data %>%
+      dplyr::select(i)
+    x
+  }
+)
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'missing', j = 'character', drop = 'ANY'),
+  function(x, j, ..., drop = FALSE) {
+    x = reconnect(x)
+    x@data = x@data %>%
+      dplyr::select(c(.uID, x, y, j))
+    x
+  }
+)
+# numeric input subsets by row index
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'missing', j = 'numeric', drop = 'ANY'),
+  function(x, j, ..., drop = FALSE) {
+    x = reconnect(x)
+    sel_cols = names(x)[j]
+    x@data = x@data %>%
+      dplyr::select(.uID, x, y, sel_cols)
+    x
+  }
+)
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'missing', j = 'logical', drop = 'ANY'),
+  function(x, j, ..., drop = FALSE) {
+    x = reconnect(x)
+    sel_cols = names(x)[j]
+    x@data = x@data %>%
+      dplyr::select(.uID, x, y, sel_cols)
+    x
+  }
+)
+
+## rows and cols ####
+# i char / j char NOT DEFINED
+#
+#' @rdname hidden_aliases
+#' @export
+setMethod(
+  '[', signature(x = 'dbPointsProxy', i = 'gdbIndexNonChar', j = 'gdbIndex', drop = 'ANY'),
+  function(x, i, j, ..., drop = FALSE) {
+    x = reconnect(x)
+    x = x[, j, ..., drop]
+    x = x[i, , ..., drop]
+    x
+  }
+)
+
+
+
+
+
+
