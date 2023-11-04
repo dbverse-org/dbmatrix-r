@@ -1,6 +1,6 @@
 Package: dbMatrix
 Title: dbMatrix
-Version: 0.0.0.9002
+Version: 0.0.0.9000
 Authors@R:
   c(person("Edward", "C. Ruiz", , "ecr7407@example.com", role = c("aut"),
            comment = c(ORCID = "0000-0002-9174-5387")),
