@@ -1,4 +1,4 @@
-url: https://ed2uiz.github.io/dbMatrix/
+url: ed2uiz.github.io/dbMatrix/
 template:
   bootstrap: 5
-
+  bootswatch: slate

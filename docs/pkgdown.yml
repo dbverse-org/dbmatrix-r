@@ -2,8 +2,5 @@ pandoc: 3.1.1
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles: {}
-last_built: 2023-11-04T18:16Z
-urls:
-  reference: https://ed2uiz.github.io/dbMatrix/reference
-  article: https://ed2uiz.github.io/dbMatrix/articles
+last_built: 2023-11-04T18:38Z
 

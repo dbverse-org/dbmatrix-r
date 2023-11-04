@@ -1,69 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/404.html</loc>
+    <loc>/404.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/LICENSE.html</loc>
+    <loc>/LICENSE.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/authors.html</loc>
+    <loc>/authors.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/index.html</loc>
+    <loc>/index.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/news/index.html</loc>
+    <loc>/news/index.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/castNumeric.html</loc>
+    <loc>/reference/castNumeric.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/colTypes.html</loc>
+    <loc>/reference/colTypes.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/createDBDenseMatrix.html</loc>
+    <loc>/reference/createDBDenseMatrix.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/dbDataFrame-class.html</loc>
+    <loc>/reference/dbDataFrame-class.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/dbDenseMatrix-class.html</loc>
+    <loc>/reference/dbDenseMatrix-class.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/dbMatrix-class.html</loc>
+    <loc>/reference/dbMatrix-class.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/dbSparseMatrix-class.html</loc>
+    <loc>/reference/dbSparseMatrix-class.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/flex_window_order.html</loc>
+    <loc>/reference/flex_window_order.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/get_dbdir.html</loc>
+    <loc>/reference/get_dbdir.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/get_tblName.html</loc>
+    <loc>/reference/get_tblName.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/index.html</loc>
+    <loc>/reference/index.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/nrow.html</loc>
+    <loc>/reference/nrow.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/pipe.html</loc>
+    <loc>/reference/pipe.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/print_array.html</loc>
+    <loc>/reference/print_array.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/simulate_objects.html</loc>
+    <loc>/reference/simulate_objects.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/toDbDense.html</loc>
+    <loc>/reference/toDbDense.html</loc>
   </url>
   <url>
-    <loc>https://ed2uiz.github.io/dbMatrix/reference/to_ijx_disk.html</loc>
+    <loc>/reference/to_ijx_disk.html</loc>
   </url>
 </urlset>
