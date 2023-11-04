@@ -1,0 +1,109 @@
+---
+title: "Spatial Operations"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+### load package
+```{r, eval=FALSE}
+devtools::load_all('../') 
+```
+
+### simulate objects to use
+```{r, eval=FALSE}
+dbpoly = sim_dbPolygonProxy()
+dbpoints = sim_dbPointsProxy()
+```
+
+
+
+### terra::query() with dbSpatProxy objects
+```{r, eval=FALSE}
+dbpoly2 = query(dbpoly, where = 'poly_ID = \'101161259912191124732236989250178928032\'')
+# (sql_query also exists as an internal generic for working with the remote tables
+# that allows lazy usage of SQL within dplyr chains)
+```
+
+
+
+### extent-based selection from dbSpatProxy
+```{r, eval=FALSE}
+# original dbpoly extent = 6391.46568586489, 6903.57332779812, -5153.89721175534, -4694.86823300896 (xmin, xmax, ymin, ymax)
+subset_ext = terra::ext(6500, 6800, -5000, -4800)
+```
+
+
+
+
+### Internal function for filtering dbSpatProxy objects
+Steps:    
+simplify to point by finding mean of vertices to make it easier to select a polygon instead of overlapping any of the vertices and overrunning the spatial bound desired. Hard selection to perform subset so that xminbound <= xvals >= xmaxbound.    
+`filter_dbspat()` is a dplyr/dbplyr based function to manipulate the data with across either the geometry OR value data.
+```{r, eval=FALSE}
+sub_dbpoly = filter_dbspat(dbpoly, by_geom = function(x) {
+  x = extent_filter(x, subset_ext, include = rep(TRUE, 4), method = 'mean')
+})
+```
+
+
+
+
+
+### Spatial Chunked/Tiled Operations
+Some spatial operations are hard to perform without a dedicated (and often non-standardized) set of database spatial operations. Spatial chunking will pull out patches of the spatial data and perform the operations in a chunked manner in memory. Then send it back to the database.    
+
+The following are some of the internal operations inside of the `chunk_spat_apply()` function    
+#### previewing a chunking plan
+```{r, eval=FALSE}
+ext_list = chunk_plan(extent = ext(dbpoly), min_chunks = 4L)
+expected_len = nrow(dbpoly)
+preview_chunk_plan(ext_list)
+```
+
+
+#### getting a selection for chunking
+The selection here is with a soft selection on the top and the right spatial bounds, effectively meaning this: xminbound <= xvals > xmaxbound and yminbound <= yvals > ymaxbound. This prevents double selection of values when tiling.
+```{r, eval=FALSE}
+chunk_x_list = lapply(
+  ext_list,
+  function(e) {
+    # 'soft' selections on top and right            #bottom, left, top, right
+    extent_filter(x = dbpoly, extent = e, include = c(TRUE, TRUE, FALSE, FALSE),
+                  method = 'mean')
+  }
+)
+```
+
+#### show that the chunking operation worked properly
+```{r, eval=FALSE}
+chunk_x_list_len = lapply(chunk_x_list, nrow) # show how many polys per chunk
+select_len_sum = do.call(sum, chunk_x_list_len) # sum of all polys matches input with 462 polys
+```
+
+
+
+### perform spatial chunking
+Test with `terra::extract()` spatially chunked over database `dbpoly` and `dbpoints`. The spatial chunking is first performed on `dbpoly` using the desired spatial extent, this spatial extent is then slightly enlarged and then applied to `dbpoints` so that operation performed on `dbpoly` never see the edge of the data they are supposed to work with. The desired operation is then performed and repeatd for all the other specified spatial tiles.
+```{r, eval=FALSE}
+out = chunk_spat_apply(x = dbpoly,
+                       y = dbpoints,
+                       chunk_y = TRUE,
+                       n_per_chunk = 100,
+                       fun = function(x, y) {
+                         terra::extract(x, y)
+                       })
+
+# show more interesting portions of the data
+out |> dplyr::filter(poly_ID != 'NA')
+```
+
+
+
+
+
+

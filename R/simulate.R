@@ -1,83 +1,247 @@
-
-
-
-#' @name simulate_objects
-#' @title Simulate GiottoDB objects
-#' @description
-#' Create simulated GiottoDB objects in memory from pre-prepared data. Useful
-#' for testing purposes and examples.
-#' @param data data to use
-#' @param name remote name of table on database to set
-NULL
-
-
 #' @describeIn simulate_objects Simulate a duckdb connection dplyr tbl_Pool in memory
-#' @export
-simulate_duckdb = function(data = datasets::iris, name = 'test', p = NULL) {
-  if(is.null(p)) {
-    drv = duckdb::duckdb(dbdir = ':memory:')
-    p = pool::dbPool(drv)
+#' @keywords internal
+sim_duckdb = function(value = datasets::iris,
+                      name = 'test',
+                      con = NULL,
+                      memory = TRUE) {
+  # setup in-memory db if no pool connection provided
+  if(is.null(con)) {
+    if(memory){
+      drv = duckdb::duckdb(dbdir = ':memory:')
+    }else{
+      # create temporary temp.db file
+      temp_file = tempfile(fileext = '.duckdb')
+      drv = duckdb::duckdb(dbdir = temp_file)
+    }
+
+    # create connection
+    con = DBI::dbConnect(drv)
   }
-  conn = pool::poolCheckout(p)
-  duckdb::duckdb_register(conn, df = data, name = name)
-  pool::poolReturn(conn)
-  dplyr::tbl(p, name)
+
+  # check to see if table already exists and if so remove it
+  if(DBI::dbExistsTable(con, name)){
+    DBI::dbRemoveTable(con, name)
+  }
+
+  # add table to database
+  DBI::dbWriteTable(con, name, value)
+
+  # show
+  dplyr::tbl(con, name)
 }
 
+#' @describeIn simulate_objects Simulate a dgcMatrix
+#' @title sim_dgc
+#' @keywords internal
+#' @details
+#' This function generates a simulated sparse matrix (dgCMatrix) with number
+#' of rows and columns and sets n_vals random values to a non-zero value.
+sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
+  # create simulated dgc matrix
+  data <- matrix(0, nrow = num_rows, ncol = num_cols)
+
+  # Set n random values to non-zero
+  non_zero_indices <- sample(1:(num_rows*num_cols), n_vals)
+  data[non_zero_indices] <- rnorm(num_cols)
+
+  # Create dumby sparse dgc matrix (column-major)
+  mat = as(data, "dgCMatrix")
+
+  return(mat)
+}
+
+#' @describeIn simulate_objects Simulate a dgcMatrix
+#' @title sim_dgc
+#' @keywords internal
+#' @details
+#' This function generates a simulated dense matrix object with a specified number
+#' of rows and columns.
+sim_denseMat <- function(num_rows = 50, num_cols = 50){
+  # create simulated dense matrix
+  mat <- matrix(rnorm(num_rows*num_cols), nrow = num_rows, ncol = num_cols)
+
+  return(mat)
+}
+
+#' @describeIn simulate_objects Simulate a duckdb connection dplyr tbl_Pool in memory
+#' @title sim_ijx_matrix
+#'
+#' @details
+#' This function generates an ijx representation of a simulated dgCMatrix object
+#' with a specified number of rows and columns and sets 50 random values to
+#' a non-zero value.
+#'
+#' @param num_rows The number of rows in the matrix (default: 50)
+#' @param num_cols The number of columns in the matrix (default: 50)
+#' @param seed_num The seed number for reproducibility (default: 42)
+#'
+#' @return A dgCMatrix object
+#'
+#' @examples
+#' sim_ijx_matrix()
+#'
+#' @keywords internal
+sim_ijx_matrix = function(mat_type = NULL,
+                          num_rows = 50,
+                          num_cols = 50,
+                          seed_num = 42){
+  # check if mat_type is empty
+  if (is.null(mat_type)) {
+    stop("mat_type must be either 'dense' or 'sparse'")
+  }
+
+  # check if num_rows and num_cols are both greater than or equal to 10
+  if (num_rows < 10 | num_cols < 10) {
+    stop("Number of rows and columns must be at least 10")
+  }
+
+  # check if mat_type is either dense or sparse
+  if (mat_type != 'dense' & mat_type != 'sparse') {
+    stop("mat_type must be either 'dense' or 'sparse'")
+  }
+
+  # for reproducibility
+  set.seed(seed_num)
+
+  # setup dummy matrix data
+  if(mat_type == 'sparse'){
+
+    # Simulate dgcMatrix
+    mat = sim_dgc(num_rows = num_rows, num_cols = num_cols)
+
+    # Create sparse ijx representation
+    ijx = Matrix::summary(mat)
+
+  } else { # dense matrix
+    # Create dumby dataset
+    mat = matrix(rnorm(num_rows * num_cols), nrow = num_rows, ncol = num_cols)
+
+    # hardcode dimnames for simulated data
+    # row_names = as.factor(paste0("row", 1:num_rows))
+    # col_names = as.factor(paste0("col", 1:num_cols))
+    row_idx = as.integer(1:num_rows)
+    col_idx = as.integer(1:num_cols)
+
+    # set dimnames for matrix
+    # rownames(mat) = row_names
+    # colnames(mat) = col_names
+
+    # Create dense ijx representation
+    ijx <- dplyr::tibble(
+      i = row_idx[row(mat)],
+      j = col_idx[col(mat)],
+      x = as.numeric(mat)
+    )
+
+  }
+
+  return(ijx)
+}
 
 #' @describeIn simulate_objects Simulate a dbDataFrame in memory
 #' @export
-simulate_dbDataFrame = function(data = NULL, name = 'df_test', key = NA_character_) {
+sim_dbDataFrame = function(value = NULL, name = 'df_test', key = NA_character_) {
   if(is.null(data)) {
-    data = simulate_duckdb(name = name)
+    data = sim_duckdb(name = name)
   }
   if(!inherits(data, 'tbl_sql')) {
-    checkmate::assert_class('data.frame')
-    data = simulate_duckdb(data = data, name = name)
+    checkmate::assert_class(data, 'data.frame')
+    data = sim_duckdb(data = data, name = name)
   }
   dbDataFrame(data = data, remote_name = name, hash = 'ID_dummy',
               init = TRUE, key = key)
 }
 
-
-#' @describeIn simulate_objects Simulate a dbPointsProxy in memory
+#' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
+#' @description  Simulate a dbSparseMatrix in memory
 #' @export
-simulate_dbPointsProxy = function(data = NULL) {
-  if(is.null(data)) {
-    gpoint = GiottoData::loadSubObjectMini('giottoPoints')
-    sv_dt = svpoint_to_dt(gpoint[], include_values = TRUE)
-    data = simulate_duckdb(data = sv_dt, name = 'pnt_test')
+sim_dbSparseMatrix = function(num_rows = 50,
+                              num_cols = 50,
+                              seed_num = 42,
+                              name = 'sparse_test',
+                              memory = FALSE) {
+  # check input
+  if (num_rows < 10 | num_cols < 10) {
+    stop("Number of rows and columns must be at least 10.")
   }
-  dbPointsProxy(data = data, remote_name = 'pnt_test', hash = 'ID_dummy',
-                n_point = nrow(sv_dt), init = TRUE, extent = terra::ext(gpoint[]))
+
+  # simulate ijx matrix
+  ijx = sim_ijx_matrix(mat_type = 'sparse',
+                       num_rows = num_rows,
+                       num_cols = num_cols,
+                       seed_num = seed_num)
+
+  ijx = ijx %>% as.data.frame()
+
+  # add ijx as table to new duckdb connection
+  data = sim_duckdb(value = ijx, name = name, memory = memory)
+
+  # save connection
+  conn = dbplyr::remote_con(data)
+
+  # setup dimnames
+  row_names = as.factor(paste0("row", 1:num_rows))
+  col_names = as.factor(paste0("col", 1:num_cols))
+  dim_names = list(row_names, col_names)
+
+  # setup dims
+  dim = c(as.integer(num_rows), as.integer(num_cols))
+
+  # create dbSparseMatrix obj
+  res = dbSparseMatrix(value = data,
+                       con = conn,
+                       name = name,
+                       dim = dim,
+                       dim_names = dim_names,
+                       init = FALSE)
+
+  # show
+  res
 }
 
-
-#' @describeIn simulate_objects Simulate a dbPolygonProxy in memory
+#' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
+#' @description Simulate a dbDenseMatrix in memory.
 #' @export
-simulate_dbPolygonProxy = function(data = NULL) {
-  if(is.null(data)) {
-    gpoly = GiottoData::loadSubObjectMini('giottoPolygon')
-    sv_geom = data.table::setDT(terra::geom(gpoly[], df = TRUE))
-    sv_atts = data.table::setDT(terra::values(gpoly[]))
-    sv_atts[, geom := seq(.N)]
-    data.table::setcolorder(sv_atts, neworder = c('geom', 'poly_ID'))
-
-    data = simulate_duckdb(data = sv_geom, name = 'poly_test')
-    data_atts = simulate_dbDataFrame(
-      simulate_duckdb(sv_atts, p = cPool(data), name = 'poly_test_attr'),
-      key = 'geom',
-      name = 'poly_test_attr'
-    )
+sim_dbDenseMatrix = function(num_rows = 50,
+                             num_cols = 50,
+                             seed_num = 42,
+                             name = 'dense_test',
+                             memory = FALSE) {
+  # check input
+  if (num_rows < 10 | num_cols < 10) {
+    stop("Number of rows and columns must be at least 10.")
   }
-  dbPolygonProxy(data = data, remote_name = 'poly_test', hash = 'ID_dummy',
-                 n_poly = nrow(sv_atts), init = TRUE, extent = terra::ext(gpoly[]),
-                 attributes = data_atts)
+
+  # simulate dense matrix
+  data = sim_ijx_matrix(mat_type = 'dense',
+                        num_rows = num_rows,
+                        num_cols = num_cols,
+                        seed_num = seed_num)
+
+  # add dense matrix as table to duckdb database
+  data = sim_duckdb(value = data, name = name, memory = memory)
+
+  # get connection
+  conn = dbplyr::remote_con(data)
+
+  # setup dimnames
+  row_names = as.factor(paste0("row", 1:num_rows))
+  col_names = as.factor(paste0("col", 1:num_cols))
+  # row_names = rownames(data)
+  # col_names = colnames(data)
+  dim_names = list(row_names, col_names)
+
+  # setup dims
+  dim = c(as.integer(num_rows), as.integer(num_cols))
+
+  # create dbDenseMatrix object
+  res = dbDenseMatrix(value = data,
+                      con = conn,
+                      name = name,
+                      dim = dim,
+                      dim_names = dim_names,
+                      init = TRUE)
+
+  # Show
+  res
 }
-
-
-
-
-
-
-

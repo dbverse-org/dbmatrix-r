@@ -1,72 +1,27 @@
-Package: GiottoDB
-Title: Database Backend for Giotto
-Version: 0.1.2
-Authors@R: c(
-	person("Ruben", "Dries", email = "rubendries@gmail.com",
-		 role = c("aut", "cre")),
-	person("Jiaji", "George Chen", email = "jiajic@bu.edu",
-		 role = c("aut")),
-	person("Eddie", "Ruiz", email = "ecruiz@bu.edu",
-		 role = c("aut"))
-	)
+Package: dbMatrix
+Title: dbMatrix
+Version: 0.0.0.9002
+Authors@R:
+  c(person("Edward", "C. Ruiz", , "ecr7407@example.com", role = c("aut"),
+           comment = c(ORCID = "0000-0002-9174-5387")),
+    person("Jiaji", "George Chen", email = "jiajic@bu.edu", role = c("aut")),
+    person("Ruben", "Dries", email = "rubendries@gmail.com",role = c("aut", "cre")))
 Maintainer: Ruben Dries <rubendries@gmail.com>
-Description: Extends the Giotto package for working out-of-memory using duckdb
+Description: Count matrices and data.frames on disk backed by DuckDB
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-URL: https://drieslab.github.io/Giotto/, https://github.com/drieslab/Giotto
-BugReports: https://github.com/drieslab/Giotto/issues
+URL: https://dbverse-org.github.io/dbmatrix-r/, https://github.com/dbverse-org/dbmatrix-r, https://ed2uiz.github.io/dbMatrix/
+BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.2.3
 Depends:
     base (>= 3.5.0),
     utils (>= 3.5.0),
     R (>= 3.5.0),
 Imports:
-    arrow (>= 12.0.0),
-    checkmate,
-    data.table (>= 1.12.2),
     DBI,
     dbplyr,
-    digest,
-    duckdb (>= 0.7),
-    dplyr,
-    fs,
-    Matrix,
+    duckdb,
     magrittr,
-    methods,
-    pool,
-    terra (>= 1.7),
-    tidyr
-Suggests:
-    future,
-    future.apply,
-    future.callr,
-    HDF5Array (>= 1.18.1),
-    hdf5r,
-    rstudioapi,
-    testthat (>= 3.0.0),
-Collate: 
-    'classes.R'
-    'Math.R'
-    'assert.R'
-    'generics.R'
-    'backend.R'
-    'coerce.R'
-    'query.R'
-    'extract.R'
-    'connection.R'
-    'data_input.R'
-    'dbDataFrame.R'
-    'matrix_to_dt.R'
-    'dbMatrix.R'
-    'dbSpatProxy.R'
-    'dd.R'
-    'fields_preset.R'
-    'names.R'
-    'operations.R'
-    'plot.R'
-    'simulate.R'
-    'spatial_chunking.R'
-    'utils.R'
-    'workflow_giotto.R'
-    'zzz.R'
+    data.table (>= 1.12.2),
+    glue

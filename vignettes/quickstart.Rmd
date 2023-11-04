@@ -1,0 +1,152 @@
+---
+title: "Quickstart"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+number-sections: true
+vignette: >
+  %\VignetteIndexEntry{quickstart}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This vignette introduces the different classes of Duckling and how to work 
+with them at a basic level using generic functions. The goal of the classes
+was to emulate in-memory classes that are commonly used in the omics field
+(e.g. dgCMatrix) but rely on a database backend (i.e. DuckDB). 
+
+## Class Structure of Duckling
+
+[![](https://mermaid.ink/img/pako:eNp1VF2PmzAQ_CvIT20vicgngYdKV6WVTuqpUa93Dy1VZMwGrBg7NaYNjfLfu4AJBPWeWM-OZ3fHNmfCVAwkIEzQPN9wmmiahbJeOZuCHQSXiXP-8fLw9dvz_eeflzYXUXYAGT_IvXLOoXScu1jz36B3jAoROCylmjIDuklFuyM16RBOaT7ExhqYkhKY-dAUePM2lNeicbShhjb1ri01FRAPHBOJ3VYp8Zr6nYZMGdhJmsEwxSU3gSNUwnGC21YGPTxSo_mpnZpntVyOe3luWgyXXBpI7FT3mpu0ksH4yzG3EQq1IFPinQ21-tOG5j_Tf8IDAlv8AGWd7xhP6PNWq1NZUWvSwCncBScDEmetuB_ruEmMcwQ4Fb8K0KWt3ClvlSgTJWtxW54aNCIqDHrZ661Oyd0R-T0TLn0lRPO-UMXmVUt9eiiv9288fm8rDMDeLQylvR0d2bZzgzeHV4H2GBsYvdA5dMn-uqVAxoe0G8IGZD_XK3pzKla-Ayypb_DrnKt1ZEQy0BnlMb7e2saQmBRwYBJgGMOeFsKEBL1EKi2MeiolI4HRBYxIccQXA_a9k2BPRY7okcrvSmUtCZckOJMTCaZLf-LOVuvV0pstZvP5ejUiJQlm64nvua43m3srfzH1_PllRP7WCu7En1dsz3eni-XaW4wIxNwo_Wj_N9Xn8g9yVonZ?type=png)](https://mermaid.live/edit#pako:eNp1VF2PmzAQ_CvIT20vicgngYdKV6WVTuqpUa93Dy1VZMwGrBg7NaYNjfLfu4AJBPWeWM-OZ3fHNmfCVAwkIEzQPN9wmmiahbJeOZuCHQSXiXP-8fLw9dvz_eeflzYXUXYAGT_IvXLOoXScu1jz36B3jAoROCylmjIDuklFuyM16RBOaT7ExhqYkhKY-dAUePM2lNeicbShhjb1ri01FRAPHBOJ3VYp8Zr6nYZMGdhJmsEwxSU3gSNUwnGC21YGPTxSo_mpnZpntVyOe3luWgyXXBpI7FT3mpu0ksH4yzG3EQq1IFPinQ21-tOG5j_Tf8IDAlv8AGWd7xhP6PNWq1NZUWvSwCncBScDEmetuB_ruEmMcwQ4Fb8K0KWt3ClvlSgTJWtxW54aNCIqDHrZ661Oyd0R-T0TLn0lRPO-UMXmVUt9eiiv9288fm8rDMDeLQylvR0d2bZzgzeHV4H2GBsYvdA5dMn-uqVAxoe0G8IGZD_XK3pzKla-Ayypb_DrnKt1ZEQy0BnlMb7e2saQmBRwYBJgGMOeFsKEBL1EKi2MeiolI4HRBYxIccQXA_a9k2BPRY7okcrvSmUtCZckOJMTCaZLf-LOVuvV0pstZvP5ejUiJQlm64nvua43m3srfzH1_PllRP7WCu7En1dsz3eni-XaW4wIxNwo_Wj_N9Xn8g9yVonZ)
+
+Duckling currently supports the following generic methods.
+
+|          | dbSparseMatrix | dbDenseMatrix | dbDataFrame |
+|----------|----------------|---------------|-------------|
+| colSums  | ✅             | ✅            | \-          |
+| rowSums  | ✅             | ✅            | \-          |
+| colMeans | ✅             | ✅            | \-          |
+| rowMeans | ✅             | ✅            | \-          |
+| colSds   | 🟧             | ✅            | \-          |
+| rowSds   | 🟧             | ✅            | \-          |
+| t        | 🟧             | ✅            | \-          |
+| mean     | ✅             | ✅            | \-          |
+| nrow     | ✅             | ✅            | ✅          |
+| ncol     | ✅             | ✅            | ✅          |
+| dims     | ✅             | ✅            | ✅          |
+| head     | 🟧             | ✅            | \-          |
+| tail     | 🟧             | ✅            | \-          |
+| math     | 🟧             | ✅            | \-          |
+| ...      |                |               |             |
+
+## Loading library
+
+```{r, message=F}
+# git clone repo
+devtools::load_all('../')
+library(dplyr)
+library(duckdb)
+```
+
+## Working with large matrices with dbMatrix
+
+`dbMatrix` consists of three subclasses that are designed to work with
+different types of matrices. All `dbMatrix` subclasses currently support
+basic generic operations as listed below, with more to be likely added
+in the future.
+
+### Sparse matrices
+
+We represent sparse matrices using a triplicate format with `i`, `j`,
+and `x` vectors. `i` and `j` refer to the row and column indices,
+respectively, with specific `x` values or counts.
+
+The `dbSparseMatrix` class stores this ijx matrix (now tehnically a
+data.frame) with their associated dimension names and dimensions. It
+does not contain zeros. Zero values are inferred based on the stored
+dimensions.
+
+```{r eval=TRUE, message=FALSE, warning=FALSE}
+# simulate dbSparseMatrix
+sparse = sim_dbSparseMatrix()
+
+# preview 
+dplyr::glimpse(sparse[]) 
+```
+
+```{r}
+# Generics for dbSparseMatrix
+colMeans(sparse)
+
+colSums(sparse)
+
+rowMeans(sparse)
+
+rowSums(sparse)
+
+mean(sparse)
+
+dim(sparse)
+```
+
+### Dense matrices
+
+We use the same approach as sparse matrices to convert a matrix into a
+triplicate `i`, `j`, and `x` vector data.frame format. All values in the
+`x` vector are retained and the `i` and `j` vectors represent the
+dimnames.
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+dense = sim_dbDenseMatrix() # from MASS::Animals package
+
+dplyr::glimpse(dense[]) 
+```
+
+```{r}
+colMeans(dense)
+
+colSums(dense)
+
+rowMeans(dense)
+
+rowSums(dense)
+
+mean(dense)
+
+dim(dense)
+
+# t(dense)
+
+# Also supports math operations
+# dense + 10
+# 
+# dense / 10 
+# 
+# dense * 10
+# 
+# dense - 10
+```
+
+## Working with large data.frames with dbDataFrame
+
+Large data.frames can be stored as dbDataFrames directly in DuckDB since
+they are essentially the same tabular data structure.
+
+```{r eval=TRUE, message=FALSE}
+# Simulate dbDataFrame
+df = sim_dbDataFrame()
+
+# Generics for dbDataFrame
+nrow(df)
+
+ncol(df)
+
+dim(df)
+```
+
+## Session Info
+
+```{r eval=TRUE, message=FALSE}
+sessionInfo()
+```

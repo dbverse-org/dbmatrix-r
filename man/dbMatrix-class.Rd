@@ -6,20 +6,12 @@
 \alias{dbMatrix}
 \title{S4 dbMatrix class}
 \description{
-Representation of triplet matrices using an on-disk database. Each object
+Representation of sparse matrices using an on-disk database. Each object
 is used as a connection to a single table that exists within the database.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{data}}{dplyr tbl that represents the database data}
-
-\item{\code{hash}}{unique hash ID for backend}
-
-\item{\code{remote_name}}{name of table within database that contains the data}
-
-\item{\code{path}}{path to database on-disk file}
-
 \item{\code{dim_names}}{row [1] and col [2] names}
 
 \item{\code{dims}}{dimensions of the matrix}

@@ -10,7 +10,7 @@
 \S4method{castNumeric}{dbMatrix,missing}(x, col, ...)
 }
 \arguments{
-\item{x}{GiottoDB data object}
+\item{x}{dbData data object}
 
 \item{col}{column to cast to numeric}
 
