@@ -1,5 +1,19 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9006 (2023-11-09)
+
+## Bug fixes
+
+- Methods::as scope correction.
+
+## Features
+
+- Add methods to deps.
+
+## Chore
+
+- Update .gitignore.
+
 # dbMatrix 0.0.0.9005 (2023-11-09)
 
 ## Feat
