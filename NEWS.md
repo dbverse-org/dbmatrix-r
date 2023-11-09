@@ -1,5 +1,12 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9007 (2023-11-09)
+
+## Features
+
+- Add Matrix as dep.
+
+
 # dbMatrix 0.0.0.9006 (2023-11-09)
 
 ## Bug fixes
