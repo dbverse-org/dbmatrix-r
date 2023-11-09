@@ -1,4 +1,8 @@
 url: ed2uiz.github.io/dbMatrix/
 template:
   bootstrap: 5
-  bootswatch: spacelab
+  # bootswatch: spacelab
+  theme: nord
+  bslib:
+    fg: "#2f343f"
+    bg: "white"

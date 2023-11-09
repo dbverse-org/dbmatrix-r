@@ -1,6 +1,6 @@
 Package: dbMatrix
 Title: dbMatrix
-Version: 0.0.0.9003
+Version: 0.0.0.9005
 Authors@R:
   c(person("Edward", "C. Ruiz", , "ecr7407@example.com", role = c("aut"),
            comment = c(ORCID = "0000-0002-9174-5387")),
@@ -11,7 +11,7 @@ Description: Count matrices and data.frames on disk backed by DuckDB
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
-URL: https://dbverse-org.github.io/dbmatrix-r/, https://github.com/dbverse-org/dbmatrix-r, https://ed2uiz.github.io/dbMatrix/
+URL: https://dbverse-org.github.io/dbmatrix-r/, https://ed2uiz.github.io/dbMatrix/
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.2.3
 Depends:
@@ -24,4 +24,5 @@ Imports:
     duckdb,
     magrittr,
     data.table (>= 1.12.2),
-    glue
+    glue,
+    Matrix

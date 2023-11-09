@@ -68,7 +68,7 @@ a non-zero value.
 
 \item \code{sim_dgc()}: Simulate a dgcMatrix
 
-\item \code{sim_denseMat()}: Simulate a dgcMatrix
+\item \code{sim_denseMat()}: Simulate a dense matrix
 
 \item \code{sim_ijx_matrix()}: Simulate a duckdb connection dplyr tbl_Pool in memory
 
@@ -76,7 +76,7 @@ a non-zero value.
 
 \item \code{sim_dbSparseMatrix()}: Simulate a dbSparseMatrix in memory
 
-\item \code{sim_dbDenseMatrix()}: Simulate a dbSparseMatrix in memory
+\item \code{sim_dbDenseMatrix()}: Simulate a dbDenseMatrix in memory
 
 }}
 \examples{

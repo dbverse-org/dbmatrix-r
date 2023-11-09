@@ -45,12 +45,12 @@ sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
   data[non_zero_indices] <- rnorm(num_cols)
 
   # Create dumby sparse dgc matrix (column-major)
-  mat = as(data, "dgCMatrix")
+  mat = Matrix::as(data, "dgCMatrix")
 
   return(mat)
 }
 
-#' @describeIn simulate_objects Simulate a dgcMatrix
+#' @describeIn simulate_objects Simulate a dense matrix
 #' @title sim_dgc
 #' @keywords internal
 #' @details
@@ -199,7 +199,7 @@ sim_dbSparseMatrix = function(num_rows = 50,
   res
 }
 
-#' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
+#' @describeIn simulate_objects Simulate a dbDenseMatrix in memory
 #' @description Simulate a dbDenseMatrix in memory.
 #' @export
 sim_dbDenseMatrix = function(num_rows = 50,

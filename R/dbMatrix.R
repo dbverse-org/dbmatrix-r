@@ -117,7 +117,7 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
 
 })
 
-##  dbDSparseMatrix ####
+##  dbSparseMatrix ####
 setMethod('show', signature('dbSparseMatrix'), function(object) {
 
   cat('connection : ', get_dbdir(object), '\n')
@@ -275,16 +275,17 @@ createDBMatrix <- function(value,
     }
   }
 
-  # check name
-  if (!grepl("^[a-zA-Z]", name)) {
-    stopf("name must exist and start with a letter.")
+  # check name and not contain -
+  if (!grepl("^[a-zA-Z]", name) | grepl("-", name)) {
+    stopf("please provide valid name that starts with a letter, does not contain '-'")
   }
 
   # check class
-  if (!is.null(class)) {
-    if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
-      stopf("class must be: 'dbDenseMatrix' or 'dbSparseMatrix'")
-    }
+  if (is.null(class)) {
+    stopf("please specify dbMatrix class: 'dbSparseMatrix' or 'dbDenseMatrix'")
+  }
+  if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
+    stopf("class must be character and one of either: 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
   # check value and class mismatch
@@ -318,6 +319,9 @@ createDBMatrix <- function(value,
                         overwrite = overwrite, ...)
 
       data <- dplyr::tbl(con, name)
+
+      dims <- dim(value)
+      dim_names <- list(rownames(value), colnames(value))
     } else {
       stopf("value must be an in-memory matrix, tbl_duckdb_connection, or
             filepath to matrix data.")
