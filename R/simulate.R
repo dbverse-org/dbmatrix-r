@@ -45,7 +45,7 @@ sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
   data[non_zero_indices] <- rnorm(num_cols)
 
   # Create dumby sparse dgc matrix (column-major)
-  mat = methods::as(data, "dgCMatrix")
+  mat = as(data, "dgCMatrix")
 
   return(mat)
 }

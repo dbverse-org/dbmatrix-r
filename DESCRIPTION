@@ -18,7 +18,8 @@ Depends:
     base (>= 3.5.0),
     utils (>= 3.5.0),
     R (>= 3.5.0),
-    methods
+    methods,
+    Matrix
 Imports:
     DBI,
     dbplyr,
