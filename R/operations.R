@@ -226,6 +226,7 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
 # Math Summary Ops ####
 ## rowSums ####
 
+#' @title rowSums
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSums', signature(x = 'dbDenseMatrix'),
@@ -250,6 +251,9 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
           }
         )
 
+#' @title rowSums
+#' @rdname hidden_aliases
+#' @export
 setMethod('rowSums', signature(x = 'dbSparseMatrix'),
           function(x, ...)
           {
@@ -270,12 +274,16 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
             # format data for join operation
             nonzero_rownames = rownames(x)[nonzero_row_indices]
-            rownames_df <- data.frame(rowname = rownames(x), stringsAsFactors = FALSE)
-            rowSum_df <- data.frame(rowname = nonzero_rownames, value = rowSum, stringsAsFactors = FALSE)
+            rownames_df <- data.frame(rowname = rownames(x),
+                                      stringsAsFactors = FALSE)
+            rowSum_df <- data.frame(rowname = nonzero_rownames,
+                                    value = rowSum,
+                                    stringsAsFactors = FALSE)
 
             # left join to retain order of original dimnames
-            merged_df <- dplyr::left_join(rownames_df, rowSum_df, by = "rowname") %>%
-                         mutate(value = ifelse(is.na(value), 0, value))
+            merged_df <- dplyr::left_join(rownames_df, rowSum_df,
+                                          by = "rowname") %>%
+                         dplyr::mutate(value = ifelse(is.na(value), 0, value))
 
             # return rowSums as a named vector
             res <- merged_df$value
@@ -288,6 +296,7 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
 ## colSums ####
 
+#' @title colSums
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSums', signature(x = 'dbDenseMatrix'),
@@ -311,12 +320,12 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
             vals
           })
 
+#' @title colSums
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSums', signature(x = 'dbSparseMatrix'),
           function(x, ...)
           {
-            browser()
             x = castNumeric(x)
 
             # calc colsum for nonzero values in ijx
@@ -343,7 +352,7 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
             # left join to retain order of original dimnames
             merged_df <- dplyr::left_join(colnames_df, colSum_df,
                                           by = "colname") %>%
-                         mutate(value = ifelse(is.na(value), 0, value))
+                         dplyr::mutate(value = ifelse(is.na(value), 0, value))
 
             # return rowSums as a named vector
             res <- merged_df$value
@@ -354,8 +363,10 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
           })
 
 
+
 ## rowMeans ####
 
+#' @title rowMeans
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
@@ -380,6 +391,7 @@ setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
             vals
           })
 
+#' @title rowMeans
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
@@ -398,6 +410,9 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
             val_names = factor(rownames(x)[row_indices])
 
             # calculate rowSums
+            row_sums = rowSums(x)
+            n_rows <- dim(x)[1]
+            vals = row_sums / n_rows
 
             # show
             vals
@@ -405,6 +420,7 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
 
 ## colMeans ####
 
+#' @title colMeans
 #' @rdname hidden_aliases
 #' @export
 setMethod('colMeans', signature(x = 'dbDenseMatrix'),
@@ -423,6 +439,7 @@ setMethod('colMeans', signature(x = 'dbDenseMatrix'),
             vals
           })
 
+#' @title colMeans
 #' @rdname hidden_aliases
 #' @export
 setMethod('colMeans', signature(x = 'dbSparseMatrix'),
@@ -452,6 +469,7 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
 
 ## colSds ####
 
+#' @title colSds
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSds', signature(x = 'dbDenseMatrix'),
@@ -470,6 +488,8 @@ setMethod('colSds', signature(x = 'dbDenseMatrix'),
             names(vals) = val_names
             vals
           })
+
+#' @title colSds
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSds', signature(x = 'dbSparseMatrix'),
@@ -497,7 +517,7 @@ setMethod('colSds', signature(x = 'dbSparseMatrix'),
           })
 
 ## rowSds ####
-
+#' @title rowSds
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSds', signature(x = 'dbDenseMatrix'),
@@ -517,6 +537,7 @@ setMethod('rowSds', signature(x = 'dbDenseMatrix'),
             vals
           })
 
+#' @title rowSds
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSds', signature(x = 'dbSparseMatrix'),
@@ -540,6 +561,7 @@ setMethod('rowSds', signature(x = 'dbSparseMatrix'),
 
 ## mean ####
 
+#' @title mean
 #' @rdname hidden_aliases
 #' @export
 setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
@@ -558,11 +580,10 @@ setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
 
 ### t ####
 
+#' @title Transpose
 #' @rdname hidden_aliases
 #' @export
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
-  # x = reconnect(x)
-
   x[] = x[] %>% dplyr::select(i = j, j = i, x)
   x@dims = c(x@dims[[2L]], x@dims[[1L]])
   x@dim_names = list(x@dim_names[[2L]], x@dim_names[[1L]])
@@ -592,6 +613,7 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
+#' @title nrow
 #' @rdname hidden_aliases
 #' @export
 setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
@@ -601,6 +623,7 @@ setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
 
 ### ncol ####
 
+#' @title ncol
 #' @rdname hidden_aliases
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
@@ -617,6 +640,7 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
+#' @title ncol
 #' @rdname hidden_aliases
 #' @export
 setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
@@ -624,6 +648,7 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
   ncol(x@data)
 })
 
+#' @title ncol
 #' @rdname hidden_aliases
 #' @export
 setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
@@ -633,6 +658,7 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
 
 ### dim ####
 
+#' @title dim
 #' @rdname hidden_aliases
 #' @export
 setMethod('dim', signature('dbData'), function(x) {
@@ -644,6 +670,7 @@ setMethod('dim', signature('dbData'), function(x) {
   c(nr, ncol(x@data))
 })
 
+#' @title dim
 #' @rdname hidden_aliases
 #' @export
 setMethod('dim',
@@ -657,7 +684,7 @@ setMethod('dim',
           })
 
 ### head ####
-
+#' @title head
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset = x@dim_names[[1L]] = head(x@dim_names[[1L]], n = n)
@@ -666,6 +693,7 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
+#' @title head
 #' @export
 setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
   x[] = x[] %in% head(x, n = n)
@@ -673,7 +701,7 @@ setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 })
 
 ### tail ####
-
+#' @title tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset = x@dim_names[[1L]] = tail(x@dim_names[[1L]], n = n)
@@ -682,6 +710,7 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
+#' @title tail
 #' @export
 setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
   x[] = x[] %in% tail(x, n = n)
