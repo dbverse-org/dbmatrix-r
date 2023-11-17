@@ -22,9 +22,9 @@ Depends:
     Matrix
 Imports:
     DBI,
+    dplyr,
     dbplyr,
     duckdb,
     magrittr,
     data.table (>= 1.12.2),
-    glue,
-    Matrix
+    glue
