@@ -334,12 +334,16 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
 
             # format data for join operation
             nonzero_colnames = colnames(x)[nonzero_col_indices]
-            colnames_df <- data.frame(colname = colnames(x), stringsAsFactors = FALSE)
-            colSum_df <- data.frame(colname = nonzero_colnames, value = colSum, stringsAsFactors = FALSE)
+            colnames_df <- data.frame(colname = colnames(x),
+                                      stringsAsFactors = FALSE)
+            colSum_df <- data.frame(colname = nonzero_colnames,
+                                    value = colSum,
+                                    stringsAsFactors = FALSE)
 
             # left join to retain order of original dimnames
-            merged_df <- dplyr::left_join(colnames_df, colSum_df, by = "colname") %>%
-              mutate(value = ifelse(is.na(value), 0, value))
+            merged_df <- dplyr::left_join(colnames_df, colSum_df,
+                                          by = "colname") %>%
+                         mutate(value = ifelse(is.na(value), 0, value))
 
             # return rowSums as a named vector
             res <- merged_df$value
