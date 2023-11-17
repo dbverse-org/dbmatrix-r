@@ -6,6 +6,11 @@
 \usage{
 flex_window_order(x, order_cols)
 }
+\arguments{
+\item{x}{dbplyr::tbl_lazy}
+
+\item{order_cols}{character vector of column names}
+}
 \description{
 workaround for multiple dbplyr window column ordering
 }

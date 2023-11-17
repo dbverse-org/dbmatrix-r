@@ -11,8 +11,6 @@ createDBMatrix(
   db_path = ":temp:",
   overwrite = FALSE,
   class = NULL,
-  dims,
-  dim_names,
   ...
 )
 }
@@ -27,10 +25,6 @@ by one of the read functions, or a dplyr tbl in a db (required)}
 \item{overwrite}{whether to overwrite if table already exists in database (required)}
 
 \item{class}{class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" (required)}
-
-\item{dims}{dimensions of the matrix (optional)}
-
-\item{dim_names}{list of rownames and colnames of the matrix (optional)}
 
 \item{...}{additional params to pass}
 }

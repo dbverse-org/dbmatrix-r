@@ -146,8 +146,8 @@ setMethod('[<-', signature(x = 'dbDataFrame', i = 'missing', j = 'missing', valu
 
 #'@ flex_window_order
 #'
-#'@param x
-#'@param order_cols
+#'@param x dbplyr::tbl_lazy
+#'@param order_cols character vector of column names
 #'@description
 #'workaround for multiple dbplyr window column ordering
 #'
