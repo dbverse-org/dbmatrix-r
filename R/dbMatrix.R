@@ -242,8 +242,6 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' by one of the read functions, or a dplyr tbl in a db (required)
 #' @param name table name to assign within database (optional)
 #' @param db_path path to database on disk (relative or absolute) or in memory (":temp:")
-#' @param dim_names list of rownames and colnames of the matrix (optional)
-#' @param dims dimensions of the matrix (optional)
 #' @param overwrite whether to overwrite if table already exists in database (required)
 #' @param class class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" (required)
 #' @param ... additional params to pass
@@ -260,13 +258,9 @@ createDBMatrix <- function(value,
                            db_path = ":temp:",
                            overwrite = FALSE,
                            class = NULL,
-                           dims,
-                           dim_names,
                            ...) {
   # check value
-  if (is.null(value)) {
-    stop("value missing. please provide a matrix, table or filepath to matrix data")
-  }
+  assert_valid_value(value)
 
   # check db_path
   if (db_path != ":temp:") {
@@ -275,14 +269,14 @@ createDBMatrix <- function(value,
     }
   }
 
-  # check name and not contain -
+  # check name
   if (!grepl("^[a-zA-Z]", name) | grepl("-", name)) {
     stopf("please provide valid name that starts with a letter, does not contain '-'")
   }
 
   # check class
   if (is.null(class)) {
-    stopf("please specify dbMatrix class: 'dbSparseMatrix' or 'dbDenseMatrix'")
+    stopf("please specify dbMatrix class: 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
   if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
     stopf("class must be character and one of either: 'dbDenseMatrix' or 'dbSparseMatrix'")
@@ -296,23 +290,33 @@ createDBMatrix <- function(value,
     stopf("Please set class to 'dbSparseMatrix' for sparse matrices")
   }
 
-  # setup db
+  # setup db connection
   con <- DBI::dbConnect(duckdb::duckdb(), db_path)
 
   # initialize data (value)
   data <- NULL
 
-  if (inherits(matrix, "tbl_duckdb_connection")) { # data is already in DB
+  if (inherits(value, "tbl_duckdb_connection")) { # data is already in DB
     data <- value
+
+    query <- paste0("SELECT max(i) FROM ", name)
+    num_row <- DBI::dbGetQuery(con, query) %>%
+      dplyr::pull("max(i)")
+
+    query <- paste0("SELECT max(j) FROM ", name)
+    num_col <- DBI::dbGetQuery(con, query) %>%
+      dplyr::pull("max(j)")
+
+    dims <- c(as.integer(num_row), as.integer(num_col))
+    dim_names <- list(NULL, NULL)
   } else { # data must be read in
-    if (is.character(value)) {
+    if (is.character(value)) { # read in from file
       stopf("TODO: read in matrix from file... See read_matrix()")
       # data <- read_matrix(con = con, value = value, name = name,
       #                     overwrite = overwrite, ...)
     } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplicate vector ijx format
-      ijx <- Matrix::summary(as(value, "TsparseMatrix")) %>%
-        as.data.frame()
+      ijx <- Matrix::summary(as(value, "TsparseMatrix")) %>% as.data.frame()
 
       # write to db
       DBI::dbWriteTable(conn = con, name = name, value = ijx,
@@ -329,43 +333,27 @@ createDBMatrix <- function(value,
   }
 
   # 0.0.0.9000 release: hardcode dimnames as enums
-  if(missing(dims)) {
-    query <- paste0("SELECT max(i) FROM ", name)
-    num_row <- DBI::dbGetQuery(con, query) %>%
-      dplyr::pull("max(i)")
-
-    query <- paste0("SELECT max(j) FROM ", name)
-    num_col <- DBI::dbGetQuery(con, query) %>%
-      dplyr::pull("max(j)")
-
-    dims <- c(as.integer(num_row), as.integer(num_col))
-  }
-
-  if(missing(dim_names)) {
-    row_names = as.factor(paste0("row", 1:num_row))
-    col_names = as.factor(paste0("col", 1:num_col))
+  if(is.null(unlist(dim_names))) {
+    row_names = as.factor(paste0("row", 1:dims[1]))
+    col_names = as.factor(paste0("col", 1:dims[2]))
     dim_names = list(row_names, col_names)
   }
 
   if(class == "dbSparseMatrix"){
-    res <- new("dbSparseMatrix",
-                value = data,
-                con = con,
-                name = name,
-                init = TRUE,
-                dim_names = dim_names,
-                dims = dims)
+    set_class = "dbSparseMatrix"
   } else if(class == "dbDenseMatrix"){
-    res <- new("dbDenseMatrix",
-                value = data,
-                con = con,
-                name = name,
-                init = TRUE,
-                dim_names = dim_names,
-                dims = dims)
-  } else {
-    stopf("class must be a character vector: dbDenseMatrix or dbSparseMatrix")
+    set_class = "dbDenseMatrix"
+  } else { ## redundant check from above
+    stopf("please specify dbMatrix class: 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
+
+  res <- new(Class = set_class,
+             value = data,
+             con = con,
+             name = name,
+             init = TRUE,
+             dim_names = dim_names,
+             dims = dims)
 
   return(res)
 }
