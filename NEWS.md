@@ -1,5 +1,24 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9008 (2023-11-17)
+
+## Bug fixes
+
+- Updates to dbSparseMatrix rowMeans, colMeans.
+
+- Updates to colSums and rowSums for dbSparseMatrix.
+
+- Update dbMatrix constructor dimnames issues.
+
+## Chore
+
+- Update DESCRIPTION, remove redundant Matrix import, dep.
+
+- Update docs.
+
+- Update roxygen for operations.
+
+
 # dbMatrix 0.0.0.9007 (2023-11-09)
 
 ## Features
