@@ -1,5 +1,20 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9009 (2023-11-20)
+
+## Bug fixes
+
+- Mean generic for dbDenseMatrix.
+
+## Chore
+
+- Update docs.
+
+- Update site.
+
+- Update gitignore.
+
+
 # dbMatrix 0.0.0.9008 (2023-11-17)
 
 ## Bug fixes
