@@ -7,6 +7,15 @@
     <loc>ed2uiz.github.io/dbMatrix/LICENSE.html</loc>
   </url>
   <url>
+    <loc>ed2uiz.github.io/dbMatrix/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/articles/operations.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/articles/quickstart.html</loc>
+  </url>
+  <url>
     <loc>ed2uiz.github.io/dbMatrix/authors.html</loc>
   </url>
   <url>
@@ -46,6 +55,15 @@
     <loc>ed2uiz.github.io/dbMatrix/reference/get_tblName.html</loc>
   </url>
   <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/head-dbDataFrame-method.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/head-dbMatrix-method.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/hidden_aliases.html</loc>
+  </url>
+  <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/index.html</loc>
   </url>
   <url>
@@ -59,6 +77,12 @@
   </url>
   <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/simulate_objects.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/tail-dbDataFrame-method.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/tail-dbMatrix-method.html</loc>
   </url>
   <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/toDbDense.html</loc>

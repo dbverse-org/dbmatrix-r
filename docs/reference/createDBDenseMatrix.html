@@ -14,7 +14,7 @@ could also be read in from files on disk."><!-- mathjax --><script src="https://
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9008</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -24,6 +24,12 @@ could also be read in from files on disk."><!-- mathjax --><script src="https://
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item dropdown">
+  <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
+  <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/operations.html">Operations</a>
+  </div>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -63,8 +69,6 @@ could also be read in from files on disk.</p>
 <span>  db_path <span class="op">=</span> <span class="st">":temp:"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  class <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">dims</span>,</span>
-<span>  <span class="va">dim_names</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -90,14 +94,6 @@ by one of the read functions, or a dplyr tbl in a db (required)</p></dd>
 
 <dt>class</dt>
 <dd><p>class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" (required)</p></dd>
-
-
-<dt>dims</dt>
-<dd><p>dimensions of the matrix (optional)</p></dd>
-
-
-<dt>dim_names</dt>
-<dd><p>list of rownames and colnames of the matrix (optional)</p></dd>
 
 
 <dt>...</dt>
