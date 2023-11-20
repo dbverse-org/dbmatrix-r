@@ -1,0 +1,164 @@
+---
+title: "Operations"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+number-sections: true
+vignette: >
+  %\VignetteIndexEntry{Operations}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This vignette introduces the different classes of `dbMatrix` and how to work 
+with them at a basic level using generic functions.
+
+## Loading library
+
+```{r, message=F}
+library(dbMatrix)
+library(Matrix)
+```
+
+## Working with large matrices with dbMatrix
+
+`dbMatrix` consists of two dbMatrix subclasses that are designed to work with
+dense and sparse matrices. Support for compressed sparse column matrices through the `dgCMatrix` class from the `Matrix` package is currently implemented. For more information about sparse matrices, see [the wiki article here ](https://en.wikipedia.org/wiki/Sparse_matrix). 
+
+`dbMatrix` subclasses currently support basic generic operations listed below with support for more operations coming soon.
+
+|          | dbSparseMatrix | dbDenseMatrix |
+|----------|----------------|---------------|
+| colSums  | ✅             | ✅            |
+| rowSums  | ✅             | ✅            |
+| colMeans | ✅             | ✅            |
+| rowMeans | ✅             | ✅            |
+| colSds   | 🟧             | ✅            |
+| rowSds   | 🟧             | ✅            |
+| t        | ✅             | ✅            |
+| mean     | ✅             | ✅            |
+| nrow     | ✅             | ✅            |
+| ncol     | ✅             | ✅            |
+| dims     | ✅             | ✅            |
+| head     | ✅             | ✅            |
+| tail     | ✅             | ✅            |
+| math     | ✅             | ✅            |
+| ...      |                |               |
+
+## dbSparse Matrix Operations
+
+We represent sparse matrices using a triplicate format with `i`, `j`,
+and `x` numerical vectors. `i` and `j` refer to the row and column indices,
+respectively, with specific `x` values or counts.
+
+The `dbSparseMatrix` class stores this ijx matrix (now technicality a
+dataframe) with their associated dimension names and dimensions if available. It
+does not contain zeros. Zero values are inferred based on the stored
+dimensions.
+
+```{r eval=TRUE, message=FALSE, warning=FALSE}
+# simulate a dgC matrix
+dgc = dbMatrix:::sim_dgc()
+
+# create dbSparseMatrix from the same dgc in memory
+sparse = createDBMatrix(value = dgc, name = "sparse", class = "dbSparseMatrix", overwrite = TRUE)
+
+# preview 
+# show function aims to emulate the show method for dgCMatrix
+sparse
+```
+
+### colMeans
+```{r}
+dbMatrix::colMeans(sparse)
+
+all.equal(unname(dbMatrix::colMeans(sparse)), Matrix::colMeans(dgc))
+```
+
+### colSums
+```{r}
+dbMatrix::colSums(sparse)
+
+all.equal(unname(dbMatrix::colSums(sparse)), Matrix::colSums(dgc))
+```
+
+### rowMeans
+```{r}
+dbMatrix::rowMeans(sparse)
+
+all.equal(unname(dbMatrix::rowMeans(sparse)), Matrix::rowMeans(dgc))
+```
+
+### rowSums
+```{r}
+dbMatrix::rowSums(sparse)
+
+all.equal(unname(dbMatrix::rowSums(sparse)), Matrix::rowSums(dgc))
+```
+
+### dim
+```{r}
+dim(sparse)
+
+dim(dgc)
+```
+
+### Transpose
+```{r}
+t(sparse)
+```
+
+### Dense matrices
+
+We use the same approach as sparse matrices to convert a matrix into a
+triplicate `i`, `j`, and `x` vector data.frame format. All values including zeros are included. 
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+dense = sim_dbDenseMatrix()
+
+# preview
+dense
+```
+## dbDenseMatrix Operations
+### colMeans
+```{r}
+dbMatrix::colMeans(dense)
+```
+
+### colSums
+```{r}
+dbMatrix::colSums(dense)
+```
+
+### rowMeans
+```{r}
+dbMatrix::rowMeans(dense)
+```
+
+### rowSums
+```{r}
+dbMatrix::rowSums(dense)
+```
+
+### mean
+```{r}
+dbMatrix::mean(dense)
+```
+
+### dim
+```{r}
+dim(dense)
+```
+
+### transpose
+```{r}
+t(dense)
+```
+
+
+## Session Info
+
+```{r eval=TRUE, message=FALSE}
+sessionInfo()
+```

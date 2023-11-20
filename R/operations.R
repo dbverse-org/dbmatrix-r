@@ -564,8 +564,21 @@ setMethod('rowSds', signature(x = 'dbSparseMatrix'),
 #' @title mean
 #' @rdname hidden_aliases
 #' @export
-setMethod('mean', signature(x = 'dbMatrix'), function(x, ...) {
-  # x = reconnect(x)
+setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
+  x = castNumeric(x)
+
+  res = x[] %>%
+    dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
+    dplyr::pull(mean_x)
+
+  return(res)
+
+})
+
+#' @title mean
+#' @rdname hidden_aliases
+#' @export
+setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
   x = castNumeric(x)
 
   res = x[] %>%
@@ -658,17 +671,17 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
 
 ### dim ####
 
-#' @title dim
-#' @rdname hidden_aliases
-#' @export
-setMethod('dim', signature('dbData'), function(x) {
-  # x = reconnect(x)
-  nr = x@data %>%
-    dplyr::summarise(n()) %>%
-    dplyr::pull() %>%
-    as.integer()
-  c(nr, ncol(x@data))
-})
+# @title dim
+# @rdname hidden_aliases
+# @export
+# setMethod('dim', signature('dbData'), function(x) {
+#   # x = reconnect(x)
+#   nr = x@data %>%
+#     dplyr::summarise(n()) %>%
+#     dplyr::pull() %>%
+#     as.integer()
+#   c(nr, ncol(x@data))
+# })
 
 #' @title dim
 #' @rdname hidden_aliases

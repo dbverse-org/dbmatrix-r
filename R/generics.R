@@ -16,15 +16,13 @@ setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
 setGeneric('colSds', function(x, ...) standardGeneric('colSds'))
 setGeneric('colMeans', function(x, ...) standardGeneric('colMeans'))
 setGeneric('colSums', function(x, ...) standardGeneric('colSums'))
-
 setGeneric('rowSds', function(x, ...) standardGeneric('rowSds'))
 setGeneric('rowMeans', function(x, ...) standardGeneric('rowMeans'))
 setGeneric('rowSums', function(x, ...) standardGeneric('rowSums'))
 
 # dbData ops ####
 setGeneric('t', function(x, ...) standardGeneric('t'))
-setGeneric('nrow', function(x, ...) standardGeneric('nrow'))
-setGeneric('ncol', function(x, ...) standardGeneric('ncol'))
+setGeneric('mean', function(x, ...) standardGeneric('mean'))
 
 # extract ####
 # setGeneric('keyCol', function(x, ...) standardGeneric('keyCol'))
