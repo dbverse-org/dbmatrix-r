@@ -581,9 +581,14 @@ setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
 setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
   x = castNumeric(x)
 
+  dim = dim(x)
+  n = dim[1] * dim[2]
+
   res = x[] %>%
-    dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) %>%
-    dplyr::pull(mean_x)
+    dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) %>%
+    dplyr::pull(sum_x)
+
+  res = res / n
 
   return(res)
 
