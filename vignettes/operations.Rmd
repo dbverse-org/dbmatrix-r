@@ -11,8 +11,7 @@ vignette: >
 
 ## Introduction
 
-This vignette introduces the different classes of `dbMatrix` and how to work 
-with them at a basic level using generic functions.
+This vignette introduces the generic functions supported by dMatrix. 
 
 ## Loading library
 
@@ -21,12 +20,9 @@ library(dbMatrix)
 library(Matrix)
 ```
 
-## Working with large matrices with dbMatrix
+## dbMatrix generics
 
-`dbMatrix` consists of two dbMatrix subclasses that are designed to work with
-dense and sparse matrices. Support for compressed sparse column matrices through the `dgCMatrix` class from the `Matrix` package is currently implemented. For more information about sparse matrices, see [the wiki article here ](https://en.wikipedia.org/wiki/Sparse_matrix). 
-
-`dbMatrix` subclasses currently support basic generic operations listed below with support for more operations coming soon.
+`dbMatrix` subclasses currently support basic generic functions listed below with support for more operations coming soon.
 
 |          | dbSparseMatrix | dbDenseMatrix |
 |----------|----------------|---------------|
@@ -43,19 +39,9 @@ dense and sparse matrices. Support for compressed sparse column matrices through
 | dims     | ✅             | ✅            |
 | head     | ✅             | ✅            |
 | tail     | ✅             | ✅            |
-| math     | ✅             | ✅            |
 | ...      |                |               |
 
 ## dbSparse Matrix Operations
-
-We represent sparse matrices using a triplicate format with `i`, `j`,
-and `x` numerical vectors. `i` and `j` refer to the row and column indices,
-respectively, with specific `x` values or counts.
-
-The `dbSparseMatrix` class stores this ijx matrix (now technicality a
-dataframe) with their associated dimension names and dimensions if available. It
-does not contain zeros. Zero values are inferred based on the stored
-dimensions.
 
 ```{r eval=TRUE, message=FALSE, warning=FALSE}
 # simulate a dgC matrix
@@ -104,15 +90,12 @@ dim(sparse)
 dim(dgc)
 ```
 
-### Transpose
+### transpose
 ```{r}
 t(sparse)
 ```
 
-### Dense matrices
-
-We use the same approach as sparse matrices to convert a matrix into a
-triplicate `i`, `j`, and `x` vector data.frame format. All values including zeros are included. 
+## dbDenseMatrix Operations
 
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
 dense = sim_dbDenseMatrix()
@@ -120,7 +103,7 @@ dense = sim_dbDenseMatrix()
 # preview
 dense
 ```
-## dbDenseMatrix Operations
+
 ### colMeans
 ```{r}
 dbMatrix::colMeans(dense)
