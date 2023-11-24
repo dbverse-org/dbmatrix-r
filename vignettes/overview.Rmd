@@ -19,11 +19,13 @@ knitr::opts_chunk$set(
 
 
 ## dbSparseMatrix
+![](../man/figures/dbMatrix-overview.png)
+
 We represent sparse matrices using a triplicate format with `i`, `j`,
 and `x` numerical vectors. `i` and `j` refer to the row and column indices,
 respectively, with specific `x` values or counts.
 
-The `dbSparseMatrix` class stores this ijx matrix representation (now technicality a dataframe) with its associated dimension names and dimensions if available. It does not contain zeros. Zero values are inferred based on the provided dimensions.
+The `dbSparseMatrix` class stores this ijx matrix representation (now a dataframe) with its associated dimension names and dimensions if available. It does not contain zeros. Zero values are inferred based on the provided dimensions.
 
 Support for compressed sparse column matrices of the `dgCMatrix` class from the `Matrix` R package is currently implemented. For more information about sparse matrices, see [the wiki article here ](https://en.wikipedia.org/wiki/Sparse_matrix). 
 
