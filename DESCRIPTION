@@ -28,3 +28,7 @@ Imports:
     magrittr,
     data.table (>= 1.12.2),
     glue
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

@@ -6,3 +6,12 @@ template:
   bslib:
     fg: "#2f343f"
     bg: "white"
+  articles:
+    text: Articles
+    menu:
+      - text: Overview
+        href: articles/overview.html
+      - text: Operations
+        href: articles/operations.html
+      - text: Arithmetic
+        href: articles/arithmetic.html
