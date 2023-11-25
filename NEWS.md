@@ -1,13 +1,14 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
-# dbMatrix 0.0.0.9011 (2023-11-25)
-
-- Same as previous version.
-
-
 # dbMatrix 0.0.0.9010 (2023-11-25)
 
-- Same as previous version.
+## Breaking changes
+
+- migrate to |> pipe, remove %>%, update deps.
+
+## Chore
+
+- Update docs.
 
 
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
