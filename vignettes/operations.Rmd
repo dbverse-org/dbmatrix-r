@@ -11,7 +11,7 @@ vignette: >
 
 ## Introduction
 
-This vignette introduces the generic functions supported by dMatrix. 
+This vignette introduces the generic functions and operations supported by `dbMatrix`. 
 
 ## Loading library
 
