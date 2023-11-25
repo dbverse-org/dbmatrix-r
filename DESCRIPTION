@@ -23,7 +23,8 @@ Imports:
     dbplyr,
     duckdb, 
     data.table (>= 1.12.2),
-    glue
+    glue,
+    googledrive
 Suggests: 
     knitr,
     rmarkdown
