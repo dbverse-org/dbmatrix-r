@@ -19,16 +19,71 @@ library(dbMatrix)
 ```
 
 
-### Create test data
+### Get test data
+The test file is a `dgCMatrix` stored as an `rds` object on Google Drive.
 
+If you have not used the `googledrive` package before, please authenticate your credentials below in order to download the test file. 
+```{r}
+# install.packages('googledrive')
+# googledrive::drive_auth()
+# library(googledrive)
+# googledrive::drive_auth()
+```
+
+The file will be downloaded as `dgc.rds` in your working directory.
+```{r}
+file_id <- "1b2wP_22cfvZ8GPnvJ5wWjG1URfp8FtVI"
+file <- googledrive::drive_get(googledrive::as_id(file_id))
+googledrive::drive_download(file, overwrite = TRUE, path = "dgc.rds")
+```
+
+Let's load the .rds file and inspect it.
+
+```{r}
+dgc <- readRDS("dgc.rds")
+
+head(dgc)
+
+str(dgc)
+```
+
+The file contains 634 rows and 624 columns. The rows represent gene names and the columns represent cell names. This file is a subset of a processed a 10X Visium dataset.
+
+
+### Create a dbMatrix object
+Let's create a `dbSparseMatrix` object from the above `dgc` object.
+```{r}
+# Note: by default the constructor creates a dbMatrix object in-memory
+dbsm <- createDBMatrix(value = dgc, name = 'visium', class = "dbSparseMatrix", overwrite = TRUE)
+
+# preview the object
+dbsm
+```
 
 ### Scalar Arithmetic
-```{r}
+Performing scalar arithmetic on a `dbMatrix` object is similar to performing scalar arithmetic on a `dgCMatrix` object. 
 
+Note: scalar arithmetic on a `dbSparseMatrix` results in a `dbDenseMatrix`.
+```{r} 
+dbsm + 1
+
+dbsm * 100
 ```
 
 ### Matrix Arithmetic
+`dbMatrix` also supports matrix arithmetic for `dbMatrix` objects that are [conformable]().
 ```{r}
-
+dbsm + dbsm
 ```
+
+### Matrix Multiplication
+```{r}
+dbsm * dbsm
+```
+
+### Session Info
+```{r}
+sessionInfo()
+```
+
 

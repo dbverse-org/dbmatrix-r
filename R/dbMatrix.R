@@ -232,18 +232,18 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 
 # Basic function to generate a dbDenseMatrix obj given data input
 
-#' @title Create a dense matrix with database backend
+#' @title Create a sparse or dense dbMatrix object
 #' @name createDBDenseMatrix
 #' @description
-#' Create an S4 dbMatrix object that has a dense ijx triplet vector format (ijx).
-#' The data for the matrix is either written to a specified database file or
+#' Create an S4 dbMatrix object that has a sparse or dense ijx triplet vector format (ijx).
+#' The data for the matrix is either written to a specified database file, in-memory (default), or
 #' could also be read in from files on disk.
 #' @param value object coercible to matrix or filepath to matrix data accessible
-#' by one of the read functions, or a dplyr tbl in a db (required)
-#' @param name table name to assign within database (optional)
-#' @param db_path path to database on disk (relative or absolute) or in memory (":temp:")
-#' @param overwrite whether to overwrite if table already exists in database (required)
-#' @param class class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" (required)
+#' by one of the read functions, or a dplyr tbl in a db `(required)`
+#' @param name table name to assign within database `(optional)`
+#' @param db_path path to database on disk (relative or absolute) or in memory `(":temp:")`
+#' @param overwrite whether to overwrite if table already exists in database `(required)`
+#' @param class class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" `(required)`
 #' @param ... additional params to pass
 #' @details Information is only read into the database during this process. Based
 #' on the \code{name} and \code{db_path} a lazy connection is then made

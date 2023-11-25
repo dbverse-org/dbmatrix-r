@@ -22,11 +22,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
+    <nav class="navbar fixed-top navbar-inverse navbar-expand-lg bg-light"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9010</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,15 +36,18 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
 <li class="nav-item">
-  <a class="nav-link" href="../reference/index.html">Reference</a>
+  <a class="nav-link" href="../index.html">Home</a>
 </li>
 <li class="active nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
-    <a class="dropdown-item" href="../articles/arithmetic.html">Arithmetic</a>
-    <a class="dropdown-item" href="../articles/operations.html">Operations</a>
     <a class="dropdown-item" href="../articles/overview.html">Overview</a>
+    <a class="dropdown-item" href="../articles/operations.html">Operations</a>
+    <a class="dropdown-item" href="../articles/arithmetic.html">Arithmetic</a>
   </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="../reference/index.html">Documentation</a>
 </li>
 <li class="nav-item">
   <a class="nav-link" href="../news/index.html">Changelog</a>
@@ -68,6 +71,9 @@
   </div>
 </nav><div class="container template-article">
 
+
+
+
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Overview</h1>
@@ -82,20 +88,46 @@
 <div class="section level2">
 <h2 id="dbmatrix">dbMatrix<a class="anchor" aria-label="anchor" href="#dbmatrix"></a>
 </h2>
-<p><code>dbMatrix</code> is a core package in the <a href="https://ed2uiz.github.io/dbverse/" class="external-link"><code>dbverse</code></a> library that consists of two subclasses, <code>dbSparseMatrix</code> and <code>dbDenseMatrix</code>, that emulate in-memory dense and sparse matrices on disk.</p>
+<p><code>dbMatrix</code> is a core package in the <a href="https://ed2uiz.github.io/dbverse/" class="external-link"><code>dbverse</code></a>
+library that inherits from the <code>dbData</code> base class and
+consists of two subclasses, <code>dbSparseMatrix</code> and
+<code>dbDenseMatrix</code>.</p>
+<p><code>dbMatrix</code> objects emulate in-memory dense and sparse
+matrices in an embedded database powered by DuckDB.</p>
 </div>
 <div class="section level2">
 <h2 id="dbsparsematrix">dbSparseMatrix<a class="anchor" aria-label="anchor" href="#dbsparsematrix"></a>
 </h2>
-<p><img src="../../../../reference/figures/dbMatrix-overview.png"></p>
-<p>We represent sparse matrices using a triplicate format with <code>i</code>, <code>j</code>, and <code>x</code> numerical vectors. <code>i</code> and <code>j</code> refer to the row and column indices, respectively, with specific <code>x</code> values or counts.</p>
-<p>The <code>dbSparseMatrix</code> class stores this ijx matrix representation (now a dataframe) with its associated dimension names and dimensions if available. It does not contain zeros. Zero values are inferred based on the provided dimensions.</p>
-<p>Support for compressed sparse column matrices of the <code>dgCMatrix</code> class from the <code>Matrix</code> R package is currently implemented. For more information about sparse matrices, see <a href="https://en.wikipedia.org/wiki/Sparse_matrix" class="external-link">the wiki article here</a>.</p>
+<p><img src="../reference/figures/dbMatrix-overview.png"></p>
+<p>Sparse matrices are represented as triplet vectors with
+<code>i</code>, <code>j</code>, and <code>x</code> numerical vectors.
+<code>i</code> and <code>j</code> refer to the row and column indices,
+respectively, with specific <code>x</code> values or counts. Note:
+unlike the rest of R, the <code>i</code> and <code>j</code> vectors are
+zero-indexed following conventions from the <code>Matrix</code> R
+package for the <code>dgCMatrix</code> and <code>TSparseMatrix</code>
+class.</p>
+<p>The <code>dbSparseMatrix</code> class stores the triplet vector
+representation with its associated dimension names and dimensions if
+available. If none are provided, they are automatically generated as
+factors (enums) with <code>row#</code> or <code>col#</code> labels for
+rownames and colnames, respectively. The <code>dbSparseMatrix</code>
+class does not contain zeros in the triplet vector representation. Zero
+values are inferred based on the provided dimensions.</p>
+<p>Support for compressed sparse column matrices of the
+<code>dgCMatrix</code> class from the <code>Matrix</code> R package is
+currently implemented. For more information about sparse matrices, see
+<a href="https://en.wikipedia.org/wiki/Sparse_matrix" class="external-link">the wiki article
+here</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="dbdensematrix">dbDenseMatrix<a class="anchor" aria-label="anchor" href="#dbdensematrix"></a>
 </h2>
-<p>We use the same approach as <code>dbSparseMatrix</code> to represent a dense matrix as a triplicate <code>i</code>, <code>j</code>, and <code>x</code> vector. The only difference is that the <code>dbDenseMatrix</code> class consists of all values in the matrix, including zeros.</p>
+<p>We use the same approach as <code>dbSparseMatrix</code> to represent
+a dense matrix as a triplet <code>i</code>, <code>j</code>, and
+<code>x</code> vector. The only difference is that the
+<code>dbDenseMatrix</code> class consists of all values in the matrix,
+including zeros.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

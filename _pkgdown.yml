@@ -6,12 +6,23 @@ template:
   bslib:
     fg: "#2f343f"
     bg: "white"
-  articles:
-    text: Articles
-    menu:
-      - text: Overview
-        href: articles/overview.html
-      - text: Operations
-        href: articles/operations.html
-      - text: Arithmetic
-        href: articles/arithmetic.html
+
+navbar:
+  title: ~
+  type: inverse
+  left:
+    - text: Home
+      href: index.html
+    - text: Articles
+      menu:
+        - text: "Overview"
+          href: articles/overview.html
+        - text: "Operations"
+          href: articles/operations.html
+        - text: "Arithmetic"
+          href: articles/arithmetic.html
+    - text: "Documentation"
+      href: reference/index.html
+    - text: "Changelog"
+      href: news/index.html
+
