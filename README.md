@@ -15,8 +15,8 @@ status](https://www.r-pkg.org/badges/version/dbMatrix)](https://CRAN.R-project.o
 `{dbMatrix}` is a core package in the
 [`dbverse`](https://ed2uiz.github.io/dbverse/) library.
 
-The goal of `{dbMatrix}` is to provide a database backend for dataframes
-and sparse+dense matrices in R.
+The goal of `{dbMatrix}` is to support larger-than-memory matrix
+computations.
 
 ## Installation
 
