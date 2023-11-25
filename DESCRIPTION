@@ -15,17 +15,13 @@ URL: https://dbverse-org.github.io/dbmatrix-r/, https://ed2uiz.github.io/dbMatri
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.2.3
 Depends:
-    base (>= 3.5.0),
-    utils (>= 3.5.0),
-    R (>= 3.5.0),
-    methods,
+    R (>= 4.1.0),
     Matrix
 Imports:
     DBI,
     dplyr,
     dbplyr,
-    duckdb,
-    magrittr,
+    duckdb, 
     data.table (>= 1.12.2),
     glue
 Suggests: 

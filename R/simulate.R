@@ -171,7 +171,7 @@ sim_dbSparseMatrix = function(num_rows = 50,
                        num_cols = num_cols,
                        seed_num = seed_num)
 
-  ijx = ijx %>% as.data.frame()
+  ijx = ijx |> as.data.frame()
 
   # add ijx as table to new duckdb connection
   data = sim_duckdb(value = ijx, name = name, memory = memory)

@@ -90,8 +90,8 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
   }
 
   # prepare subset to print
-  preview_dt = object@value %>%
-    dplyr::filter(i %in% p_rown & j %in% p_coln) %>%
+  preview_dt = object@value |>
+    dplyr::filter(i %in% p_rown & j %in% p_coln) |>
     data.table::as.data.table()
   data.table::setkeyv(preview_dt, c('i', 'j')) # enforce ordering
 
@@ -175,8 +175,8 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
   filter_j = sapply(p_coln, function(f_j) which(f_j == col_names))
 
   # prepare subset to print
-  preview_tbl = object@value %>%
-    dplyr::filter(i %in% filter_i & j %in% filter_j) %>%
+  preview_tbl = object@value |>
+    dplyr::filter(i %in% filter_i & j %in% filter_j) |>
     dplyr::collect()
 
   # ij indices for printing
@@ -203,7 +203,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
     writeLines(a_out[1:4])
 
     sprintf('\n......suppressing %d columns and %d rows\n\n',
-            dim_col - 10L, dim_row - 6L) %>%
+            dim_col - 10L, dim_row - 6L) |>
       cat()
 
     writeLines(a_out[5:7])
@@ -300,11 +300,11 @@ createDBMatrix <- function(value,
     data <- value
 
     query <- paste0("SELECT max(i) FROM ", name)
-    num_row <- DBI::dbGetQuery(con, query) %>%
+    num_row <- DBI::dbGetQuery(con, query) |>
       dplyr::pull("max(i)")
 
     query <- paste0("SELECT max(j) FROM ", name)
-    num_col <- DBI::dbGetQuery(con, query) %>%
+    num_col <- DBI::dbGetQuery(con, query) |>
       dplyr::pull("max(j)")
 
     dims <- c(as.integer(num_row), as.integer(num_col))
@@ -316,7 +316,7 @@ createDBMatrix <- function(value,
       #                     overwrite = overwrite, ...)
     } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplicate vector ijx format
-      ijx <- Matrix::summary(as(value, "TsparseMatrix")) %>% as.data.frame()
+      ijx <- Matrix::summary(as(value, "TsparseMatrix")) |> as.data.frame()
 
       # write to db
       DBI::dbWriteTable(conn = con, name = name, value = ijx,
@@ -448,94 +448,95 @@ toDbDense <- function(db_sparse){
 #' @noRd
 #' @keywords internal
 toDbSparse <- function(db_dense){
-  # check if db_dense is a dbDenseMatrix
-  if (!inherits(db_dense, "dbDenseMatrix")) {
-    stop("dbDenseMatrix object conversion currently only supported")
-  }
-
-  # Setup
-  con <- cPool(db_dense)
-  dims <- db_dense@dims
-  remote_name <- db_dense@remote_name
-  n_rows <- dims[1]
-  n_cols <- dims[2]
-
-  # Create a table with all possible combinations of 'i' and 'j' indices
-  sql <- paste("CREATE TABLE all_indices AS
-               SELECT i.i, j.j
-               FROM (SELECT generate_series(1, ?) AS i) AS i
-               CROSS JOIN (SELECT generate_series(1, ?) AS j) AS j")
-
-  DBI::dbExecute(
-    conn = con,
-    statement = sql,
-    params = list(n_rows, n_cols),
-    overwrite = TRUE
-  )
-
-  # Create a table with all unique 'i' and 'j' indices from
-  # the dbSparseMatrix table
-  sql <- paste("CREATE TABLE unique_indices AS
-               SELECT DISTINCT i, j
-               FROM", remote_name)
-
-  DBI::dbExecute(
-    conn = con,
-    statement = sql)
-
-  # Perform a CROSS JOIN between the unique 'i' and 'j' indices to
-  # create a new table with the missing combinations
-  sql <- paste("CREATE TABLE missing_combinations AS
-                SELECT i.i, j.j
-                FROM unique_indices AS i
-                CROSS JOIN unique_indices AS j
-                WHERE NOT EXISTS(
-                  SELECT 1
-                  FROM ", remote_name, "
-                  WHERE ", paste0(remote_name, ".i"), "=i.i AND",
-               paste0(remote_name, ".j"), "= j.j)")
-
-  DBI::dbExecute(
-    conn = con,
-    statement = sql
-  )
-
-  # Remove the temporary tables
-  DBI::dbRemoveTable(conn = con, name = "all_indices")
-  DBI::dbRemoveTable(conn = con, name = "unique_indices")
-
-  # Perform a UNION between the dbSparseMatrix table and the new table with missing combinations
-  sql <- paste(
-    "
-      CREATE TABLE staged AS
-      SELECT i, j, x FROM", remote_name, "
-      UNION ALL
-      SELECT i, j, 0 AS x FROM missing_combinations
-      "
-  )
-
-  DBI::dbExecute(conn = con,
-                 statement = sql)
-
-  # Remove the temporary tables
-  DBI::dbRemoveTable(conn = con, name = "missing_combinations")
-
-  # Remove old table
-  DBI::dbExecute(conn = con, paste0("DROP VIEW IF EXISTS ", remote_name))
-
-  # Rename staged to new remote_name table
-  rename_sql <- paste("ALTER TABLE staged RENAME TO", remote_name)
-  data <- DBI::dbExecute(conn = con, statement = rename_sql)
-
-  # Create new dbSparseMatrix object
-  db_sparse <- new("dbSparseMatrix",
-                   data = db_dense@data,
-                   hash = db_dense@hash,
-                   remote_name = remote_name,
-                   dims = dims,
-                   dim_names = db_dense@dim_names)
-  # show
-  db_sparse
+  stopf("TODO")
+  # # check if db_dense is a dbDenseMatrix
+  # if (!inherits(db_dense, "dbDenseMatrix")) {
+  #   stop("dbDenseMatrix object conversion currently only supported")
+  # }
+  #
+  # # Setup
+  # con <- cPool(db_dense)
+  # dims <- db_dense@dims
+  # remote_name <- db_dense@remote_name
+  # n_rows <- dims[1]
+  # n_cols <- dims[2]
+  #
+  # # Create a table with all possible combinations of 'i' and 'j' indices
+  # sql <- paste("CREATE TABLE all_indices AS
+  #              SELECT i.i, j.j
+  #              FROM (SELECT generate_series(1, ?) AS i) AS i
+  #              CROSS JOIN (SELECT generate_series(1, ?) AS j) AS j")
+  #
+  # DBI::dbExecute(
+  #   conn = con,
+  #   statement = sql,
+  #   params = list(n_rows, n_cols),
+  #   overwrite = TRUE
+  # )
+  #
+  # # Create a table with all unique 'i' and 'j' indices from
+  # # the dbSparseMatrix table
+  # sql <- paste("CREATE TABLE unique_indices AS
+  #              SELECT DISTINCT i, j
+  #              FROM", remote_name)
+  #
+  # DBI::dbExecute(
+  #   conn = con,
+  #   statement = sql)
+  #
+  # # Perform a CROSS JOIN between the unique 'i' and 'j' indices to
+  # # create a new table with the missing combinations
+  # sql <- paste("CREATE TABLE missing_combinations AS
+  #               SELECT i.i, j.j
+  #               FROM unique_indices AS i
+  #               CROSS JOIN unique_indices AS j
+  #               WHERE NOT EXISTS(
+  #                 SELECT 1
+  #                 FROM ", remote_name, "
+  #                 WHERE ", paste0(remote_name, ".i"), "=i.i AND",
+  #              paste0(remote_name, ".j"), "= j.j)")
+  #
+  # DBI::dbExecute(
+  #   conn = con,
+  #   statement = sql
+  # )
+  #
+  # # Remove the temporary tables
+  # DBI::dbRemoveTable(conn = con, name = "all_indices")
+  # DBI::dbRemoveTable(conn = con, name = "unique_indices")
+  #
+  # # Perform a UNION between the dbSparseMatrix table and the new table with missing combinations
+  # sql <- paste(
+  #   "
+  #     CREATE TABLE staged AS
+  #     SELECT i, j, x FROM", remote_name, "
+  #     UNION ALL
+  #     SELECT i, j, 0 AS x FROM missing_combinations
+  #     "
+  # )
+  #
+  # DBI::dbExecute(conn = con,
+  #                statement = sql)
+  #
+  # # Remove the temporary tables
+  # DBI::dbRemoveTable(conn = con, name = "missing_combinations")
+  #
+  # # Remove old table
+  # DBI::dbExecute(conn = con, paste0("DROP VIEW IF EXISTS ", remote_name))
+  #
+  # # Rename staged to new remote_name table
+  # rename_sql <- paste("ALTER TABLE staged RENAME TO", remote_name)
+  # data <- DBI::dbExecute(conn = con, statement = rename_sql)
+  #
+  # # Create new dbSparseMatrix object
+  # db_sparse <- new("dbSparseMatrix",
+  #                  data = db_dense@data,
+  #                  hash = db_dense@hash,
+  #                  remote_name = remote_name,
+  #                  dims = dims,
+  #                  dim_names = db_dense@dim_names)
+  # # show
+  # db_sparse
 }
 
 # create ijx vector representation of sparse matrix, keeping zeros
@@ -619,7 +620,7 @@ read_matrix <- function(con, value, name, overwrite, ...){
 
     # grab col and row names
     query <- glue::glue("DESCRIBE {name};")
-    col_names <- DBI::dbGetQuery(con, query) %>%
+    col_names <- DBI::dbGetQuery(con, query) |>
       dplyr::pull("column_name")
 
     # if all values of col_names start with "V" then set value exists_cnames to FALSE

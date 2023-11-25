@@ -26,7 +26,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'gdbIndex', j = 'missing', drop = '
           function(x, i, ...) {
             select = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
             x@dim_names[[1L]] = select
-            x[] = x[] %>% dplyr::filter(i %in% select)
+            x[] = x[] |> dplyr::filter(i %in% select)
             x@dims[1L] = if(is.logical(i)) sum(i) else length(i)
             x
           })
@@ -38,7 +38,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'gdbIndex', drop = '
           function(x, j, ...) {
             select = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
             x@dim_names[[2L]] = select
-            x[] = x[] %>% dplyr::filter(j %in% select)
+            x[] = x[] |> dplyr::filter(j %in% select)
             x@dims[2L] = if(is.logical(j)) sum(j) else length(j)
             x
           })
@@ -52,7 +52,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'gdbIndex', j = 'gdbIndex', drop = 
             select_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
             x@dim_names[[1L]] = select_i
             x@dim_names[[2L]] = select_j
-            x[] = x[] %>% dplyr::filter(i %in% select_i, j %in% select_j)
+            x[] = x[] |> dplyr::filter(i %in% select_i, j %in% select_j)
             x@dims[1L] = if(is.logical(i)) sum(i) else length(i)
             x@dims[2L] = if(is.logical(j)) sum(j) else length(j)
             x
@@ -86,17 +86,17 @@ setMethod(
     # numerics and logical
     if(is.logical(i) | is.numeric(i)) {
       if(is.logical(i)) i = which(i)
-      x@data = x@data %>%
-        flex_window_order(x@key) %>%
-        dplyr::mutate(.n = dplyr::row_number()) %>%
-        dplyr::collapse() %>%
-        dplyr::filter(.n %in% i) %>%
-        dplyr::select(-.n) %>%
+      x@data = x@data |>
+        flex_window_order(x@key) |>
+        dplyr::mutate(.n = dplyr::row_number()) |>
+        dplyr::collapse() |>
+        dplyr::filter(.n %in% i) |>
+        dplyr::select(-.n) |>
         dplyr::collapse()
     } else { # character
-      x@data = x@data %>%
-        flex_window_order(x@key) %>%
-        dplyr::filter(!!as.name(x@key) %in% i) %>%
+      x@data = x@data |>
+        flex_window_order(x@key) |>
+        dplyr::filter(!!as.name(x@key) %in% i) |>
         dplyr::collapse()
     }
     x
@@ -111,7 +111,7 @@ setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'gdbIndex', drop 
             checkmate::assert_logical(drop)
 
             if(is.logical(j)) j = which(j)
-            x@data = x@data %>% dplyr::select(dplyr::all_of(j))
+            x@data = x@data |> dplyr::select(dplyr::all_of(j))
             x
           })
 
@@ -156,6 +156,6 @@ setMethod('[<-', signature(x = 'dbDataFrame', i = 'missing', j = 'missing', valu
 flex_window_order = function(x, order_cols) {
   keys = paste0('!!as.name("', order_cols, '")')
   keys = paste0(keys, collapse = ', ')
-  call_str = paste0('x %>% dbplyr::window_order(', keys, ')')
+  call_str = paste0('x |> dbplyr::window_order(', keys, ')')
   eval(str2lang(call_str))
 }

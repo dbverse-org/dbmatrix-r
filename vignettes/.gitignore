@@ -2,3 +2,5 @@
 *.db
 *.duckdb
 *.wal
+*.html
+*.R

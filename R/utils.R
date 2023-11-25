@@ -1,16 +1,3 @@
-# Pipe magrittr ####
-
-#' Pipe operator
-#'
-#' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom magrittr %>%
-#' @usage lhs \%>\% rhs
-NULL
 
 #' @importFrom data.table ":="
 NULL
@@ -41,10 +28,10 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
     if(isTRUE(errWidth)) strWidth = getOption('width') - 6
   }
 
-  cat(..., sep = sep) %>%
-    capture.output() %>%
+  cat(..., sep = sep) |>
+    capture.output() |>
     strwrap(., prefix =  ' ', initial = '', # indent later lines, no indent first line
-            width = min(80, getOption("width"), strWidth)) %>%
+            width = min(80, getOption("width"), strWidth)) |>
     paste(., collapse = '\n')
 }
 
@@ -52,7 +39,7 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
 # Custom stop function
 stopf = function(...) {
-  wrap_txt('dbMatrix:', ..., errWidth = TRUE) %>%
+  wrap_txt('dbMatrix:', ..., errWidth = TRUE) |>
     stop(call. = FALSE)
 }
 
@@ -103,7 +90,7 @@ print_array = function(i = NULL,
   }
 
   # print array
-  array(a_vals, dims, dimnames = list(rownames, rep('', dims[2]))) %>%
+  array(a_vals, dims, dimnames = list(rownames, rep('', dims[2]))) |>
     print(quote = FALSE, right = TRUE)
 }
 
