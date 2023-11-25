@@ -192,41 +192,41 @@
 <pre><code><span><span class="co">## connection :  :temp: </span></span>
 <span><span class="co">## table name : 'sparse'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbSparseMatrix"</span></span>
-<span><span class="co">##                                                          </span></span>
-<span><span class="co">## row1  . . . .                 . .                 . . . .</span></span>
-<span><span class="co">## row2  . . . . 0.680375539264994 .                 . . . .</span></span>
-<span><span class="co">## row3  . . . .                 . .                 . . . .</span></span>
+<span><span class="co">##                          </span></span>
+<span><span class="co">## row1  . . . . . . . . . .</span></span>
+<span><span class="co">## row2  . . . . . . . . . .</span></span>
+<span><span class="co">## row3  . . . . . . . . . .</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## row48 . . . .                 . . 0.827814524385101 . . .</span></span>
-<span><span class="co">## row49 . . . .                 . .                 . . . .</span></span>
-<span><span class="co">## row50 . . . .                 . .                 . . . .</span></span></code></pre>
+<span><span class="co">## row48 . . . . . . . . . .</span></span>
+<span><span class="co">## row49 . . . . . . . . . .</span></span>
+<span><span class="co">## row50 . . . . . . . . . .</span></span></code></pre>
 <div class="section level3">
 <h3 id="colmeans">colMeans<a class="anchor" aria-label="anchor" href="#colmeans"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##          col1          col2          col3          col4          col5 </span></span>
-<span><span class="co">## -0.0222100816  0.0000000000 -0.0234281777  0.0231343714  0.0704851843 </span></span>
+<span><span class="co">##  0.0000000000 -0.0186770197  0.0101028809 -0.0137968450  0.0000000000 </span></span>
 <span><span class="co">##          col6          col7          col8          col9         col10 </span></span>
-<span><span class="co">##  0.0000000000  0.0165562905  0.0000000000 -0.0456918580 -0.0400214211 </span></span>
+<span><span class="co">##  0.0000000000 -0.0524431719  0.0000000000  0.0000000000 -0.0263937464 </span></span>
 <span><span class="co">##         col11         col12         col13         col14         col15 </span></span>
-<span><span class="co">##  0.0000000000 -0.0158736913  0.0009884475  0.0000000000  0.0000000000 </span></span>
+<span><span class="co">##  0.0057460594  0.0304233855 -0.0081759827 -0.0109421477 -0.0088964960 </span></span>
 <span><span class="co">##         col16         col17         col18         col19         col20 </span></span>
-<span><span class="co">##  0.0000000000 -0.0496681120  0.0000000000 -0.0130515286  0.0121332435 </span></span>
+<span><span class="co">## -0.0002958071  0.0184544358 -0.0033321754  0.0237090252  0.0000000000 </span></span>
 <span><span class="co">##         col21         col22         col23         col24         col25 </span></span>
-<span><span class="co">## -0.0050949813  0.0089976971 -0.0070747039  0.0420750425  0.0000000000 </span></span>
+<span><span class="co">##  0.0000000000  0.0184294892 -0.0229682923 -0.0067789806  0.0370259960 </span></span>
 <span><span class="co">##         col26         col27         col28         col29         col30 </span></span>
-<span><span class="co">## -0.0314118796  0.0000000000 -0.0102013782  0.0000000000  0.0000000000 </span></span>
+<span><span class="co">## -0.0059690149  0.0032770757 -0.0234158385  0.0278374082 -0.0155393010 </span></span>
 <span><span class="co">##         col31         col32         col33         col34         col35 </span></span>
-<span><span class="co">##  0.0347017249  0.0000000000  0.0000000000 -0.0273090499  0.0122664680 </span></span>
+<span><span class="co">##  0.0000000000  0.0199646609  0.0000000000  0.0360268234  0.0000000000 </span></span>
 <span><span class="co">##         col36         col37         col38         col39         col40 </span></span>
-<span><span class="co">## -0.0117148365 -0.0501310108  0.0000000000  0.0000000000 -0.0099586550 </span></span>
+<span><span class="co">##  0.0000000000  0.0247028410  0.0000000000  0.0000000000 -0.0030233069 </span></span>
 <span><span class="co">##         col41         col42         col43         col44         col45 </span></span>
-<span><span class="co">##  0.0139551833  0.0190823932  0.0000000000 -0.0090683200 -0.0106878916 </span></span>
+<span><span class="co">##  0.0054599063 -0.0148235982  0.0000000000  0.0000000000 -0.0415684601 </span></span>
 <span><span class="co">##         col46         col47         col48         col49         col50 </span></span>
-<span><span class="co">## -0.0699346794  0.0000000000  0.0000000000  0.0000000000 -0.0228216210</span></span></code></pre>
+<span><span class="co">## -0.0009527712 -0.0096223983  0.0000000000  0.0000000000  0.0000000000</span></span></code></pre>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
@@ -237,23 +237,23 @@
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##        col1        col2        col3        col4        col5        col6 </span></span>
-<span><span class="co">## -1.11050408  0.00000000 -1.17140889  1.15671857  3.52425922  0.00000000 </span></span>
+<span><span class="co">##  0.00000000 -0.93385099  0.50514404 -0.68984225  0.00000000  0.00000000 </span></span>
 <span><span class="co">##        col7        col8        col9       col10       col11       col12 </span></span>
-<span><span class="co">##  0.82781452  0.00000000 -2.28459290 -2.00107105  0.00000000 -0.79368456 </span></span>
+<span><span class="co">## -2.62215859  0.00000000  0.00000000 -1.31968732  0.28730297  1.52116927 </span></span>
 <span><span class="co">##       col13       col14       col15       col16       col17       col18 </span></span>
-<span><span class="co">##  0.04942237  0.00000000  0.00000000  0.00000000 -2.48340560  0.00000000 </span></span>
+<span><span class="co">## -0.40879913 -0.54710739 -0.44482480 -0.01479035  0.92272179 -0.16660877 </span></span>
 <span><span class="co">##       col19       col20       col21       col22       col23       col24 </span></span>
-<span><span class="co">## -0.65257643  0.60666217 -0.25474907  0.44988485 -0.35373519  2.10375212 </span></span>
+<span><span class="co">##  1.18545126  0.00000000  0.00000000  0.92147446 -1.14841462 -0.33894903 </span></span>
 <span><span class="co">##       col25       col26       col27       col28       col29       col30 </span></span>
-<span><span class="co">##  0.00000000 -1.57059398  0.00000000 -0.51006891  0.00000000  0.00000000 </span></span>
+<span><span class="co">##  1.85129980 -0.29845075  0.16385378 -1.17079193  1.39187041 -0.77696505 </span></span>
 <span><span class="co">##       col31       col32       col33       col34       col35       col36 </span></span>
-<span><span class="co">##  1.73508625  0.00000000  0.00000000 -1.36545249  0.61332340 -0.58574183 </span></span>
+<span><span class="co">##  0.00000000  0.99823304  0.00000000  1.80134117  0.00000000  0.00000000 </span></span>
 <span><span class="co">##       col37       col38       col39       col40       col41       col42 </span></span>
-<span><span class="co">## -2.50655054  0.00000000  0.00000000 -0.49793275  0.69775916  0.95411966 </span></span>
+<span><span class="co">##  1.23514205  0.00000000  0.00000000 -0.15116534  0.27299531 -0.74117991 </span></span>
 <span><span class="co">##       col43       col44       col45       col46       col47       col48 </span></span>
-<span><span class="co">##  0.00000000 -0.45341600 -0.53439458 -3.49673397  0.00000000  0.00000000 </span></span>
+<span><span class="co">##  0.00000000  0.00000000 -2.07842300 -0.04763856 -0.48111992  0.00000000 </span></span>
 <span><span class="co">##       col49       col50 </span></span>
-<span><span class="co">##  0.00000000 -1.14108105</span></span></code></pre>
+<span><span class="co">##  0.00000000  0.00000000</span></span></code></pre>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
@@ -263,24 +263,26 @@
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##         row1         row2         row3         row4         row5         row6 </span></span>
-<span><span class="co">## -0.013884392  0.022325181 -0.045769526  0.022141067  0.000000000  0.000000000 </span></span>
-<span><span class="co">##         row7         row8         row9        row10        row11        row12 </span></span>
-<span><span class="co">## -0.035272173  0.000000000  0.000000000 -0.016537384  0.010800638 -0.030727019 </span></span>
-<span><span class="co">##        row13        row14        row15        row16        row17        row18 </span></span>
-<span><span class="co">## -0.022210082 -0.011291611 -0.005565412 -0.015442187 -0.022684534 -0.011001104 </span></span>
-<span><span class="co">##        row19        row20        row21        row22        row23        row24 </span></span>
-<span><span class="co">##  0.000000000  0.000000000  0.013397233  0.000000000 -0.022562126  0.001336301 </span></span>
-<span><span class="co">##        row25        row26        row27        row28        row29        row30 </span></span>
-<span><span class="co">##  0.000000000  0.000000000  0.000000000 -0.056716845  0.000000000  0.000000000 </span></span>
-<span><span class="co">##        row31        row32        row33        row34        row35        row36 </span></span>
-<span><span class="co">##  0.000000000  0.039982930 -0.012002012 -0.022873091  0.000000000 -0.019855788 </span></span>
-<span><span class="co">##        row37        row38        row39        row40        row41        row42 </span></span>
-<span><span class="co">##  0.008997697  0.030961277  0.042075042  0.000000000  0.000000000  0.000000000 </span></span>
-<span><span class="co">##        row43        row44        row45        row46        row47        row48 </span></span>
-<span><span class="co">## -0.036479706  0.000000000  0.015988515 -0.007074704  0.000000000  0.005868399 </span></span>
-<span><span class="co">##        row49        row50 </span></span>
-<span><span class="co">## -0.026902416  0.000000000</span></span></code></pre>
+<pre><code><span><span class="co">##          row1          row2          row3          row4          row5 </span></span>
+<span><span class="co">##  0.0000000000  0.0230446773 -0.0260234015 -0.0322497832  0.0000000000 </span></span>
+<span><span class="co">##          row6          row7          row8          row9         row10 </span></span>
+<span><span class="co">##  0.0013624253  0.0000000000 -0.0229682923  0.0000000000 -0.0067789806 </span></span>
+<span><span class="co">##         row11         row12         row13         row14         row15 </span></span>
+<span><span class="co">##  0.0014720714  0.0251496341  0.0000000000  0.0000000000 -0.0088964960 </span></span>
+<span><span class="co">##         row16         row17         row18         row19         row20 </span></span>
+<span><span class="co">## -0.0189728268  0.0000000000  0.0482580008  0.0000000000 -0.0064268941 </span></span>
+<span><span class="co">##         row21         row22         row23         row24         row25 </span></span>
+<span><span class="co">##  0.0178990829  0.0258438120 -0.0186433280 -0.0234158385 -0.0000910386 </span></span>
+<span><span class="co">##         row26         row27         row28         row29         row30 </span></span>
+<span><span class="co">## -0.0524431719 -0.0033321754  0.0000000000 -0.0387003370  0.0101028809 </span></span>
+<span><span class="co">##         row31         row32         row33         row34         row35 </span></span>
+<span><span class="co">##  0.0020067741 -0.0085092523  0.0355717491 -0.0047144356  0.0099650012 </span></span>
+<span><span class="co">##         row36         row37         row38         row39         row40 </span></span>
+<span><span class="co">##  0.0000000000  0.0336166249  0.0381929790  0.0002465599 -0.0482663048 </span></span>
+<span><span class="co">##         row41         row42         row43         row44         row45 </span></span>
+<span><span class="co">##  0.0000000000 -0.0304271304  0.0304233855  0.0000000000  0.0000000000 </span></span>
+<span><span class="co">##         row46         row47         row48         row49         row50 </span></span>
+<span><span class="co">## -0.0109421477  0.0247028410  0.0000000000  0.0000000000  0.0074879689</span></span></code></pre>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
@@ -291,23 +293,23 @@
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##        row1        row2        row3        row4        row5        row6 </span></span>
-<span><span class="co">## -0.69421959  1.11625906 -2.28847632  1.10705335  0.00000000  0.00000000 </span></span>
+<span><span class="co">##  0.00000000  1.15223387 -1.30117007 -1.61248916  0.00000000  0.06812127 </span></span>
 <span><span class="co">##        row7        row8        row9       row10       row11       row12 </span></span>
-<span><span class="co">## -1.76360865  0.00000000  0.00000000 -0.82686921  0.54003190 -1.53635095 </span></span>
+<span><span class="co">##  0.00000000 -1.14841462  0.00000000 -0.33894903  0.07360357  1.25748170 </span></span>
 <span><span class="co">##       row13       row14       row15       row16       row17       row18 </span></span>
-<span><span class="co">## -1.11050408 -0.56458053 -0.27827062 -0.77210935 -1.13422671 -0.55005519 </span></span>
+<span><span class="co">##  0.00000000  0.00000000 -0.44482480 -0.94864134  0.00000000  2.41290004 </span></span>
 <span><span class="co">##       row19       row20       row21       row22       row23       row24 </span></span>
-<span><span class="co">##  0.00000000  0.00000000  0.66986166  0.00000000 -1.12810630  0.06681503 </span></span>
+<span><span class="co">##  0.00000000 -0.32134471  0.89495414  1.29219060 -0.93216640 -1.17079193 </span></span>
 <span><span class="co">##       row25       row26       row27       row28       row29       row30 </span></span>
-<span><span class="co">##  0.00000000  0.00000000  0.00000000 -2.83584224  0.00000000  0.00000000 </span></span>
+<span><span class="co">## -0.00455193 -2.62215859 -0.16660877  0.00000000 -1.93501685  0.50514404 </span></span>
 <span><span class="co">##       row31       row32       row33       row34       row35       row36 </span></span>
-<span><span class="co">##  0.00000000  1.99914649 -0.60010058 -1.14365457  0.00000000 -0.99278938 </span></span>
+<span><span class="co">##  0.10033870 -0.42546262  1.77858745 -0.23572178  0.49825006  0.00000000 </span></span>
 <span><span class="co">##       row37       row38       row39       row40       row41       row42 </span></span>
-<span><span class="co">##  0.44988485  1.54806386  2.10375212  0.00000000  0.00000000  0.00000000 </span></span>
+<span><span class="co">##  1.68083125  1.90964895  0.01232799 -2.41331524  0.00000000 -1.52135652 </span></span>
 <span><span class="co">##       row43       row44       row45       row46       row47       row48 </span></span>
-<span><span class="co">## -1.82398532  0.00000000  0.79942573 -0.35373519  0.00000000  0.29341995 </span></span>
+<span><span class="co">##  1.52116927  0.00000000  0.00000000 -0.54710739  1.23514205  0.00000000 </span></span>
 <span><span class="co">##       row49       row50 </span></span>
-<span><span class="co">## -1.34512079  0.00000000</span></span></code></pre>
+<span><span class="co">##  0.00000000  0.37439845</span></span></code></pre>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
@@ -351,7 +353,7 @@
 <span></span>
 <span><span class="co"># preview</span></span>
 <span><span class="va">dense</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /tmp/RtmpYHUSYQ/file15fd74261b10.duckdb </span></span>
+<pre><code><span><span class="co">## connection :  /tmp/RtmpoSTsnN/file22b2409b4272.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span>
 <span><span class="co">##                                                              </span></span>
@@ -476,7 +478,7 @@
 </h3>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /tmp/RtmpYHUSYQ/file15fd74261b10.duckdb </span></span>
+<pre><code><span><span class="co">## connection :  /tmp/RtmpoSTsnN/file22b2409b4272.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
