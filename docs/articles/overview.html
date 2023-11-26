@@ -71,9 +71,6 @@
   </div>
 </nav><div class="container template-article">
 
-
-
-
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Overview</h1>
@@ -88,46 +85,21 @@
 <div class="section level2">
 <h2 id="dbmatrix">dbMatrix<a class="anchor" aria-label="anchor" href="#dbmatrix"></a>
 </h2>
-<p><code>dbMatrix</code> is a core package in the <a href="https://ed2uiz.github.io/dbverse/" class="external-link"><code>dbverse</code></a>
-library that inherits from the <code>dbData</code> base class and
-consists of two subclasses, <code>dbSparseMatrix</code> and
-<code>dbDenseMatrix</code>.</p>
-<p><code>dbMatrix</code> objects emulate in-memory dense and sparse
-matrices in an embedded database powered by DuckDB.</p>
+<p><code>dbMatrix</code> is a core package in the <a href="https://ed2uiz.github.io/dbverse/" class="external-link"><code>dbverse</code></a> library that inherits from the <code>dbData</code> base class and consists of two subclasses, <code>dbSparseMatrix</code> and <code>dbDenseMatrix</code>.</p>
+<p><code>dbMatrix</code> objects emulate in-memory dense and sparse matrices in an embedded database powered by DuckDB.</p>
 </div>
 <div class="section level2">
 <h2 id="dbsparsematrix">dbSparseMatrix<a class="anchor" aria-label="anchor" href="#dbsparsematrix"></a>
 </h2>
 <p><img src="../reference/figures/dbMatrix-overview.png"></p>
-<p>Sparse matrices are represented as triplet vectors with
-<code>i</code>, <code>j</code>, and <code>x</code> numerical vectors.
-<code>i</code> and <code>j</code> refer to the row and column indices,
-respectively, with specific <code>x</code> values or counts. Note:
-unlike the rest of R, the <code>i</code> and <code>j</code> vectors are
-zero-indexed following conventions from the <code>Matrix</code> R
-package for the <code>dgCMatrix</code> and <code>TSparseMatrix</code>
-class.</p>
-<p>The <code>dbSparseMatrix</code> class stores the triplet vector
-representation with its associated dimension names and dimensions if
-available. If none are provided, they are automatically generated as
-factors (enums) with <code>row#</code> or <code>col#</code> labels for
-rownames and colnames, respectively. The <code>dbSparseMatrix</code>
-class does not contain zeros in the triplet vector representation. Zero
-values are inferred based on the provided dimensions.</p>
-<p>Support for compressed sparse column matrices of the
-<code>dgCMatrix</code> class from the <code>Matrix</code> R package is
-currently implemented. For more information about sparse matrices, see
-<a href="https://en.wikipedia.org/wiki/Sparse_matrix" class="external-link">the wiki article
-here</a>.</p>
+<p>Sparse matrices are represented as triplet vectors with <code>i</code>, <code>j</code>, and <code>x</code> numerical vectors. <code>i</code> and <code>j</code> refer to the row and column indices, respectively, with specific <code>x</code> values or counts. Note: unlike the rest of R, the <code>i</code> and <code>j</code> vectors are zero-indexed following conventions from the <code>Matrix</code> R package for the <code>dgCMatrix</code> and <code>TSparseMatrix</code> class.</p>
+<p>The <code>dbSparseMatrix</code> class stores the triplet vector representation with its associated dimension names and dimensions if available. If none are provided, they are automatically generated as factors (enums) with <code>row#</code> or <code>col#</code> labels for rownames and colnames, respectively. The <code>dbSparseMatrix</code> class does not contain zeros in the triplet vector representation. Zero values are inferred based on the provided dimensions.</p>
+<p>Support for compressed sparse column matrices of the <code>dgCMatrix</code> class from the <code>Matrix</code> R package is currently implemented. For more information about sparse matrices, see <a href="https://en.wikipedia.org/wiki/Sparse_matrix" class="external-link">the wiki article here</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="dbdensematrix">dbDenseMatrix<a class="anchor" aria-label="anchor" href="#dbdensematrix"></a>
 </h2>
-<p>We use the same approach as <code>dbSparseMatrix</code> to represent
-a dense matrix as a triplet <code>i</code>, <code>j</code>, and
-<code>x</code> vector. The only difference is that the
-<code>dbDenseMatrix</code> class consists of all values in the matrix,
-including zeros.</p>
+<p>We use the same approach as <code>dbSparseMatrix</code> to represent a dense matrix as a triplet <code>i</code>, <code>j</code>, and <code>x</code> vector. The only difference is that the <code>dbDenseMatrix</code> class consists of all values in the matrix, including zeros.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

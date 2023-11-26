@@ -71,9 +71,6 @@
   </div>
 </nav><div class="container template-article">
 
-
-
-
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Arithmetic</h1>
@@ -99,11 +96,8 @@
 <div class="section level3">
 <h3 id="get-test-data">Get test data<a class="anchor" aria-label="anchor" href="#get-test-data"></a>
 </h3>
-<p>The test file is a <code>dgCMatrix</code>or compressed sparse column
-matrix representing a single cell gene expression matrix. The file is in
-the <code>data</code> directory of the package.</p>
-<p>Let’s load the .rds file and preview the first ten columns and
-rows.</p>
+<p>The test file is a <code>dgCMatrix</code>or compressed sparse column matrix representing a single cell gene expression matrix. The file is in the <code>data</code> directory of the package.</p>
+<p>Let’s load the .rds file and preview the first ten columns and rows.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dgc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"../data/dgc.rds"</span><span class="op">)</span></span>
 <span></span>
@@ -132,16 +126,12 @@ rows.</p>
 <span><span class="co">#&gt;   .. ..$ : chr [1:624] "AAAGGGATGTAGCAAG-1" "AAATGGCATGTCTTGT-1" "AAATGGTCAATGTGCC-1" "AAATTAACGGGTAGCT-1" ...</span></span>
 <span><span class="co">#&gt;   ..@ x       : num [1:170625] 1 1 1 1 1 1 6 2 1 1 ...</span></span>
 <span><span class="co">#&gt;   ..@ factors : list()</span></span></code></pre></div>
-<p>The file contains 634 rows and 624 columns. The rows represent gene
-names and the columns represent cell names. The values are integers and
-represent the number of times a gene is detected in a cell. Like most
-single-cell RNA-seq data, the matrix is sparse.</p>
+<p>The file contains 634 rows and 624 columns. The rows represent gene names and the columns represent cell names. The values are integers and represent the number of times a gene is detected in a cell. Like most single-cell RNA-seq data, the matrix is sparse.</p>
 </div>
 <div class="section level3">
 <h3 id="create-a-dbmatrix-object">Create a dbMatrix object<a class="anchor" aria-label="anchor" href="#create-a-dbmatrix-object"></a>
 </h3>
-<p>Let’s create a <code>dbSparseMatrix</code> object from the above
-<code>dgc</code> object.</p>
+<p>Let’s create a <code>dbSparseMatrix</code> object from the above <code>dgc</code> object.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Note: by default the constructor creates a dbMatrix object in-memory</span></span>
 <span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/createDBDenseMatrix.html">createDBMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, name <span class="op">=</span> <span class="st">'visium'</span>, class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -166,11 +156,8 @@ single-cell RNA-seq data, the matrix is sparse.</p>
 <div class="section level3">
 <h3 id="scalar-arithmetic">Scalar Arithmetic<a class="anchor" aria-label="anchor" href="#scalar-arithmetic"></a>
 </h3>
-<p>Performing scalar arithmetic on a <code>dbMatrix</code> object is
-similar to performing scalar arithmetic on a <code>dgCMatrix</code>
-object.</p>
-<p>Note: scalar arithmetic on a <code>dbSparseMatrix</code> results in a
-<code>dbDenseMatrix</code>.</p>
+<p>Performing scalar arithmetic on a <code>dbMatrix</code> object is similar to performing scalar arithmetic on a <code>dgCMatrix</code> object.</p>
+<p>Note: scalar arithmetic on a <code>dbSparseMatrix</code> results in a <code>dbDenseMatrix</code>.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dbsm</span> <span class="op">+</span> <span class="fl">1</span></span>
 <span><span class="co">#&gt; densifying sparse matrix on disk...done</span></span>
@@ -203,8 +190,7 @@ object.</p>
 <div class="section level3">
 <h3 id="matrix-arithmetic">Matrix Arithmetic<a class="anchor" aria-label="anchor" href="#matrix-arithmetic"></a>
 </h3>
-<p><code>dbMatrix</code> also supports matrix arithmetic for
-<code>dbMatrix</code> objects that are <a href="https://en.wikipedia.org/wiki/Conformable_matrix" class="external-link">conformable</a>.</p>
+<p><code>dbMatrix</code> also supports matrix arithmetic for <code>dbMatrix</code> objects that are <a href="https://en.wikipedia.org/wiki/Conformable_matrix" class="external-link">conformable</a>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dbsm</span> <span class="op">+</span> <span class="va">dbsm</span></span>
 <span><span class="co">#&gt; connection :  :temp: </span></span>
@@ -225,6 +211,9 @@ object.</p>
 <div class="section level3">
 <h3 id="matrix-multiplication">Matrix Multiplication<a class="anchor" aria-label="anchor" href="#matrix-multiplication"></a>
 </h3>
+<div class="section level4">
+<h4 id="hadamard-product">Hadamard product<a class="anchor" aria-label="anchor" href="#hadamard-product"></a>
+</h4>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dbsm</span> <span class="op">*</span> <span class="va">dbsm</span></span>
 <span><span class="co">#&gt; connection :  :temp: </span></span>
@@ -241,6 +230,12 @@ object.</p>
 <span><span class="co">#&gt; Gm19935       0 1 0 0  0 0 0  0 0 0</span></span>
 <span><span class="co">#&gt; 9630013A20Rik 0 0 0 0  0 0 0  0 0 0</span></span>
 <span><span class="co">#&gt; 2900040C04Rik 1 0 0 0  0 0 0  0 0 1</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="matrix-product">Matrix product<a class="anchor" aria-label="anchor" href="#matrix-product"></a>
+</h4>
+<p>TODO</p>
+</div>
 </div>
 <div class="section level3">
 <h3 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
@@ -281,11 +276,11 @@ object.</p>
 <span><span class="co">#&gt; [21] pillar_1.9.0      rlang_1.1.1       utf8_1.2.4        cachem_1.0.8     </span></span>
 <span><span class="co">#&gt; [25] stringi_1.8.1     xfun_0.40         fs_1.6.3          sass_0.4.7       </span></span>
 <span><span class="co">#&gt; [29] memoise_2.0.1     cli_3.6.1         withr_2.5.2       pkgdown_2.0.7    </span></span>
-<span><span class="co">#&gt; [33] magrittr_2.0.3    digest_0.6.33     grid_4.3.2        rstudioapi_0.15.0</span></span>
-<span><span class="co">#&gt; [37] dbplyr_2.4.0      lifecycle_1.0.3   vctrs_0.6.4       evaluate_0.22    </span></span>
-<span><span class="co">#&gt; [41] glue_1.6.2        data.table_1.14.8 duckdb_0.9.1-1    ragg_1.2.6       </span></span>
-<span><span class="co">#&gt; [45] fansi_1.0.5       rmarkdown_2.25    purrr_1.0.2       pkgconfig_2.0.3  </span></span>
-<span><span class="co">#&gt; [49] tools_4.3.2       htmltools_0.5.6.1</span></span></code></pre></div>
+<span><span class="co">#&gt; [33] magrittr_2.0.3    digest_0.6.33     grid_4.3.2        dbplyr_2.4.0     </span></span>
+<span><span class="co">#&gt; [37] lifecycle_1.0.3   vctrs_0.6.4       evaluate_0.22     glue_1.6.2       </span></span>
+<span><span class="co">#&gt; [41] data.table_1.14.8 duckdb_0.9.1-1    ragg_1.2.6        fansi_1.0.5      </span></span>
+<span><span class="co">#&gt; [45] rmarkdown_2.25    purrr_1.0.2       pkgconfig_2.0.3   tools_4.3.2      </span></span>
+<span><span class="co">#&gt; [49] htmltools_0.5.6.1</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

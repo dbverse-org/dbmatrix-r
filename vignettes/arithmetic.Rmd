@@ -62,9 +62,14 @@ dbsm + dbsm
 ```
 
 ### Matrix Multiplication
+
+#### Hadamard product
 ```{r}
 dbsm * dbsm
 ```
+
+#### Matrix product
+TODO
 
 ### Session Info
 ```{r}
