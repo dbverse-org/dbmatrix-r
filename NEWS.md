@@ -1,4 +1,33 @@
-<!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
+<!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
+
+# dbMatrix 0.0.0.9011 (2023-12-08)
+
+## Bug fixes
+
+- Fix incorrect aggregate operations.
+
+- Fixes after con slot removal.
+
+## Features
+
+- Add get_con().
+
+- Add dbDisconnect() generic.
+
+- Update accessors.
+
+## Chore
+
+- Update vignettes.
+
+- Update README.
+
+- Update gitignore.
+
+- Update docs.
+
+- Update NEWS.
+
 
 # dbMatrix 0.0.0.9010 (2023-11-25)
 
