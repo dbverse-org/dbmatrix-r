@@ -39,22 +39,23 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
       generic_char %in% c('-', '+')) {
     dbm = toDbDense(dbm)
   }
+  stopf("TODO")
 
-  p = cPool(dbm) # get connection pool
-  conn = pool::localCheckout(p) # create connection to allow temp tables
-  cPool(dbm) = conn # assign connection to dbm
-
-  remote_name = remoteName(dbm)
-  db_path <- conn@driver@dbdir
-
-  # handle dimnames
-  r_names = rownames(dbm)
-  if (is.factor(r_names)) {
-    r_names = 1:length(r_names)
-  }
-
-  vect_tbl = dplyr::tibble(i = r_names, num_vect = num_vect)
-  # if(remote_name == ":memory:"){
+  # p = cPool(dbm) # get connection pool
+  # conn = pool::localCheckout(p) # create connection to allow temp tables
+  # cPool(dbm) = conn # assign connection to dbm
+  #
+  # remote_name = remoteName(dbm)
+  # db_path <- conn@driver@dbdir
+  #
+  # # handle dimnames
+  # r_names = rownames(dbm)
+  # if (is.factor(r_names)) {
+  #   r_names = 1:length(r_names)
+  # }
+  #
+  # vect_tbl = dplyr::tibble(i = r_names, num_vect = num_vect)
+  # # if(remote_name == ":memory:"){
 
   # run dplyr chain
   build_call = paste0(
@@ -81,7 +82,7 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
   # }
 
   # return to pool connector
-  cPool(dbm) = p
+  # cPool(dbm) = p
 
   # show
   dbm
@@ -411,8 +412,8 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
 
             # calculate rowSums
             row_sums = rowSums(x)
-            n_rows <- dim(x)[1]
-            vals = row_sums / n_rows
+            n_cols <- dim(x)[2]
+            vals = row_sums / n_cols
 
             # show
             vals
@@ -460,8 +461,8 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
 
             # calculate
             col_sums = colSums(x)
-            n_cols <- dim(x)[2]
-            vals = col_sums / n_cols
+            n_rows <- dim(x)[1]
+            vals = col_sums / n_rows
 
             # show
             vals
