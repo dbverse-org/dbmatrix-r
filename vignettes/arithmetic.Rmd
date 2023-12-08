@@ -48,9 +48,9 @@ dbsm
 ```
 
 ### Scalar Arithmetic
-Performing scalar arithmetic on a `dbMatrix` object is similar to performing scalar arithmetic on a `dgCMatrix` object. 
+`dbMatrix` emulates scalar arithmetic in the `Matrix` package. 
 
-Note: scalar arithmetic on a `dbSparseMatrix` results in a `dbDenseMatrix`.
+Note: Addition or subtraction with non-zero addends on a `dbSparseMatrix` results in a `dbDenseMatrix`.
 ```{r} 
 dbsm + 1
 
