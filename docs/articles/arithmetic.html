@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9010</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -175,18 +175,20 @@ object.</p>
 <span><span class="co">#&gt;  634 2 1 1 1 1 1</span></span>
 <span></span>
 <span><span class="va">dbsm</span> <span class="op">*</span> <span class="fl">100</span></span>
-<span><span class="co">#&gt; densifying sparse matrix on disk...done</span></span>
 <span><span class="co">#&gt; connection :  :temp: </span></span>
 <span><span class="co">#&gt; table name : 'visium'</span></span>
-<span><span class="co">#&gt; 634 x 624  matrix of class "dbDenseMatrix"</span></span>
+<span><span class="co">#&gt; 634 x 624  matrix of class "dbSparseMatrix"</span></span>
 <span><span class="co">#&gt; [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span>
-<span><span class="co">#&gt;                             </span></span>
-<span><span class="co">#&gt;    1 100 200 100 200 300 100</span></span>
-<span><span class="co">#&gt;    2   0 100 100 100 100   0</span></span>
-<span><span class="co">#&gt;    3   0 100 100   0   0   0</span></span>
-<span><span class="co">#&gt;  632   0 100   0   0   0   0</span></span>
-<span><span class="co">#&gt;  633   0   0   0 100   0   0</span></span>
-<span><span class="co">#&gt;  634 100   0   0   0   0   0</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                      </span></span>
+<span><span class="co">#&gt; Gna12         100 200 100 100 900 100 300 500 300   .</span></span>
+<span><span class="co">#&gt; Ccnd2           . 100 100   .   . 100   . 100 100   .</span></span>
+<span><span class="co">#&gt; Btbd17          . 100 100 100   .   . 200   .   .   .</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ......suppressing 614 columns and 628 rows</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Gm19935         . 100   .   .   .   .   .   .   .   .</span></span>
+<span><span class="co">#&gt; 9630013A20Rik   .   .   .   .   .   .   .   .   .   .</span></span>
+<span><span class="co">#&gt; 2900040C04Rik 100   .   .   .   .   .   .   .   . 100</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="matrix-arithmetic">Matrix Arithmetic<a class="anchor" aria-label="anchor" href="#matrix-arithmetic"></a>
@@ -200,15 +202,15 @@ object.</p>
 <span><span class="co">#&gt; 634 x 624  matrix of class "dbSparseMatrix"</span></span>
 <span><span class="co">#&gt; [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span>
 <span><span class="co">#&gt;                                    </span></span>
-<span><span class="co">#&gt; Gna12         2 4 2 2 18 2 6 10 6 0</span></span>
-<span><span class="co">#&gt; Ccnd2         0 2 2 0  0 2 0  2 2 0</span></span>
-<span><span class="co">#&gt; Btbd17        0 2 2 2  0 0 4  0 0 0</span></span>
+<span><span class="co">#&gt; Gna12         2 4 2 2 18 2 6 10 6 .</span></span>
+<span><span class="co">#&gt; Ccnd2         . 2 2 .  . 2 .  2 2 .</span></span>
+<span><span class="co">#&gt; Btbd17        . 2 2 2  . . 4  . . .</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ......suppressing 614 columns and 628 rows</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Gm19935       0 2 0 0  0 0 0  0 0 0</span></span>
-<span><span class="co">#&gt; 9630013A20Rik 0 0 0 0  0 0 0  0 0 0</span></span>
-<span><span class="co">#&gt; 2900040C04Rik 2 0 0 0  0 0 0  0 0 2</span></span></code></pre></div>
+<span><span class="co">#&gt; Gm19935       . 2 . .  . . .  . . .</span></span>
+<span><span class="co">#&gt; 9630013A20Rik . . . .  . . .  . . .</span></span>
+<span><span class="co">#&gt; 2900040C04Rik 2 . . .  . . .  . . 2</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="matrix-multiplication">Matrix Multiplication<a class="anchor" aria-label="anchor" href="#matrix-multiplication"></a>
@@ -223,15 +225,15 @@ object.</p>
 <span><span class="co">#&gt; 634 x 624  matrix of class "dbSparseMatrix"</span></span>
 <span><span class="co">#&gt; [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span>
 <span><span class="co">#&gt;                                    </span></span>
-<span><span class="co">#&gt; Gna12         1 4 1 1 81 1 9 25 9 0</span></span>
-<span><span class="co">#&gt; Ccnd2         0 1 1 0  0 1 0  1 1 0</span></span>
-<span><span class="co">#&gt; Btbd17        0 1 1 1  0 0 4  0 0 0</span></span>
+<span><span class="co">#&gt; Gna12         1 4 1 1 81 1 9 25 9 .</span></span>
+<span><span class="co">#&gt; Ccnd2         . 1 1 .  . 1 .  1 1 .</span></span>
+<span><span class="co">#&gt; Btbd17        . 1 1 1  . . 4  . . .</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ......suppressing 614 columns and 628 rows</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Gm19935       0 1 0 0  0 0 0  0 0 0</span></span>
-<span><span class="co">#&gt; 9630013A20Rik 0 0 0 0  0 0 0  0 0 0</span></span>
-<span><span class="co">#&gt; 2900040C04Rik 1 0 0 0  0 0 0  0 0 1</span></span></code></pre></div>
+<span><span class="co">#&gt; Gm19935       . 1 . .  . . .  . . .</span></span>
+<span><span class="co">#&gt; 9630013A20Rik . . . .  . . .  . . .</span></span>
+<span><span class="co">#&gt; 2900040C04Rik 1 . . .  . . .  . . 1</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="matrix-product">Matrix product<a class="anchor" aria-label="anchor" href="#matrix-product"></a>
@@ -268,7 +270,7 @@ object.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] dbMatrix_0.0.0.9010 Matrix_1.6-1.1     </span></span>
+<span><span class="co">#&gt; [1] dbMatrix_0.0.0.9011 Matrix_1.6-1.1     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] jsonlite_1.8.8    dplyr_1.1.3       compiler_4.3.2    tidyselect_1.2.0 </span></span>
