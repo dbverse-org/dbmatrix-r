@@ -1,5 +1,24 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9012 (2023-12-08)
+
+## Bug fixes
+
+- Only densify if necessary. != 0, +/-.
+
+- toDbDense() previously updated table by value. change to update by reference via VIEW creation of table named 'dense'.
+
+## Features
+
+- Add dbListTables().
+
+## Chore
+
+- Update docs.
+
+- Update gitignore.
+
+
 # dbMatrix 0.0.0.9011 (2023-12-08)
 
 ## Bug fixes
