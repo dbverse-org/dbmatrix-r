@@ -4,7 +4,7 @@
 # to elements internal to the object.
 
 # For pre-object construction data operations/massaging, see the constructor
-# function create_dbMatrix()
+# function createDBMatrix()
 #' @keywords internal
 #' @noRd
 setMethod(
@@ -12,7 +12,7 @@ setMethod(
   signature(.Object = 'dbMatrix'),
   function(.Object, dim_names, dims, ...) {
 
-    # call dbData initialize
+    # call dbMatrix initialize
     .Object = methods::callNextMethod(.Object, ...)
 
     # matrix specific data input #
@@ -119,7 +119,6 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
 
 ##  dbSparseMatrix ####
 setMethod('show', signature('dbSparseMatrix'), function(object) {
-
   cat('connection : ', get_dbdir(object), '\n')
   cat('table name : \'', get_tblName(object), '\'\n', sep = '')
 
@@ -230,34 +229,49 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 
 # constructors ####
 
-# Basic function to generate a dbDenseMatrix obj given data input
+# Basic function to generate a dbMatrix obj given input data
 
 #' @title Create a sparse or dense dbMatrix object
-#' @name createDBDenseMatrix
+#' @name createDBMatrix
 #' @description
-#' Create an S4 dbMatrix object that has a sparse or dense ijx triplet vector format (ijx).
-#' The data for the matrix is either written to a specified database file, in-memory (default), or
-#' could also be read in from files on disk.
-#' @param value object coercible to matrix or filepath to matrix data accessible
-#' by one of the read functions, or a dplyr tbl in a db `(required)`
-#' @param name table name to assign within database `(optional)`
-#' @param db_path path to database on disk (relative or absolute) or in memory `(":temp:")`
-#' @param overwrite whether to overwrite if table already exists in database `(required)`
-#' @param class class of the matrix: "dbDenseMatrix" or "dbSparseMatrix" `(required)`
+#' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
+#' @param value data to be added to the database. See details for supported data types \code{(required)}
+#' @param name table name to assign within database \code{(optional, default: "dbMatrix")}
+#' @param db_path path to database on disk (relative or absolute) or in memory \code{(":temp:")}
+#' @param overwrite whether to overwrite if table already exists in database \code{(required)}
+#' @param class class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}
+#' @param dims dimensions of the matrix \code{(optional: [int, int])}
+#' @param dim_names dimension names of the matrix \code{(optional: list(enum, enum))}
 #' @param ... additional params to pass
-#' @details Information is only read into the database during this process. Based
+#' @details This function reads in data into a pre-existing DuckDB database. Based
 #' on the \code{name} and \code{db_path} a lazy connection is then made
-#' downstream during \code{dbData} initialization and appended to the object.
-#' If a dplyr tbl is provided as pre-made input then it is evaluated for whether
-#' it exists within the specified backend then directly passed downstream.
+#' downstream during \code{dbMatrix} initialization.
+#'
+#' Supported \code{value} data types:
+#' \itemize{
+#'  \item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
+#'  \item \code{matrix} In-memory dense matrix from base R
+#'  \item \code{.mtx} Path to .mtx file (TODO)
+#'  \item \code{.csv} Path to .csv file (TODO)
+#'  \item \code{tbl_duckdb_connection} Table in DuckDB database in ijx format from
+#'  existing \code{dbMatrix} object. \code{dims} and \code{dim_names} must be
+#'  specified if \code{value} is \code{tbl_duckdb_connection}.
+#' }
+#'
 #' @export
 #' @examples
-#' dbSparse <- createDBMatrix(value = sparse_matrix, db_path = ":temp:", name = "sparse_matrix", class = "dbSparseMatrix")
+#' dgc <- dbMatrix:::sim_dgc()
+#' dbSparse <- createDBMatrix(value = dgc, db_path = ":temp:",
+#'                            name = "sparse_matrix", class = "dbSparseMatrix",
+#'                            overwrite = TRUE)
+#' dbSparse
 createDBMatrix <- function(value,
-                           name = "dbMatrix",
+                           class = NULL,
                            db_path = ":temp:",
                            overwrite = FALSE,
-                           class = NULL,
+                           name = "dbMatrix",
+                           dims = NULL,
+                           dim_names = NULL,
                            ...) {
   # check value
   assert_valid_value(value)
@@ -265,29 +279,36 @@ createDBMatrix <- function(value,
   # check db_path
   if (db_path != ":temp:") {
     if (!file.exists(db_path)) {
-      stopf("db_path does not exist. first create *.db file.")
+      stopf("Invalid db_path: file does not exist")
     }
   }
 
   # check name
   if (!grepl("^[a-zA-Z]", name) | grepl("-", name)) {
-    stopf("please provide valid name that starts with a letter, does not contain '-'")
+    stopf("Invalid name: name must start with a letter and not contain '-'")
   }
 
   # check class
   if (is.null(class)) {
-    stopf("please specify dbMatrix class: 'dbDenseMatrix' or 'dbSparseMatrix'")
+    stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
   if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
-    stopf("class must be character and one of either: 'dbDenseMatrix' or 'dbSparseMatrix'")
+    stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
   # check value and class mismatch
   if(inherits(value, "matrix") & class == "dbSparseMatrix"){
-    stopf("Set class = 'dbDenseMatrix' for dense matrices")
+    stopf("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
   }
   if(inherits(value, "dgCMatrix") & class == "dbDenseMatrix"){
-    stopf("Please set class to 'dbSparseMatrix' for sparse matrices")
+    stopf("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
+  }
+
+  # check dims, dim_names
+  if (inherits(value, "tbl_duckdb_connection")) {
+    if (is.null(dims) | is.null(dim_names)) {
+      stopf("Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects")
+    }
   }
 
   # setup db connection
@@ -298,17 +319,8 @@ createDBMatrix <- function(value,
 
   if (inherits(value, "tbl_duckdb_connection")) { # data is already in DB
     data <- value
-
-    query <- paste0("SELECT max(i) FROM ", name)
-    num_row <- DBI::dbGetQuery(con, query) |>
-      dplyr::pull("max(i)")
-
-    query <- paste0("SELECT max(j) FROM ", name)
-    num_col <- DBI::dbGetQuery(con, query) |>
-      dplyr::pull("max(j)")
-
-    dims <- c(as.integer(num_row), as.integer(num_col))
-    dim_names <- list(NULL, NULL)
+    dims <- dims
+    dim_names <- dim_names
   } else { # data must be read in
     if (is.character(value)) { # read in from file
       stopf("TODO: read in matrix from file... See read_matrix()")
@@ -349,7 +361,6 @@ createDBMatrix <- function(value,
 
   res <- new(Class = set_class,
              value = data,
-             con = con,
              name = name,
              init = TRUE,
              dim_names = dim_names,
@@ -377,7 +388,7 @@ toDbDense <- function(db_sparse){
   }
 
   # get connection info
-  con <- db_sparse@con
+  con <- get_con(db_sparse)
 
   # get dbm info
   dims <- dim(db_sparse)
@@ -429,9 +440,8 @@ toDbDense <- function(db_sparse){
   data <- dplyr::tbl(con, remote_name)
 
   # Create new dbSparseMatrix object
-  db_dense <- new("dbDenseMatrix",
+  db_dense <- new(Class = "dbDenseMatrix",
                   value = data,
-                  con = con,
                   name = remote_name,
                   dims = dims,
                   dim_names = dim_names,

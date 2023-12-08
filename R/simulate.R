@@ -188,12 +188,12 @@ sim_dbSparseMatrix = function(num_rows = 50,
   dim = c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbSparseMatrix obj
-  res = dbSparseMatrix(value = data,
-                       con = conn,
+  res = createDBMatrix(value = data,
                        name = name,
-                       dim = dim,
+                       dims = dim,
                        dim_names = dim_names,
-                       init = FALSE)
+                       class = "dbSparseMatrix",
+                       init = TRUE)
 
   # show
   res
@@ -235,12 +235,12 @@ sim_dbDenseMatrix = function(num_rows = 50,
   dim = c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbDenseMatrix object
-  res = dbDenseMatrix(value = data,
-                      con = conn,
-                      name = name,
-                      dim = dim,
-                      dim_names = dim_names,
-                      init = TRUE)
+  res = createDBMatrix(value = data,
+                       name = name,
+                       dims = dim,
+                       dim_names = dim_names,
+                       class = "dbDenseMatrix",
+                       init = TRUE)
 
   # Show
   res
