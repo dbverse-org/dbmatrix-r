@@ -9,6 +9,11 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include=FALSE}
+options(max.print = 10) # Set the maximum number of rows to display
+options(width = 80)     # Set the maximum number of columns to display
+```
+
 ## Introduction
 
 This vignette introduces the generic functions and operations supported by `dbMatrix`. 
@@ -43,44 +48,55 @@ library(Matrix)
 
 ## dbSparse Matrix Operations
 
-```{r eval=TRUE, message=FALSE, warning=FALSE}
-# simulate a dgC matrix
-dgc = dbMatrix:::sim_dgc()
+### Get test data
+The test file is a `dgCMatrix`or compressed sparse column matrix representing a single cell gene expression matrix. The file is in the `data` directory of the package.
 
-# create dbSparseMatrix from the same dgc in memory
-sparse = createDBMatrix(value = dgc, name = "sparse", class = "dbSparseMatrix", overwrite = TRUE)
+Let's load the .rds file and preview the object.
+
+```{r}
+dgc <- readRDS("../data/dgc.rds")
+
+dplyr::glimpse(dgc)
+```
+
+```{r}
+# create dbSparseMatrix from the same dgc
+sparse = createDBMatrix(value = dgc, 
+                        db_path = ":temp:", 
+                        name = "sparse", 
+                        class = "dbSparseMatrix",
+                        overwrite = TRUE)
+
 
 # preview 
 # show function aims to emulate the show method for dgCMatrix
-sparse
+head(sparse)
+```
+
+### transpose
+```{r}
+t(sparse)
 ```
 
 ### colMeans
 ```{r}
 dbMatrix::colMeans(sparse)
-
-all.equal(unname(dbMatrix::colMeans(sparse)), Matrix::colMeans(dgc))
 ```
+
 
 ### colSums
 ```{r}
 dbMatrix::colSums(sparse)
-
-all.equal(unname(dbMatrix::colSums(sparse)), Matrix::colSums(dgc))
 ```
 
 ### rowMeans
 ```{r}
 dbMatrix::rowMeans(sparse)
-
-all.equal(unname(dbMatrix::rowMeans(sparse)), Matrix::rowMeans(dgc))
 ```
 
 ### rowSums
 ```{r}
 dbMatrix::rowSums(sparse)
-
-all.equal(unname(dbMatrix::rowSums(sparse)), Matrix::rowSums(dgc))
 ```
 
 ### dim
@@ -90,10 +106,22 @@ dim(sparse)
 dim(dgc)
 ```
 
-### transpose
-```{r}
-t(sparse)
-```
+### Check results are equivalent
+<details>
+  <summary>Click to expand </summary>
+  
+  ```{r}
+  all.equal(dbMatrix::colMeans(sparse), Matrix::colMeans(dgc))
+  
+  all.equal(dbMatrix::colSums(sparse), Matrix::colSums(dgc))
+  
+  all.equal(dbMatrix::rowMeans(sparse), Matrix::rowMeans(dgc))
+  
+  all.equal(dbMatrix::rowSums(sparse), Matrix::rowSums(dgc))
+
+  ```
+</details>
+
 
 ## dbDenseMatrix Operations
 
@@ -102,6 +130,11 @@ dense = sim_dbDenseMatrix()
 
 # preview
 dense
+```
+
+### transpose
+```{r}
+t(dense)
 ```
 
 ### colMeans
@@ -134,14 +167,12 @@ dbMatrix::mean(dense)
 dim(dense)
 ```
 
-### transpose
+## Shutdown
 ```{r}
-t(dense)
+dbMatrix::dbDisconnect(dense, shutdown = TRUE)
 ```
 
-
 ## Session Info
-
 ```{r eval=TRUE, message=FALSE}
 sessionInfo()
 ```

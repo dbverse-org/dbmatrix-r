@@ -22,14 +22,12 @@ library(dbMatrix)
 ### Get test data
 The test file is a `dgCMatrix`or compressed sparse column matrix representing a single cell gene expression matrix. The file is in the `data` directory of the package.
 
-Let's load the .rds file and preview the first ten columns and rows.
+Let's load the .rds file and preview the object.
 
 ```{r}
 dgc <- readRDS("../data/dgc.rds")
 
-dgc[1:10,1:10]
-
-str(dgc)
+dplyr::glimpse(dgc)
 ```
 
 The file contains 634 rows and 624 columns. The rows represent gene names and the columns represent cell names. The values are integers and represent the number of times a gene is detected in a cell. Like most single-cell RNA-seq data, the matrix is sparse.
@@ -39,7 +37,11 @@ The file contains 634 rows and 624 columns. The rows represent gene names and th
 Let's create a `dbSparseMatrix` object from the above `dgc` object.
 ```{r}
 # Note: by default the constructor creates a dbMatrix object in-memory
-dbsm <- createDBMatrix(value = dgc, name = 'visium', class = "dbSparseMatrix", overwrite = TRUE)
+dbsm <- createDBMatrix(value = dgc, 
+                       db_path = ":temp:", 
+                       name = 'visium', 
+                       class = "dbSparseMatrix",
+                       overwrite = TRUE)
 
 # preview the object
 dbsm
@@ -70,6 +72,11 @@ dbsm * dbsm
 
 #### Matrix product
 TODO
+
+### Shutdown
+```{r}
+dbMatrix::dbDisconnect(dbsm, shutdown = TRUE)
+```
 
 ### Session Info
 ```{r}
