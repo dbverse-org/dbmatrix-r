@@ -40,6 +40,9 @@
     <loc>ed2uiz.github.io/dbMatrix/reference/createDBDenseMatrix.html</loc>
   </url>
   <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/createDBMatrix.html</loc>
+  </url>
+  <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/dbDataFrame-class.html</loc>
   </url>
   <url>
@@ -53,6 +56,9 @@
   </url>
   <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/flex_window_order.html</loc>
+  </url>
+  <url>
+    <loc>ed2uiz.github.io/dbMatrix/reference/get_con.html</loc>
   </url>
   <url>
     <loc>ed2uiz.github.io/dbMatrix/reference/get_dbdir.html</loc>
