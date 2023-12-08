@@ -13,6 +13,9 @@ setGeneric('rowSums', function(x, ...) standardGeneric('rowSums'))
 # dbData ops ####
 setGeneric('t', function(x, ...) standardGeneric('t'))
 setGeneric('mean', function(x, ...) standardGeneric('mean'))
+
+# DBI ####
 setGeneric('dbDisconnect', function(x, ...) standardGeneric('dbDisconnect'))
+setGeneric('dbListTables', function(x, ...) standardGeneric('dbListTables'))
 
 

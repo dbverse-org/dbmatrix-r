@@ -103,12 +103,24 @@ ij_array_map = function(i, j, dims) {
   (j - 1) * dims[1] + i
 }
 
-# Connection ####
-#' @title colSums
-#' @rdname hidden_aliases
+# DBI ####
+
+## dbDisconnect ####
+#' @title dbDisconnect
+#' @rdname DBI
 #' @export
 setMethod('dbDisconnect', signature(x = 'dbMatrix'),
           function(x, ...){
             con <- get_con(x)
-            DBI::dbDisconnect(con, shutdown = TRUE)
+            DBI::dbDisconnect(conn = con, shutdown = TRUE)
+          })
+
+## dbListTables ####
+#' @title dbListTables
+#' @rdname DBI
+#' @export
+setMethod('dbListTables', signature(x = 'dbMatrix'),
+          function(x, ...){
+            con <- get_con(x)
+            DBI::dbListTables(conn = con)
           })
