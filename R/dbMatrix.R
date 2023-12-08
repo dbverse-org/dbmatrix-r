@@ -398,15 +398,16 @@ toDbDense <- function(db_sparse){
   n_cols <- dims[2]
   db_path <- get_dbdir(db_sparse)
 
-  # create empty df of all 'i' and 'j' indices IN MEMORY
+  # create empty df of all 'i' and 'j' indices
+  # note: IN MEMORY operation. may fail for very large matrices
   all_combinations = expand.grid(i = 1:n_rows, j = 1:n_cols, x = 0)
 
   # write to db
   # note: alternatively create VIEW for in-memory computation (faster but limited by mem)
-  dplyr::copy_to(
-    df = all_combinations, name = "all_combinations", dest = con,
-    temporary = FALSE, overwrite = TRUE
-  )
+  dplyr::copy_to(df = all_combinations,
+                 name = "dense",
+                 dest = con,
+                 temporary = TRUE, overwrite = TRUE)
 
   # # write out all_combinations as a temporary .csv file
   # # note: this is a workaround for the fact that dplyr::copy_to() is slow
@@ -422,22 +423,22 @@ toDbDense <- function(db_sparse){
   # create dense matrix on disk
   # note: time-intensive step
   cat("densifying sparse matrix on disk...")
-  sql <- paste0("UPDATE all_combinations ",
+  sql <- paste0("UPDATE dense ",
                 "SET x = ", remote_name, ".x FROM ", remote_name,
-                " WHERE all_combinations.i = ", remote_name, ".i AND ",
-                "all_combinations.j = ", remote_name, ".j"
+                " WHERE dense.i = ", remote_name, ".i AND ",
+                "dense.j = ", remote_name, ".j"
                 )
   DBI::dbExecute(conn = con, statement = sql)
 
   # remove old sparse ijx table
-  DBI::dbExecute(conn = con, paste0("DROP TABLE IF EXISTS ", remote_name))
+  # DBI::dbExecute(conn = con, paste0("DROP TABLE IF EXISTS ", remote_name))
 
   # rename dense table to existing tbl name
-  rename_sql <- paste("ALTER TABLE all_combinations RENAME TO", remote_name)
-  DBI::dbExecute(conn = con, statement = rename_sql)
+  # rename_sql <- paste("ALTER TABLE all_combinations RENAME TO", remote_name)
+  # DBI::dbExecute(conn = con, statement = rename_sql)
 
   # get new table from database
-  data <- dplyr::tbl(con, remote_name)
+  data <- dplyr::tbl(con, "dense")
 
   # Create new dbSparseMatrix object
   db_dense <- new(Class = "dbDenseMatrix",

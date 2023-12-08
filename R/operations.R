@@ -33,12 +33,9 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
 
 #' @noRd
 arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
-  # if dbm is dbSparseMatrix and generic_char is "-" or "+" then convert
-  # dbm to dense using toDbDense()
-  if (class(dbm) == 'dbSparseMatrix' &&
-      generic_char %in% c('-', '+')) {
-    dbm = toDbDense(dbm)
-  }
+  # if (class(dbm) == 'dbSparseMatrix' && generic_char %in% c('-', '+')) {
+  #   dbm = toDbDense(dbm)
+  # }
   stopf("TODO")
 
   # p = cPool(dbm) # get connection pool
@@ -93,19 +90,19 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 ## Arith: dbm_e2 ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
-{
-  # perform matrix densification on dbSparseMatrix if e2 is not 0
-  if (class(e1) == 'dbSparseMatrix' && e2 != 0) {
-    e1 = toDbDense(e1)
-  }
-
+setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   dbm = castNumeric(e1)
 
-  num_vect = if (typeof(e2) != 'double')
+  num_vect = if(typeof(e2) != 'double'){
     as.numeric(e2)
-  else
+  } else{
     e2
+  }
+
+  # perform matrix densification on dbSparseMatrix if e2 is not 0
+  if (class(e1) == 'dbSparseMatrix' && e2 != 0) {
+    dbm = toDbDense(dbm)
+  }
 
   arith_call_dbm(
     dbm_narg = 1L,
@@ -119,17 +116,17 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 #' @rdname hidden_aliases
 #' @export
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
-  # perform matrix densification on dbSparseMatrix if e1 is not 0
-  if (class(e2) == 'dbSparseMatrix' && e1 != 0) {
-    e2 = toDbDense(e2)
-  }
-
   dbm = castNumeric(e2)
 
   num_vect = if (typeof(e1) != 'double'){
     as.numeric(e1)
   } else{
     e1
+  }
+
+  # perform matrix densification on dbSparseMatrix if e1 is not 0
+  if (class(dbm) == 'dbSparseMatrix' && e1 != 0) {
+    dbm = toDbDense(dbm)
   }
 
   arith_call_dbm(
@@ -676,18 +673,6 @@ setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
 })
 
 ### dim ####
-
-# @title dim
-# @rdname hidden_aliases
-# @export
-# setMethod('dim', signature('dbData'), function(x) {
-#   # x = reconnect(x)
-#   nr = x@data |>
-#     dplyr::summarise(n()) |>
-#     dplyr::pull() |>
-#     as.integer()
-#   c(nr, ncol(x@data))
-# })
 
 #' @title dim
 #' @rdname hidden_aliases
