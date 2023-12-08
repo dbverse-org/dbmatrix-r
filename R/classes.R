@@ -4,7 +4,6 @@
 #' @title dbData
 #' @description Base class for all db objects
 #' @slot value dplyr tbl that represents the database data
-#' @slot con duckdb database connection object created with DBI
 #' @slot name name of table within database that contains the data
 #' @slot init logical. Whether the object is fully initialized
 #' @noRd
@@ -13,13 +12,11 @@ setClass(
   contains = c('VIRTUAL'),
   slots = list(
     value = 'ANY',
-    con = 'duckdb_connection',
     name = 'character',
     init = 'logical'
   ),
   prototype = list(
     value = NULL,
-    con = NULL,
     name = NA_character_,
     init = FALSE
   )
