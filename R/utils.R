@@ -102,3 +102,13 @@ ij_array_map = function(i, j, dims) {
   # arrays map vector values first by row then by col
   (j - 1) * dims[1] + i
 }
+
+# Connection ####
+#' @title colSums
+#' @rdname hidden_aliases
+#' @export
+setMethod('dbDisconnect', signature(x = 'dbMatrix'),
+          function(x, ...){
+            con <- get_con(x)
+            DBI::dbDisconnect(con, shutdown = TRUE)
+          })
