@@ -99,8 +99,8 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
     e2
   }
 
-  # perform matrix densification on dbSparseMatrix if e2 is not 0
-  if (class(e1) == 'dbSparseMatrix' && e2 != 0) {
+  # Only densify if not 0 and if op is + or -
+  if (class(e1) == 'dbSparseMatrix' && e2 != 0 && as.character(.Generic) %in% c('-', '+')) {
     dbm = toDbDense(dbm)
   }
 
@@ -124,8 +124,8 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
     e1
   }
 
-  # perform matrix densification on dbSparseMatrix if e1 is not 0
-  if (class(dbm) == 'dbSparseMatrix' && e1 != 0) {
+  # Only densify if not 0 and if op is + or -
+  if (class(dbm) == 'dbSparseMatrix' && e1 != 0 && as.character(.Generic) %in% c('-', '+')) {
     dbm = toDbDense(dbm)
   }
 

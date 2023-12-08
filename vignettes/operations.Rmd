@@ -67,7 +67,6 @@ sparse = createDBMatrix(value = dgc,
                         class = "dbSparseMatrix",
                         overwrite = TRUE)
 
-
 # preview 
 # show function aims to emulate the show method for dgCMatrix
 head(sparse)
