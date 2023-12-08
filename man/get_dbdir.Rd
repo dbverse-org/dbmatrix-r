@@ -4,10 +4,10 @@
 \alias{get_dbdir}
 \title{get_dbdir}
 \usage{
-get_dbdir(dbData)
+get_dbdir(dbMatrix)
 }
 \arguments{
-\item{dbData}{}
+\item{dbMatrix}{}
 }
 \description{
 get_dbdir
