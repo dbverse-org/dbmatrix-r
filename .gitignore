@@ -3,3 +3,4 @@
 .Rbuildignore
 :temp:
 tutorials/
+.DS_Store
