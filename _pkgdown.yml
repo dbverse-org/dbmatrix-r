@@ -1,24 +1,22 @@
-url: ed2uiz.github.io/dbMatrix/
+url: https://drieslab.github.io/dbMatrix/
 template:
   bootstrap: 5
-  # bootswatch: spacelab
-  # theme: nord
 navbar:
   title: ~
   type: inverse
   left:
-    - text: Home
-      href: index.html
-    - text: Articles
-      menu:
-        - text: "Overview"
-          href: articles/overview.html
-        - text: "Operations"
-          href: articles/operations.html
-        - text: "Arithmetic"
-          href: articles/arithmetic.html
-    - text: "Documentation"
-      href: reference/index.html
-    - text: "Changelog"
-      href: news/index.html
+  - text: Home
+    href: index.html
+  - text: Articles
+    menu:
+    - text: Overview
+      href: articles/overview.html
+    - text: Operations
+      href: articles/operations.html
+    - text: Arithmetic
+      href: articles/arithmetic.html
+  - text: Documentation
+    href: reference/index.html
+  - text: Changelog
+    href: news/index.html
 
