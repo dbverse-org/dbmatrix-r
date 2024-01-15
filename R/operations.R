@@ -33,26 +33,18 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
 
 #' @noRd
 arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
-  # if (class(dbm) == 'dbSparseMatrix' && generic_char %in% c('-', '+')) {
-  #   dbm = toDbDense(dbm)
-  # }
-  stopf("TODO")
+  browser()
 
-  # p = cPool(dbm) # get connection pool
-  # conn = pool::localCheckout(p) # create connection to allow temp tables
-  # cPool(dbm) = conn # assign connection to dbm
-  #
-  # remote_name = remoteName(dbm)
-  # db_path <- conn@driver@dbdir
-  #
-  # # handle dimnames
-  # r_names = rownames(dbm)
-  # if (is.factor(r_names)) {
-  #   r_names = 1:length(r_names)
-  # }
-  #
-  # vect_tbl = dplyr::tibble(i = r_names, num_vect = num_vect)
-  # # if(remote_name == ":memory:"){
+  # handle dimnames
+  r_names = rownames(dbm)
+  if (is.factor(r_names)) {
+    r_names = 1:length(r_names)
+  }
+
+  # perform matching of vect by rownames on dbm
+  vect_tbl = dplyr::tibble(i = match(names(num_vect), r_names),
+                           num_vect = unname(num_vect[match(names(num_vect),
+                                                            r_names)]))
 
   # run dplyr chain
   build_call = paste0(
@@ -82,7 +74,7 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
   # cPool(dbm) = p
 
   # show
-  dbm
+  return(dbm)
 }
 
 # Math Ops ####
@@ -91,6 +83,7 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 #' @rdname hidden_aliases
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
+  browser()
   dbm = castNumeric(e1)
 
   num_vect = if(typeof(e2) != 'double'){
@@ -99,9 +92,14 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
     e2
   }
 
+  # when not to densify:
+  # case 1. if e1 is already a dbDenseMatrix
+  # case 2. if e2 is a scalar (integer) equal to zero
+  # case 3. if the operand is multiplication or division
+
   # Only densify if not 0 and if op is + or -
-  if (class(e1) == 'dbSparseMatrix' && e2 != 0 && as.character(.Generic) %in% c('-', '+')) {
-    dbm = toDbDense(dbm)
+  if (class(e1) == 'dbSparseMatrix' && all(e2 == 0) && as.character(.Generic) %in% c('-', '+')) {
+      dbm = toDbDense(dbm)
   }
 
   arith_call_dbm(
