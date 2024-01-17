@@ -7,7 +7,7 @@ Authors@R:
     person("Jiaji", "George Chen", email = "jiajic@bu.edu", role = c("aut")),
     person("Ruben", "Dries", email = "rubendries@gmail.com",role = c("aut", "cre")))
 Maintainer: Ruben Dries <rubendries@gmail.com>
-Description: Count matrices and data.frames on disk backed by DuckDB
+Description: dbMatrix is a package in the dbverse for working with matrices in databases.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
@@ -15,9 +15,9 @@ URL: https://dbverse-org.github.io/dbmatrix-r/
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.2.3
 Depends:
-    R (>= 4.1.0),
-    Matrix
+    R (>= 4.1.0)
 Imports:
+    Matrix,
     DBI,
     dplyr,
     dbplyr,
