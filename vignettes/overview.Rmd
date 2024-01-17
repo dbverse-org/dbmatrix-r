@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 ![](../man/figures/dbMatrix-overview.png)
 
 Sparse matrices are represented as triplet vectors with `i`, `j`,
-and `x` numerical vectors. `i` and `j` refer to the row and column indices, respectively, with specific `x` values or counts. Note: unlike the rest of R, the `i` and `j` vectors are zero-indexed following conventions from the `Matrix` R package for the `dgCMatrix` and `TSparseMatrix` class.
+and `x` numerical vectors. `i` and `j` refer to the row and column indices, respectively, with specific `x` values or counts. Note: The `i` and `j` vectors are one-based following conventions from the `Matrix` R package and the `TSparseMatrix` class.
 
 The `dbSparseMatrix` class stores the triplet vector representation with its associated dimension names and dimensions if available. If none are provided, they are automatically generated as factors (enums) with `row#` or `col#` labels for rownames and colnames, respectively. The `dbSparseMatrix` class does not contain zeros in the triplet vector representation. Zero values are inferred based on the provided dimensions.
 
