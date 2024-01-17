@@ -74,7 +74,7 @@ head(sparse)
 
 ### transpose
 ```{r}
-t(sparse)
+dbMatrix::t(sparse)
 ```
 
 ### colMeans
@@ -125,7 +125,8 @@ dim(dgc)
 ## dbDenseMatrix Operations
 
 ```{r, eval=TRUE, message=FALSE, warning=FALSE}
-dense = sim_dbDenseMatrix()
+# below is a convenience function to simulate a dbDenseMatrix
+dense = dbMatrix::sim_dbDenseMatrix()
 
 # preview
 dense
@@ -133,7 +134,7 @@ dense
 
 ### transpose
 ```{r}
-t(dense)
+dbMatrix::t(dense)
 ```
 
 ### colMeans
