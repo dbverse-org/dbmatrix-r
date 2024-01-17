@@ -1,108 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/404.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/404.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/LICENSE.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/LICENSE.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/articles/arithmetic.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/articles/arithmetic.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/articles/index.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/articles/index.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/articles/operations.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/articles/operations.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/articles/overview.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/articles/overview.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/articles/quickstart.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/articles/quickstart.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/authors.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/authors.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/index.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/index.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/news/index.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/news/index.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/DBI.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/DBI.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/castNumeric.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/castNumeric.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/colTypes.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/colTypes.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/createDBDenseMatrix.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/createDBDenseMatrix.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/createDBMatrix.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/createDBMatrix.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/dbDataFrame-class.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/dbDataFrame-class.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/dbDenseMatrix-class.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/dbDenseMatrix-class.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/dbMatrix-class.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/dbMatrix-class.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/dbSparseMatrix-class.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/dbSparseMatrix-class.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/flex_window_order.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/flex_window_order.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/get_con.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/get_con.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/get_dbdir.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/get_dbdir.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/get_tblName.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/get_tblName.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/head-dbDataFrame-method.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/head-dbDataFrame-method.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/head-dbMatrix-method.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/head-dbMatrix-method.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/hidden_aliases.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/hidden_aliases.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/index.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/index.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/nrow.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/nrow.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/pipe.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/pipe.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/print_array.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/print_array.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/simulate_objects.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/simulate_objects.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/tail-dbDataFrame-method.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/tail-dbDataFrame-method.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/tail-dbMatrix-method.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/tail-dbMatrix-method.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/toDbDense.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/toDbDense.html</loc>
   </url>
   <url>
-    <loc>ed2uiz.github.io/dbMatrix/reference/to_ijx_disk.html</loc>
+    <loc>https://drieslab.github.io/dbMatrix/reference/to_ijx_disk.html</loc>
   </url>
 </urlset>

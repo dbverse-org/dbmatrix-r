@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,24 +125,13 @@ downstream during <code>dbMatrix</code> initialization.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dgc</span> <span class="op">&lt;-</span> <span class="fu">dbMatrix</span><span class="fu">:::</span><span class="fu"><a href="simulate_objects.html">sim_dgc</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in as(data, "dgCMatrix"):</span> no method or default for coercing “matrix” to “dgCMatrix”</span>
 <span class="r-in"><span><span class="va">dbSparse</span> <span class="op">&lt;-</span> <span class="fu">createDBMatrix</span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, db_path <span class="op">=</span> <span class="st">":temp:"</span>,</span></span>
 <span class="r-in"><span>                           name <span class="op">=</span> <span class="st">"sparse_matrix"</span>, class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span></span>
 <span class="r-in"><span>                           overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'dgc' not found</span>
 <span class="r-in"><span><span class="va">dbSparse</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> connection :  :temp: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> table name : 'sparse_matrix'</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 50 x 50  matrix of class "dbSparseMatrix"</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [[ Colnames 'col1', 'col2', 'col3' ... suppressing 44 ...'col48', 'col49', 'col50' ]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row1  . . . . . . -1.87689968030091 -0.499967220066952 . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row2  . . . . . .                 .                  . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row3  . . . . . .                 .                  . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ......suppressing 40 columns and 44 rows</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row48 . . . . . .                 .                  . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row49 . . . . . .                 .                  . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> row50 . . . . . .                 .                  . . .</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'dbSparse' not found</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

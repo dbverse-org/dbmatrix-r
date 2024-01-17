@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9011</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Operations</h1>
             
-            <h4 data-toc-skip class="date">2023-12-08</h4>
+            <h4 data-toc-skip class="date">2024-01-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/drieslab/dbMatrix/blob/HEAD/vignettes/operations.Rmd" class="external-link"><code>vignettes/operations.Rmd</code></a></small>
       <div class="d-none name"><code>operations.Rmd</code></div>
@@ -96,7 +96,7 @@ supported by <code>dbMatrix</code>.</p>
 <h2 id="loading-library">Loading library<a class="anchor" aria-label="anchor" href="#loading-library"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://drieslab.github.io/dbMatrix/" class="external-link">dbMatrix</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://drieslab.github.io/dbMatrix/">dbMatrix</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Matrix.R-forge.R-project.org" class="external-link">Matrix</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -230,7 +230,7 @@ the <code>data</code> directory of the package.</p>
 <h3 id="transpose">transpose<a class="anchor" aria-label="anchor" href="#transpose"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## connection :  :temp: </span></span>
 <span><span class="co">## table name : 'sparse'</span></span>
 <span><span class="co">## 624 x 634  matrix of class "dbSparseMatrix"</span></span></code></pre>
@@ -332,7 +332,7 @@ Click to expand
 <span></span>
 <span><span class="co"># preview</span></span>
 <span><span class="va">dense</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//RtmpjRxaVa/filec2e67eeffc6e.duckdb </span></span>
+<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmp1DGl7N/file39c018df5d4e.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span>
 <span><span class="co">##                                                              </span></span>
@@ -342,8 +342,8 @@ Click to expand
 <h3 id="transpose-1">transpose<a class="anchor" aria-label="anchor" href="#transpose-1"></a>
 </h3>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//RtmpjRxaVa/filec2e67eeffc6e.duckdb </span></span>
+<code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmp1DGl7N/file39c018df5d4e.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
@@ -423,7 +423,7 @@ Click to expand
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.3.2 (2023-10-31)</span></span>
 <span><span class="co">## Platform: aarch64-apple-darwin20 (64-bit)</span></span>
-<span><span class="co">## Running under: macOS Ventura 13.3.1</span></span>
+<span><span class="co">## Running under: macOS Sonoma 14.2.1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib </span></span>
@@ -439,12 +439,12 @@ Click to expand
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] dbMatrix_0.0.0.9011 Matrix_1.6-1.1     </span></span>
+<span><span class="co">## [1] Matrix_1.6-5        dbMatrix_0.0.0.9012</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] jsonlite_1.8.8    dplyr_1.1.3       compiler_4.3.2    tidyselect_1.2.0 </span></span>
+<span><span class="co">##  [1] jsonlite_1.8.8    dplyr_1.1.4       compiler_4.3.2    tidyselect_1.2.0 </span></span>
 <span><span class="co">##  [5] blob_1.2.4        stringr_1.5.1     jquerylib_0.1.4   systemfonts_1.0.4</span></span>
-<span><span class="co">##  [9] textshaping_0.3.6 yaml_2.3.7       </span></span>
+<span><span class="co">##  [9] textshaping_0.3.6 yaml_2.3.8       </span></span>
 <span><span class="co">##  [ reached getOption("max.print") -- omitted 40 entries ]</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
