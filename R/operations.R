@@ -82,6 +82,7 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 #' @rdname hidden_aliases
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
+  browser()
   dbm = castNumeric(e1)
 
   num_vect = if(typeof(e2) != 'double'){
@@ -96,7 +97,7 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   # case 3. if the operand is multiplication or division
 
   # Only densify if not 0 and if op is + or -
-  if (class(e1) == 'dbSparseMatrix' && all(e2 == 0) && as.character(.Generic) %in% c('-', '+')) {
+  if (class(e1) == 'dbSparseMatrix' && !all(e2 == 0) && as.character(.Generic) %in% c('-', '+')) {
       dbm = toDbDense(dbm)
   }
 
