@@ -9,7 +9,7 @@ setMethod('names', signature(x = 'dbDataFrame'), function(x) {
 
 #' @rdname hidden_aliases
 #' @export
-setMethod('names<-', signature(x = 'dbDataFrame', value = 'gdbIndex'), function(x, value) {
+setMethod('names<-', signature(x = 'dbDataFrame', value = 'dbIndex'), function(x, value) {
   x = reconnect(x)
   dplyr_set_colnames(x, value = as.character(value))
 })
@@ -64,7 +64,7 @@ setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
 
 #' @rdname hidden_aliases
 #' @export
-setMethod('colnames<-', signature(x = 'dbDataFrame', value = 'gdbIndex'), function(x, value) {
+setMethod('colnames<-', signature(x = 'dbDataFrame', value = 'dbIndex'), function(x, value) {
   x = reconnect(x)
   dplyr_set_colnames(x = x, value = as.character(value))
 })

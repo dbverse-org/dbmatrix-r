@@ -22,40 +22,107 @@ setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = '
 ## rows only ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'gdbIndex', j = 'missing', drop = 'missing'),
+setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'missing'),
           function(x, i, ...) {
+
+            # create mapping of select rownames to row index
+            map = data.frame(i = 1:length(rownames(x)), rowname = rownames(x))
+
+            # subset map by select rownames
             select = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
+            map = map |> dplyr::filter(rowname %in% select)
+
+            # subset dbMatrix by mapped row index
+            x[] = x[] |> dplyr::filter(i %in% !!map$i) # force map$i evaluation
+
+            # update rownames
             x@dim_names[[1L]] = select
-            x[] = x[] |> dplyr::filter(i %in% select)
-            x@dims[1L] = if(is.logical(i)) sum(i) else length(i)
-            x
+
+            # update dims
+            x@dims[1L] = if(is.logical(i)){
+              sum(i)
+            } else{
+              length(i)
+            }
+
+            return(x)
           })
 
 ## cols only ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'gdbIndex', drop = 'missing'),
+setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'missing'),
           function(x, j, ...) {
+
+            # create mapping of subsetted colnames to col index
+            map = data.frame(j = 1:length(colnames(x)), colname = colnames(x))
+
+            # subset map by select rownames
             select = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+            map = map |> dplyr::filter(colname %in% select)
+
+            # subset dbMatrix by mapped row index
+            x[] = x[] |> dplyr::filter(j %in% !!map$j) # force map$i evaluation
+
+            # update rownames
             x@dim_names[[2L]] = select
-            x[] = x[] |> dplyr::filter(j %in% select)
-            x@dims[2L] = if(is.logical(j)) sum(j) else length(j)
-            x
+
+            # update dims
+            x@dims[2L] = if(is.logical(j)){
+              sum(j)
+            } else{
+              length(j)
+            }
+
+            return(x)
           })
 
 ## rows and cols ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'gdbIndex', j = 'gdbIndex', drop = 'missing'),
+setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
           function(x, i, j, ...) {
+            # create mapping of dim indices and dimnames
+            map_i = data.frame(i = 1:length(rownames(x)),
+                             rowname = rownames(x))
+
+            map_j = data.frame(j = 1:length(colnames(x)),
+                               colname = colnames(x))
+
+            # subset map by select dimnames
             select_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
             select_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+            map_i = map_i |>
+              dplyr::filter(rowname %in% select_i)
+
+            map_j = map_j |>
+              dplyr::filter(colname %in% select_j)
+
+
+            # subset dbMatrix by mapped row index
+            # Note: !! forces evaluation of map$i and map$j before sending to db
+            x[] = x[] |> dplyr::filter(i %in% !!map_i$i, j %in% !!map_j$j)
+
+            # update dimnames
             x@dim_names[[1L]] = select_i
             x@dim_names[[2L]] = select_j
-            x[] = x[] |> dplyr::filter(i %in% select_i, j %in% select_j)
-            x@dims[1L] = if(is.logical(i)) sum(i) else length(i)
-            x@dims[2L] = if(is.logical(j)) sum(j) else length(j)
-            x
+
+            # update dims
+            # rows
+            x@dims[1L] = if(is.logical(i)){
+              sum(i)
+            } else{
+              length(i)
+            }
+
+            # cols
+            x@dims[2L] = if(is.logical(j)){
+              sum(j)
+            } else{
+              length(j)
+            }
+
+            return(x)
           })
 
 
@@ -65,6 +132,7 @@ get_dbM_sub_i = function(index, dbM_dimnames) {
   i_names = dbM_dimnames[[1L]]
   return(i_names[index])
 }
+
 #' @noRd
 get_dbM_sub_j = function(index, dbM_dimnames) {
   if(is.character(index)) return(index)
@@ -78,7 +146,7 @@ get_dbM_sub_j = function(index, dbM_dimnames) {
 #' @rdname hidden_aliases
 #' @export
 setMethod(
-  '[', signature(x = 'dbDataFrame', i = 'gdbIndex', j = 'missing', drop = 'ANY'),
+  '[', signature(x = 'dbDataFrame', i = 'dbIndex', j = 'missing', drop = 'ANY'),
   function(x, i, ..., drop = FALSE) {
     x = reconnect(x)
     if(any(is.na(x@key))) stopf('Set dbDataFrame key with `keyCol()` to subset on \'i\'')
@@ -105,7 +173,7 @@ setMethod(
 ## cols only ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'gdbIndex', drop = 'ANY'),
+setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'dbIndex', drop = 'ANY'),
           function(x, j, ..., drop = FALSE) {
             x = reconnect(x)
             checkmate::assert_logical(drop)
@@ -117,7 +185,7 @@ setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'gdbIndex', drop 
 
 #' @rdname hidden_aliases
 #' @export
-setMethod('[', signature(x = 'dbDataFrame', i = 'gdbIndex', j = 'gdbIndex', drop = 'ANY'),
+setMethod('[', signature(x = 'dbDataFrame', i = 'dbIndex', j = 'dbIndex', drop = 'ANY'),
           function(x, i, j, ..., drop = FALSE) {
             x = reconnect(x)
             x = x[i,]

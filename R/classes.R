@@ -92,9 +92,9 @@ dbDataFrame = setClass(
   )
 )
 
-## dgbIndex ####
-#' @title Virtual Class "gdbIndex" - Simple Class for dbData indices
-#' @name gdbIndex
+## dbIndex ####
+#' @title Virtual Class "dbIndex" - Simple Class for dbData indices
+#' @name dbIndex
 #' @description
 #' This is a virtual class used for indices (in signatures) for indexing
 #' and sub-assignment of 'dbData' objects. Simple class union of 'logical',
@@ -102,11 +102,11 @@ dbDataFrame = setClass(
 #' Based on the 'index' class implemented in \pkg{Matrix}
 #' @keywords internal
 #' @noRd
-setClassUnion(name = 'gdbIndex',
+setClassUnion(name = 'dbIndex',
               members = c('logical', 'numeric', 'integer', 'character'))
 
-#' @title Virtual Class "gdbIndexNonChar" - Simple Class for dbData indices
-#' @name gdbIndex
+#' @title Virtual Class "dbIndexNonChar" - Simple Class for dbData indices
+#' @name dbIndex
 #' @description
 #' This is a virtual class used for indices (in signatures) for indexing
 #' and sub-assignment of 'dbData' objects. Simple class union of 'logical' and
@@ -114,7 +114,7 @@ setClassUnion(name = 'gdbIndex',
 #' Based on the 'index' class implemented in \pkg{Matrix}
 #' @keywords internal
 #' @noRd
-setClassUnion(name = 'gdbIndexNonChar',
+setClassUnion(name = 'dbIndexNonChar',
               members = c('logical', 'numeric'))
 
 ## dbMF ####
