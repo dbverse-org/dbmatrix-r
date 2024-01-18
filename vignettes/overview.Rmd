@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ## dbMatrix
-`dbMatrix` is a core package in the [`dbverse`](https://ed2uiz.github.io/dbverse/) library that inherits from the `dbData` base class and consists of two subclasses, `dbSparseMatrix` and `dbDenseMatrix`.
+`dbMatrix` is a core package in the [`dbverse`](https://drieslab.github.io/dbverse/) library that inherits from the `dbData` base class and consists of two subclasses, `dbSparseMatrix` and `dbDenseMatrix`.
 
 `dbMatrix` objects emulate in-memory dense and sparse matrices in an embedded database powered by DuckDB. 
 
