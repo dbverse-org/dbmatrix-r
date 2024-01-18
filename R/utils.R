@@ -124,3 +124,39 @@ setMethod('dbListTables', signature(x = 'dbMatrix'),
             con <- get_con(x)
             DBI::dbListTables(conn = con)
           })
+
+# Converters ####
+#' as_matrix
+#'
+#' @param x dbSparseMatrix
+#' @details
+#' this is a helper function to convert dbMatrix to dgCMatrix or matrix
+#' Warning: this fn can lead memory issue if the dbMatrix is large
+#'
+#'
+#' @return dgCMatrix or matrix
+#' @noRd
+as_matrix <- function(x, output = c("dgCMatrix", "matrix")){
+  # check that x is a dbSparseMatrix
+  if(!inherits(x = x, what = "dbSparseMatrix")){
+    stop("Only dbSparseMatrix is currently supported.")
+  }
+  browser()
+
+  # Get dbMatrix in triplet vector format (TSparseMatrix)
+  df = x@value |> as.data.frame()
+  dim_names = dimnames(x)
+  dims = dim(x)
+
+  # Create mat
+  # Note: casting to sparseMatrix automatically converts to 0-based indexing
+  mat = Matrix::sparseMatrix(i = df$i , j = df$j , x = df$x)
+  # dimnames(mat) = dim_names
+  # dim(mat) = dims
+
+  if(output == "dgCMatrix"){
+    return(mat)
+  } else {
+    return(as.matrix(mat))
+  }
+}
