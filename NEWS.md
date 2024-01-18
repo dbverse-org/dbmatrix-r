@@ -14,7 +14,7 @@
 
 - Update docs.
 
-- Migrate site ilnks to drieslab.
+- Migrate site link to drieslab.
 
 - Move {Matrix} to Imports.
 
