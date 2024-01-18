@@ -1,5 +1,28 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9013 (2024-01-18)
+
+## Bug fixes
+
+- update dbIndex superclass after ijx representation update.
+
+## Features
+
+- Add experimental as_matrix() convenience function.
+
+## Chore
+
+- Update docs.
+
+- Migrate site links to drieslab.
+
+## Documentation
+
+- Update overview.Rmd.
+
+- Update operations vignette.
+
+
 # dbMatrix 0.0.0.9012 (2023-12-08)
 
 ## Bug fixes
