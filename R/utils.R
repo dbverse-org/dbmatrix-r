@@ -136,29 +136,27 @@ setMethod('dbListTables', signature(x = 'dbMatrix'),
 #'
 #' @return dgCMatrix or matrix
 #' @noRd
-as_matrix <- function(x, output = c("dgCMatrix", "matrix")){
+as_matrix <- function(x){
   # check that x is a dbSparseMatrix
-  if(!inherits(x = x, what = "dbSparseMatrix") &
-     !inherits(x = x, what = "tbl_duckdb_connection")){
-    stop("Only dbSparseMatrix or tbl_duckdb_connection is currently supported.")
+  if(!inherits(x = x, what = "dbMatrix")){
+    stop("Only dbSparseMatrix is currently supported.")
   }
 
+  check_class = class(x)
+
   # Get dbMatrix in triplet vector format (TSparseMatrix)
-  if(inherits(x, "tbl_duckdb_connection")){
-    df = x |> as.data.frame()
-  } else {
-    df = x@value |> as.data.frame()
-  }
-  # dim_names = dimnames(x)
-  # dims = dim(x)
+  df = x@value |> as.data.frame()
+
+  dims = dim(x)
+  dim_names = dimnames(x)
 
   # Create mat
   # Note: casting to sparseMatrix automatically converts to 0-based indexing
   mat = Matrix::sparseMatrix(i = df$i , j = df$j , x = df$x)
-  # dimnames(mat) = dim_names
-  # dim(mat) = dims
+  dimnames(mat) = dim_names
+  dim(mat) = dims
 
-  if(output == "dgCMatrix"){
+  if(check_class == "dbSparseMatrix"){
     return(mat)
   } else {
     return(as.matrix(mat))
