@@ -1,5 +1,13 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9014 (2024-01-19)
+
+## Features
+
+- update dbIndex superclass
+
+- update as_matrix() 
+
 # dbMatrix 0.0.0.9013 (2024-01-18)
 
 ## Bug fixes
