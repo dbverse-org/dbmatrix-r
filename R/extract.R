@@ -24,26 +24,36 @@ setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = '
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'missing'),
           function(x, i, ...) {
+            # get dbMatrix info
+            con = x[][[1]]$con  # TODO: use proper getter
+            tbl_name = x@name # TODO: use proper getter
 
-            # create mapping of select rownames to row index
-            map = data.frame(i = 1:length(rownames(x)), rowname = rownames(x))
+            # create mapping of filtered rownames to row index
+            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
+            map = data.frame(i = seq_along(rownames(x)), rowname = rownames(x))
+            filter_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
+            map = map |>
+              dplyr::filter(rowname %in% filter_i) |>
+              dplyr::mutate(new_i = seq_along(filter_i)) # reset index
 
-            # subset map by select rownames
-            select = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
-            map = map |> dplyr::filter(rowname %in% select)
+            # send map to db for subsetting
+            # TODO: implement unique naming of temp tables
+            duckdb::dbWriteTable(conn = con,
+                                 name = 'map_temp_i',
+                                 overwrite = TRUE,
+                                 value = map,
+                                 temporary = TRUE)
+            map_temp <- dplyr::tbl(con, "map_temp_i")
 
-            # subset dbMatrix by mapped row index
-            x[] = x[] |> dplyr::filter(i %in% !!map$i) # force map$i evaluation
+            # subset dbMatrix
+            x[] <- x[] |>
+              dplyr::filter(i %in% !!map$i) |>
+              dplyr::inner_join(map_temp, by = c("i" = "i")) |>
+              dplyr::select(i = new_i, j, x)
 
-            # update rownames
-            x@dim_names[[1L]] = select
-
-            # update dims
-            x@dims[1L] = if(is.logical(i)){
-              sum(i)
-            } else{
-              length(i)
-            }
+            # update dbMatrix attributes
+            x@dim_names[[1L]] = filter_i
+            x@dims[1L] <- ifelse(is.logical(i), sum(i), length(i))
 
             return(x)
           })
@@ -53,26 +63,36 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'm
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'missing'),
           function(x, j, ...) {
+            # get dbMatrix info
+            con = x[][[1]]$con  # TODO: use proper getter
+            tbl_name = x@name # TODO: use proper getter
 
-            # create mapping of subsetted colnames to col index
-            map = data.frame(j = 1:length(colnames(x)), colname = colnames(x))
+            # create mapping of filtered colnames to col index
+            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
+            map = data.frame(j = seq_along(colnames(x)), colname = colnames(x))
+            filter_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+            map = map |>
+              dplyr::filter(colname %in% filter_j) |>
+              dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
-            # subset map by select rownames
-            select = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
-            map = map |> dplyr::filter(colname %in% select)
+            # send map to db for subsetting
+            # TODO: implement unique table name
+            duckdb::dbWriteTable(conn = con,
+                                 name = 'map_temp_j',
+                                 overwrite = TRUE,
+                                 value = map,
+                                 temporary = TRUE)
+            map_temp <- dplyr::tbl(con, "map_temp_j")
 
-            # subset dbMatrix by mapped row index
-            x[] = x[] |> dplyr::filter(j %in% !!map$j) # force map$i evaluation
+            # subset dbMatrix
+            x[] <- x[] |>
+              dplyr::filter(j %in% !!map$j) |>
+              dplyr::inner_join(map_temp, by = c("j" = "j")) |>
+              dplyr::select(i, j = new_j, x)
 
-            # update rownames
-            x@dim_names[[2L]] = select
-
-            # update dims
-            x@dims[2L] = if(is.logical(j)){
-              sum(j)
-            } else{
-              length(j)
-            }
+            # update dbMatrix attributes
+            x@dim_names[[2L]] = filter_j
+            x@dims[2L] <- ifelse(is.logical(j), sum(j), length(j))
 
             return(x)
           })
@@ -82,49 +102,67 @@ setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'm
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
           function(x, i, j, ...) {
+            # get dbMatrix info
+            con = x[][[1]]$con  # TODO: use proper getter
+            tbl_name = x@name # TODO: use proper getter
+
             # create mapping of dim indices and dimnames
-            map_i = data.frame(i = 1:length(rownames(x)),
+            map_i = data.frame(i = seq_along(rownames(x)),
                              rowname = rownames(x))
 
-            map_j = data.frame(j = 1:length(colnames(x)),
+            map_j = data.frame(j = seq_along(colnames(x)),
                                colname = colnames(x))
 
-            # subset map by select dimnames
-            select_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
-            select_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+            # subset map by filtered dimnames
+            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
+            filter_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
+            filter_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+
             map_i = map_i |>
-              dplyr::filter(rowname %in% select_i)
+              dplyr::filter(rowname %in% filter_i) |>
+              dplyr::mutate(new_i = seq_along(filter_i)) # reset index
 
             map_j = map_j |>
-              dplyr::filter(colname %in% select_j)
+              dplyr::filter(colname %in% filter_j) |>
+              dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
+            # subset dbMatrix j
+            # TODO: implement unique table name
+            duckdb::dbWriteTable(conn = con,
+                                 name = 'map_temp_ij_i',
+                                 overwrite = TRUE,
+                                 value = map_j,
+                                 temporary = TRUE)
+            map_temp <- dplyr::tbl(con, "map_temp_ij_i")
 
-            # subset dbMatrix by mapped row index
-            # Note: !! forces evaluation of map$i and map$j before sending to db
-            x[] = x[] |> dplyr::filter(i %in% !!map_i$i, j %in% !!map_j$j)
+            x[] <- x[] |>
+              dplyr::filter(j %in% !!map_j$j) |>
+              dplyr::inner_join(map_temp, by = c("j" = "j")) |>
+              dplyr::select(i, j = new_j, x)
 
-            # update dimnames
-            x@dim_names[[1L]] = select_i
-            x@dim_names[[2L]] = select_j
+            # subset dbMatrix i
+            # TODO: implement unique table name
+            duckdb::dbWriteTable(conn = con,
+                                 name = 'map_temp_ij_j',
+                                 overwrite = TRUE,
+                                 value = map_i,
+                                 temporary = TRUE)
 
-            # update dims
-            # rows
-            x@dims[1L] = if(is.logical(i)){
-              sum(i)
-            } else{
-              length(i)
-            }
+            map_temp <- dplyr::tbl(con, "map_temp_ij_j")
 
-            # cols
-            x@dims[2L] = if(is.logical(j)){
-              sum(j)
-            } else{
-              length(j)
-            }
+            x[] <- x[] |>
+              dplyr::filter(i %in% !!map_i$i) |>
+              dplyr::inner_join(map_temp, by = c("i" = "i")) |>
+              dplyr::select(i=new_i, j , x)
+
+            # update dbMatrix attributes
+            x@dim_names[[1L]] = filter_i
+            x@dim_names[[2L]] = filter_j
+            x@dims[1L] <- ifelse(is.logical(i), sum(i), length(i))
+            x@dims[2L] <- ifelse(is.logical(j), sum(j), length(j))
 
             return(x)
           })
-
 
 #' @noRd
 get_dbM_sub_i = function(index, dbM_dimnames) {
