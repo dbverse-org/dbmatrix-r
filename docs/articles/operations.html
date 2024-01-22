@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9014</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="" class="logo" alt=""><h1>Operations</h1>
             
-            <h4 data-toc-skip class="date">2024-01-17</h4>
+            <h4 data-toc-skip class="date">2024-01-20</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/drieslab/dbMatrix/blob/HEAD/vignettes/operations.Rmd" class="external-link"><code>vignettes/operations.Rmd</code></a></small>
       <div class="d-none name"><code>operations.Rmd</code></div>
@@ -328,11 +328,12 @@ Click to expand
 <h2 id="dbdensematrix-operations">dbDenseMatrix Operations<a class="anchor" aria-label="anchor" href="#dbdensematrix-operations"></a>
 </h2>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dense</span> <span class="op">=</span> <span class="fu"><a href="../reference/simulate_objects.html">sim_dbDenseMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># below is a convenience function to simulate a dbDenseMatrix</span></span>
+<span><span class="va">dense</span> <span class="op">=</span> <span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_objects.html">sim_dbDenseMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># preview</span></span>
 <span><span class="va">dense</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmp1DGl7N/file39c018df5d4e.duckdb </span></span>
+<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmpdh8hqy/file126c387c8fdc.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span>
 <span><span class="co">##                                                              </span></span>
@@ -343,7 +344,7 @@ Click to expand
 </h3>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmp1DGl7N/file39c018df5d4e.duckdb </span></span>
+<pre><code><span><span class="co">## connection :  /var/folders/h8/lxlpbpsx351fll0v5t72bjwh0000gp/T//Rtmpdh8hqy/file126c387c8fdc.duckdb </span></span>
 <span><span class="co">## table name : 'dense_test'</span></span>
 <span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
@@ -439,7 +440,7 @@ Click to expand
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] Matrix_1.6-5        dbMatrix_0.0.0.9012</span></span>
+<span><span class="co">## [1] Matrix_1.6-5        dbMatrix_0.0.0.9014</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] jsonlite_1.8.8    dplyr_1.1.4       compiler_4.3.2    tidyselect_1.2.0 </span></span>

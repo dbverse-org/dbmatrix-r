@@ -44,6 +44,7 @@
 \alias{rowSds,dbSparseMatrix-method}
 \alias{mean,dbDenseMatrix-method}
 \alias{mean,dbSparseMatrix-method}
+\alias{log,dbMatrix-method}
 \alias{t,dbMatrix-method}
 \alias{nrow,dbDataFrame-method}
 \alias{ncol,dbMatrix-method}
@@ -137,6 +138,8 @@
 
 \S4method{mean}{dbSparseMatrix}(x, ...)
 
+\S4method{log}{dbMatrix}(x, ...)
+
 \S4method{t}{dbMatrix}(x)
 
 \S4method{nrow}{dbDataFrame}(x)
@@ -177,6 +180,8 @@ rowSds
 mean
 
 mean
+
+log
 
 Transpose
 

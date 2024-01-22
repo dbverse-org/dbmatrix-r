@@ -48,7 +48,7 @@ dim"><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9014</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -125,22 +125,22 @@ dim"><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax
 # S4 method for dbData,missing,missing,ANY
 [(x, i, j) &lt;- value
 
-# S4 method for dbMatrix,gdbIndex,missing,missing
+# S4 method for dbMatrix,dbIndex,missing,missing
 [(x, i, j, ..., drop = TRUE)
 
-# S4 method for dbMatrix,missing,gdbIndex,missing
+# S4 method for dbMatrix,missing,dbIndex,missing
 [(x, i, j, ..., drop = TRUE)
 
-# S4 method for dbMatrix,gdbIndex,gdbIndex,missing
+# S4 method for dbMatrix,dbIndex,dbIndex,missing
 [(x, i, j, ..., drop = TRUE)
 
-# S4 method for dbDataFrame,gdbIndex,missing,ANY
+# S4 method for dbDataFrame,dbIndex,missing,ANY
 [(x, i, j, ..., drop = TRUE)
 
-# S4 method for dbDataFrame,missing,gdbIndex,ANY
+# S4 method for dbDataFrame,missing,dbIndex,ANY
 [(x, i, j, ..., drop = TRUE)
 
-# S4 method for dbDataFrame,gdbIndex,gdbIndex,ANY
+# S4 method for dbDataFrame,dbIndex,dbIndex,ANY
 [(x, i, j, ..., drop = FALSE)
 
 # S4 method for dbDataFrame,missing,missing,missing
@@ -152,7 +152,7 @@ dim"><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax
 # S4 method for dbDataFrame
 names(x)
 
-# S4 method for dbDataFrame,gdbIndex
+# S4 method for dbDataFrame,dbIndex
 names(x) &lt;- value
 
 # S4 method for dbData
@@ -173,7 +173,7 @@ colnames(x)
 # S4 method for dbMatrix,ANY
 colnames(x) &lt;- value
 
-# S4 method for dbDataFrame,gdbIndex
+# S4 method for dbDataFrame,dbIndex
 colnames(x) &lt;- value
 
 # S4 method for dbMatrix

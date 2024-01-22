@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9012</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9014</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -88,7 +88,7 @@
 <div class="section level2">
 <h2 id="dbmatrix">dbMatrix<a class="anchor" aria-label="anchor" href="#dbmatrix"></a>
 </h2>
-<p><code>dbMatrix</code> is a core package in the <a href="https://ed2uiz.github.io/dbverse/" class="external-link"><code>dbverse</code></a>
+<p><code>dbMatrix</code> is a core package in the <a href="https://drieslab.github.io/dbverse/" class="external-link"><code>dbverse</code></a>
 library that inherits from the <code>dbData</code> base class and
 consists of two subclasses, <code>dbSparseMatrix</code> and
 <code>dbDenseMatrix</code>.</p>
@@ -102,11 +102,10 @@ matrices in an embedded database powered by DuckDB.</p>
 <p>Sparse matrices are represented as triplet vectors with
 <code>i</code>, <code>j</code>, and <code>x</code> numerical vectors.
 <code>i</code> and <code>j</code> refer to the row and column indices,
-respectively, with specific <code>x</code> values or counts. Note:
-unlike the rest of R, the <code>i</code> and <code>j</code> vectors are
-zero-indexed following conventions from the <code>Matrix</code> R
-package for the <code>dgCMatrix</code> and <code>TSparseMatrix</code>
-class.</p>
+respectively, with specific <code>x</code> values or counts. Note: The
+<code>i</code> and <code>j</code> vectors are one-based following
+conventions from the <code>Matrix</code> R package and the
+<code>TSparseMatrix</code> class.</p>
 <p>The <code>dbSparseMatrix</code> class stores the triplet vector
 representation with its associated dimension names and dimensions if
 available. If none are provided, they are automatically generated as
