@@ -90,13 +90,9 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
     e2
   }
 
-  # when not to densify:
-  # case 1. if e1 is already a dbDenseMatrix
-  # case 2. if e2 is a scalar (integer) equal to zero
-  # case 3. if the operand is multiplication or division
-
-  # Only densify if not 0 and if op is + or -
-  if (class(e1) == 'dbSparseMatrix' && !all(e2 == 0) && as.character(.Generic) %in% c('-', '+')) {
+  # density
+  if (class(e1) == 'dbSparseMatrix' && !all(e2 == 0) &&
+      as.character(.Generic) %in% c('-', '+')) {
       dbm = toDbDense(dbm)
   }
 
@@ -588,6 +584,21 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 
 })
 
+## log ####
+
+#' @title log
+#' @rdname hidden_aliases
+#' @export
+setMethod('log', signature(x = 'dbMatrix'), function(x, ...) {
+  x = castNumeric(x)
+
+  x[] = x[] |>
+    dplyr::mutate(x = log(x))
+
+  return(x)
+
+})
+
 # General Ops ####
 
 ### t ####
@@ -687,7 +698,7 @@ setMethod('dim',
 #' @title head
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset = x@dim_names[[1L]] = head(x@dim_names[[1L]], n = n)
+  n_subset = 1:n
   x[] = x[] |> dplyr::filter(i %in% n_subset)
   x@dims[1L] = min(x@dims[1L], as.integer(n))
   return(x)
@@ -704,7 +715,7 @@ setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 #' @title tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset = x@dim_names[[1L]] = tail(x@dim_names[[1L]], n = n)
+  n_subset = (x@dims[1L] - n):x@dims[1L]
   x[] = x[] |> dplyr::filter(i %in% n_subset)
   x@dims[1L] = min(x@dims[1L], as.integer(n))
   return(x)
