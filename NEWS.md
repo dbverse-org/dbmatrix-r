@@ -1,5 +1,20 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9015 (2024-01-22)
+
+## Features
+
+- Add log().
+
+- Update toDbDense to use dplyr instead of SQL.
+
+## Chore
+
+- Update DESCRIPTION to include testthat.
+
+- Update docs.
+
+
 # dbMatrix 0.0.0.9014 (2024-01-19)
 
 ## Features
