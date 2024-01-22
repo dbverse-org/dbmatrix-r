@@ -139,7 +139,7 @@ setMethod('dbListTables', signature(x = 'dbMatrix'),
 as_matrix <- function(x){
   # check that x is a dbSparseMatrix
   if(!inherits(x = x, what = "dbMatrix")){
-    stop("Only dbSparseMatrix is currently supported.")
+    stop("Invalid input. Only dbMatrix is currently supported.")
   }
 
   check_class = class(x)
