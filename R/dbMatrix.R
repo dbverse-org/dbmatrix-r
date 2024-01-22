@@ -404,41 +404,20 @@ toDbDense <- function(db_sparse){
 
   # write to db
   # note: alternatively create VIEW for in-memory computation (faster but limited by mem)
-  dplyr::copy_to(df = all_combinations,
-                 name = "dense",
-                 dest = con,
-                 temporary = TRUE, overwrite = TRUE)
-
-  # # write out all_combinations as a temporary .csv file
-  # # note: this is a workaround for the fact that dplyr::copy_to() is slow
-  # tictoc::tic()
-  # temp_file = tempfile(fileext = ".csv")
-  # data.table::fwrite(all_combinations, temp_file)
-  #
-  # # create table 'all_combinations' in duckdb database connection by reading in .csv temp_file
-  # query <- paste0("CREATE TABLE all_combinations AS SELECT * FROM read_csv_auto('", temp_file, "');")
-  # DBI::dbExecute(conn = con, statement = query)
-  # tictoc::toc()
+  # TODO: implement unique table name
+  key <- dplyr::copy_to(df = all_combinations,
+                        name = "temp_densify",
+                        dest = con,
+                        temporary = TRUE,
+                        overwrite = TRUE)
 
   # create dense matrix on disk
   # note: time-intensive step
   cat("densifying sparse matrix on disk...")
-  sql <- paste0("UPDATE dense ",
-                "SET x = ", remote_name, ".x FROM ", remote_name,
-                " WHERE dense.i = ", remote_name, ".i AND ",
-                "dense.j = ", remote_name, ".j"
-                )
-  DBI::dbExecute(conn = con, statement = sql)
-
-  # remove old sparse ijx table
-  # DBI::dbExecute(conn = con, paste0("DROP TABLE IF EXISTS ", remote_name))
-
-  # rename dense table to existing tbl name
-  # rename_sql <- paste("ALTER TABLE all_combinations RENAME TO", remote_name)
-  # DBI::dbExecute(conn = con, statement = rename_sql)
-
-  # get new table from database
-  data <- dplyr::tbl(con, "dense")
+  data <- key |>
+    dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
+    dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
+    dplyr::select(-x.dgc)
 
   # Create new dbSparseMatrix object
   db_dense <- new(Class = "dbDenseMatrix",
@@ -447,7 +426,8 @@ toDbDense <- function(db_sparse){
                   dims = dims,
                   dim_names = dim_names,
                   init = TRUE)
-  cat("done")
+  cat("done \n")
+
   # show
   db_dense
 }
