@@ -24,6 +24,8 @@ setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = '
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'missing'),
           function(x, i, ...) {
+
+            browser()
             # get dbMatrix info
             con = x[][[1]]$con  # TODO: use proper getter
             tbl_name = x@name # TODO: use proper getter
@@ -38,12 +40,11 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'm
 
             # send map to db for subsetting
             # TODO: implement unique naming of temp tables
-            duckdb::dbWriteTable(conn = con,
-                                 name = 'map_temp_i',
-                                 overwrite = TRUE,
-                                 value = map,
-                                 temporary = TRUE)
-            map_temp <- dplyr::tbl(con, "map_temp_i")
+            map_temp <- dplyr::copy_to(dest = con,
+                                       df = map,
+                                       name = 'map_temp_i',
+                                       overwrite = TRUE,
+                                       temporary = TRUE)
 
             # subset dbMatrix
             x[] <- x[] |>
