@@ -67,4 +67,30 @@ test_that("character row/col indexing works", {
 })
 
 # ---------------------------------------------------------------------------- #
+# Perform boolean indexing
 
+boolean_row_index = c(rep(FALSE, nrow(dgc)-5), rep(TRUE,5))
+dgc_subset = dgc[boolean_row_index,]
+dbsm_subset = dbsm[boolean_row_index,]
+dgc_db_subset = as_matrix(dbsm_subset)
+
+test_that("boolean row indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+boolean_col_index = c(rep(FALSE, ncol(dgc)-5), rep(TRUE,5))
+dgc_subset = dgc[,boolean_col_index]
+dbsm_subset = dbsm[,boolean_col_index]
+dgc_db_subset = as_matrix(dbsm_subset)
+
+test_that("boolean col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset = dgc[boolean_row_index,boolean_col_index]
+dbsm_subset = dbsm[boolean_row_index,boolean_col_index]
+dgc_db_subset = as_matrix(dbsm_subset)
+
+test_that("boolean row/col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
