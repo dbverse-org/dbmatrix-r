@@ -327,14 +327,15 @@ createDBMatrix <- function(value,
       # data <- read_matrix(con = con, value = value, name = name,
       #                     overwrite = overwrite, ...)
     } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
-      # convert dense matrix to triplicate vector ijx format
-      ijx <- Matrix::summary(as(value, "TsparseMatrix")) |> as.data.frame()
+      # convert dense matrix to triplet vector ijx format
+      ijx <- as_ijx(value)
 
-      # write to db
-      DBI::dbWriteTable(conn = con, name = name, value = ijx,
-                        overwrite = overwrite, ...)
-
-      data <- dplyr::tbl(con, name)
+      # write ijx to db
+      data <- dplyr::copy_to(dest = con,
+                             name = name,
+                             df = ijx,
+                             overwrite = overwrite,
+                             temporary = FALSE)
 
       dims <- dim(value)
       dim_names <- list(rownames(value), colnames(value))
