@@ -162,3 +162,22 @@ as_matrix <- function(x){
     return(as.matrix(mat))
   }
 }
+
+#' @title as_ijx
+#' @param x dgCMatrix
+#' @noRd
+as_ijx <- function(x){
+  # check that x is a dgCMatrix
+  if(!inherits(x = x, what = "dgCMatrix")){
+    stop("Invalid input. Only dgCMatrix is currently supported.")
+  }
+
+  # Convert dgc into TsparseMatrix class from {Matrix}
+  ijx <- as(x, "TsparseMatrix")
+
+  # Get dbMatrix in triplet vector format (TSparseMatrix)
+  # Convert to 1-based indexing
+  df = data.frame(i = ijx@i + 1, j = ijx@j + 1, x = ijx@x)
+
+  return(df)
+}
