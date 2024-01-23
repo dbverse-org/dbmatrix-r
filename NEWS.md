@@ -1,5 +1,20 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9016 (2024-01-23)
+
+## Features
+
+- Add boolean indexing tests to `test-extract.R`.
+
+- Add as_ijx() convenience function.
+
+- Update createDBMatrix() to use dplyr::copy_to().
+
+- Update as_matrix() convenience function.
+
+- Add unit tests for extract methods.
+
+
 # dbMatrix 0.0.0.9015 (2024-01-22)
 
 ## Features
