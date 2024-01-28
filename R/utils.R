@@ -164,13 +164,11 @@ as_matrix <- function(x){
 }
 
 #' @title as_ijx
-#' @param x dgCMatrix
+#' @param x dgCMatrix or matrix
 #' @noRd
 as_ijx <- function(x){
-  # check that x is a dgCMatrix
-  if(!inherits(x = x, what = "dgCMatrix")){
-    stop("Invalid input. Only dgCMatrix is currently supported.")
-  }
+  # check that x is a dgCMatrix or matrix
+  stopifnot(is(x, "dgCMatrix") || is(x, "matrix"))
 
   # Convert dgc into TsparseMatrix class from {Matrix}
   ijx <- as(x, "TsparseMatrix")
