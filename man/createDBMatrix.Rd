@@ -7,7 +7,7 @@
 createDBMatrix(
   value,
   class = NULL,
-  db_path = ":temp:",
+  db_path = ":memory:",
   overwrite = FALSE,
   name = "dbMatrix",
   dims = NULL,
@@ -20,7 +20,7 @@ createDBMatrix(
 
 \item{class}{class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}}
 
-\item{db_path}{path to database on disk (relative or absolute) or in memory \code{(":temp:")}}
+\item{db_path}{path to database on disk (relative or absolute) or in memory \code{(":memory:")}}
 
 \item{overwrite}{whether to overwrite if table already exists in database \code{(required)}}
 
@@ -53,7 +53,7 @@ Supported \code{value} data types:
 }
 \examples{
 dgc <- dbMatrix:::sim_dgc()
-dbSparse <- createDBMatrix(value = dgc, db_path = ":temp:",
+dbSparse <- createDBMatrix(value = dgc, db_path = ":memory:",
                            name = "sparse_matrix", class = "dbSparseMatrix",
                            overwrite = TRUE)
 dbSparse

@@ -237,7 +237,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 #' @param value data to be added to the database. See details for supported data types \code{(required)}
 #' @param name table name to assign within database \code{(optional, default: "dbMatrix")}
-#' @param db_path path to database on disk (relative or absolute) or in memory \code{(":temp:")}
+#' @param db_path path to database on disk (relative or absolute) or in memory \code{(":memory:")}
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
 #' @param class class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}
 #' @param dims dimensions of the matrix \code{(optional: [int, int])}
@@ -261,53 +261,54 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' @export
 #' @examples
 #' dgc <- dbMatrix:::sim_dgc()
-#' dbSparse <- createDBMatrix(value = dgc, db_path = ":temp:",
+#' dbSparse <- createDBMatrix(value = dgc, db_path = ":memory:",
 #'                            name = "sparse_matrix", class = "dbSparseMatrix",
 #'                            overwrite = TRUE)
 #' dbSparse
 createDBMatrix <- function(value,
                            class = NULL,
-                           db_path = ":temp:",
+                           db_path = ":memory:",
                            overwrite = FALSE,
                            name = "dbMatrix",
                            dims = NULL,
                            dim_names = NULL,
                            ...) {
+
   # check value
   assert_valid_value(value)
 
   # check db_path
-  if (db_path != ":temp:") {
+  if (db_path != ":memory:") {
     if (!file.exists(db_path)) {
-      stopf("Invalid db_path: file does not exist")
+      stop("Invalid db_path: database file does not exist.")
     }
   }
 
   # check name
   if (!grepl("^[a-zA-Z]", name) | grepl("-", name)) {
-    stopf("Invalid name: name must start with a letter and not contain '-'")
+    stop("Invalid name: name must start with a letter and not contain '-'")
   }
 
   # check class
   if (is.null(class)) {
-    stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
+    stop("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
   if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
-    stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
+    stop("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
   # check value and class mismatch
   if(inherits(value, "matrix") & class == "dbSparseMatrix"){
-    stopf("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
+    stop("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
   }
   if(inherits(value, "dgCMatrix") & class == "dbDenseMatrix"){
-    stopf("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
+    stop("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
   }
 
   # check dims, dim_names
   if (inherits(value, "tbl_duckdb_connection")) {
     if (is.null(dims) | is.null(dim_names)) {
-      stopf("Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects")
+      stop("Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects")
     }
   }
 
@@ -401,7 +402,7 @@ toDbDense <- function(db_sparse){
 
   # create empty df of all 'i' and 'j' indices
   # note: IN MEMORY operation. may fail for very large matrices
-  all_combinations = expand.grid(i = 1:n_rows, j = 1:n_cols, x = 0)
+  all_combinations = data.table::CJ(i = 1:n_rows, j = 1:n_cols, x = 0)
 
   # write to db
   # note: alternatively create VIEW for in-memory computation (faster but limited by mem)
@@ -645,4 +646,3 @@ read_matrix <- function(con, value, name, overwrite, ...){
 
   return(data)
 }
-
