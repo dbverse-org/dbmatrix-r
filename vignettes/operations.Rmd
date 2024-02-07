@@ -62,7 +62,7 @@ dplyr::glimpse(dgc)
 ```{r}
 # create dbSparseMatrix from the same dgc
 sparse = createDBMatrix(value = dgc, 
-                        db_path = ":temp:", 
+                        db_path = ":memory:", 
                         name = "sparse", 
                         class = "dbSparseMatrix",
                         overwrite = TRUE)

@@ -38,7 +38,7 @@ Let's create a `dbSparseMatrix` object from the above `dgc` object.
 ```{r}
 # Note: by default the constructor creates a dbMatrix object in-memory
 dbsm <- createDBMatrix(value = dgc, 
-                       db_path = ":temp:", 
+                       db_path = ":memory:", 
                        name = 'visium', 
                        class = "dbSparseMatrix",
                        overwrite = TRUE)
