@@ -1,5 +1,30 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9017 (2024-02-07)
+
+## Bug fixes
+
+- Remove ":temp:" from tests.
+
+- Replace ':temp:' with ':memory:'.
+
+- Add matrix in addition to dgCMatrix in as_ijx().
+
+## Features
+
+- Add unit tests for scalar arith.
+
+- Add unit tests for names.R.
+
+## Chore
+
+- Remove random browser() call.
+
+- Add `MatrixGenerics` to deps.
+
+- Update gitignore.
+
+
 # dbMatrix 0.0.0.9016 (2024-01-23)
 
 ## Features
