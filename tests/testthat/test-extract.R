@@ -6,7 +6,7 @@ rlang::local_options(lifecycle_verbosity = "quiet")
 dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
 dbsm = dbMatrix::createDBMatrix(value = dgc,
-                                db_path = ":temp:",
+                                db_path = ":memory:",
                                 name = 'dgc',
                                 class = "dbSparseMatrix",
                                 overwrite = TRUE)
