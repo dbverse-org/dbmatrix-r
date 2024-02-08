@@ -20,7 +20,7 @@ createDBMatrix(
 
 \item{class}{class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}}
 
-\item{db_path}{path to database on disk (relative or absolute) or in memory \code{(":memory:")}}
+\item{db_path}{path to database on disk (relative or absolute), in memory \code{(":memory:")}, or temporary file \code{(":temp:")}}
 
 \item{overwrite}{whether to overwrite if table already exists in database \code{(required)}}
 
@@ -43,6 +43,7 @@ downstream during \code{dbMatrix} initialization.
 Supported \code{value} data types:
 \itemize{
  \item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
+ \item \code{dgTMatrix} In-memory triplet vector or COO matrix
  \item \code{matrix} In-memory dense matrix from base R
  \item \code{.mtx} Path to .mtx file (TODO)
  \item \code{.csv} Path to .csv file (TODO)
