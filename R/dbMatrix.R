@@ -268,7 +268,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' dbSparse
 createDBMatrix <- function(value,
                            class = NULL,
-                           db_path = ":temp:",
+                           db_path = ":memory:",
                            overwrite = FALSE,
                            name = "dbMatrix",
                            dims = NULL,
