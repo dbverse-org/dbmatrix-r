@@ -7,7 +7,7 @@
 createDBMatrix(
   value,
   class = NULL,
-  db_path = ":memory:",
+  db_path = ":temp:",
   overwrite = FALSE,
   name = "dbMatrix",
   dims = NULL,

@@ -237,7 +237,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 #' @param value data to be added to the database. See details for supported data types \code{(required)}
 #' @param name table name to assign within database \code{(optional, default: "dbMatrix")}
-#' @param db_path path to database on disk (relative or absolute) or in memory \code{(":memory:")}
+#' @param db_path path to database on disk (relative or absolute), in memory \code{(":memory:")}, or temporary file \code{(":temp:")}
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
 #' @param class class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}
 #' @param dims dimensions of the matrix \code{(optional: [int, int])}
@@ -250,6 +250,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' Supported \code{value} data types:
 #' \itemize{
 #'  \item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
+#'  \item \code{dgTMatrix} In-memory triplet vector or COO matrix
 #'  \item \code{matrix} In-memory dense matrix from base R
 #'  \item \code{.mtx} Path to .mtx file (TODO)
 #'  \item \code{.csv} Path to .csv file (TODO)
@@ -267,7 +268,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' dbSparse
 createDBMatrix <- function(value,
                            class = NULL,
-                           db_path = ":memory:",
+                           db_path = ":temp:",
                            overwrite = FALSE,
                            name = "dbMatrix",
                            dims = NULL,
@@ -277,8 +278,8 @@ createDBMatrix <- function(value,
   # check value
   assert_valid_value(value)
 
-  # check db_path
-  if (db_path != ":memory:") {
+  # check db_path exists if not in memory or temp
+  if (db_path != ":memory:" & db_path != ":temp:") {
     if (!file.exists(db_path)) {
       stop("Invalid db_path: database file does not exist.")
     }
@@ -312,6 +313,12 @@ createDBMatrix <- function(value,
     }
   }
 
+  # Implement temporary directory on disk with :temp: token
+  # TODO: remove after dbData migration
+  if (db_path == ":temp:") {
+    db_path <- paste0(tempdir(), ".db")
+  }
+
   # setup db connection
   con <- DBI::dbConnect(duckdb::duckdb(), db_path)
 
@@ -329,7 +336,12 @@ createDBMatrix <- function(value,
       #                     overwrite = overwrite, ...)
     } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplet vector ijx format
-      ijx <- as_ijx(value)
+      if(inherits(value, "dgTMatrix")){
+        # Convert to 1-based index
+        ijx = data.frame(i = value@i + 1, j = value@j + 1, x = value@x)
+      } else{
+        ijx <- as_ijx(value)
+      }
 
       # write ijx to db
       data <- dplyr::copy_to(dest = con,
