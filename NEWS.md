@@ -1,5 +1,36 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.0.0.9018 (2024-02-12)
+
+## Bug fixes
+
+- Update constructor calls in `sim` functions.
+
+- Remove redundant `con` from constructor.
+
+- Remove `db_path` from constructor.
+
+- Constructor `db_path` arg change to `con` object.
+
+## Features
+
+- Add `dgTMatrix` to in-memory matrix types supported in `dbMatrix` constructor.
+
+## Chore
+
+- Set :memory: to default db_path in constructor.
+
+- Update createDBMatrix docs.
+
+## Documentation
+
+- Spacing.
+
+- Update after constructor fix.
+
+- Remove :temp: in place of :memory:.
+
+
 # dbMatrix 0.0.0.9017 (2024-02-07)
 
 ## Bug fixes
