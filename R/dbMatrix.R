@@ -311,12 +311,6 @@ createDBMatrix <- function(value,
     }
   }
 
-  # Implement temporary directory on disk with :temp: token
-  # TODO: remove after dbData migration
-  if (db_path == ":temp:") {
-    db_path <- paste0(tempdir(), ".db")
-  }
-
   # setup db connection
   con <- DBI::dbConnect(duckdb::duckdb(), db_path)
 
