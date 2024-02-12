@@ -5,8 +5,10 @@ rlang::local_options(lifecycle_verbosity = "quiet")
 # Load the RDS file in the 'data' folder
 dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
+con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
+
 dbsm = dbMatrix::createDBMatrix(value = dgc,
-                                db_path = ":memory:",
+                                con = con1,
                                 name = 'dgc',
                                 class = "dbSparseMatrix",
                                 overwrite = TRUE)
