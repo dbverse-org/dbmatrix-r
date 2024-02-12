@@ -61,11 +61,13 @@ dplyr::glimpse(dgc)
 
 ```{r}
 # create dbSparseMatrix from the same dgc
-sparse = createDBMatrix(value = dgc, 
-                        db_path = ":memory:", 
-                        name = "sparse", 
-                        class = "dbSparseMatrix",
-                        overwrite = TRUE)
+con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+
+sparse <- createDBMatrix(value = dgc, 
+                       con = con, 
+                       name = 'visium', 
+                       class = "dbSparseMatrix",
+                       overwrite = TRUE)
 
 # preview 
 # show function aims to emulate the show method for dgCMatrix

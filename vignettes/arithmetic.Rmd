@@ -37,8 +37,10 @@ The file contains 634 rows and 624 columns. The rows represent gene names and th
 Let's create a `dbSparseMatrix` object from the above `dgc` object.
 ```{r}
 # Note: by default the constructor creates a dbMatrix object in-memory
+con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+
 dbsm <- createDBMatrix(value = dgc, 
-                       db_path = ":memory:", 
+                       con = con, 
                        name = 'visium', 
                        class = "dbSparseMatrix",
                        overwrite = TRUE)
