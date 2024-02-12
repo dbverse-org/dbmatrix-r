@@ -189,6 +189,7 @@ sim_dbSparseMatrix = function(num_rows = 50,
 
   # create dbSparseMatrix obj
   res = createDBMatrix(value = data,
+                       con = conn,
                        name = name,
                        dims = dim,
                        dim_names = dim_names,
@@ -236,6 +237,7 @@ sim_dbDenseMatrix = function(num_rows = 50,
 
   # create dbDenseMatrix object
   res = createDBMatrix(value = data,
+                       con = conn,
                        name = name,
                        dims = dim,
                        dim_names = dim_names,
