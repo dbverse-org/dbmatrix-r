@@ -311,9 +311,6 @@ createDBMatrix <- function(value,
     }
   }
 
-  # setup db connection
-  con <- DBI::dbConnect(duckdb::duckdb(), db_path)
-
   # initialize data (value)
   data <- NULL
 
