@@ -237,7 +237,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 #' @param value data to be added to the database. See details for supported data types \code{(required)}
 #' @param name table name to assign within database \code{(optional, default: "dbMatrix")}
-#' @param db_path path to database on disk (relative or absolute), in memory \code{(":memory:")}, or temporary file \code{(":temp:")}
+#' @param con DBI or duckdb connection object \code{(required)}
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
 #' @param class class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}
 #' @param dims dimensions of the matrix \code{(optional: [int, int])}
@@ -268,7 +268,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' dbSparse
 createDBMatrix <- function(value,
                            class = NULL,
-                           db_path = ":memory:",
+                           con = NULL,
                            overwrite = FALSE,
                            name = "dbMatrix",
                            dims = NULL,
@@ -278,11 +278,9 @@ createDBMatrix <- function(value,
   # check value
   assert_valid_value(value)
 
-  # check db_path exists if not in memory or temp
-  if (db_path != ":memory:" & db_path != ":temp:") {
-    if (!file.exists(db_path)) {
-      stop("Invalid db_path: database file does not exist.")
-    }
+  # check connection object
+  if (!DBI::dbIsValid(con) | is.null(con)) {
+    stop("Invalid con: con object is not valid or missing.")
   }
 
   # check name
