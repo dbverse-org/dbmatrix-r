@@ -7,7 +7,7 @@
 createDBMatrix(
   value,
   class = NULL,
-  db_path = ":temp:",
+  con = NULL,
   overwrite = FALSE,
   name = "dbMatrix",
   dims = NULL,
@@ -20,7 +20,7 @@ createDBMatrix(
 
 \item{class}{class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}}
 
-\item{db_path}{path to database on disk (relative or absolute), in memory \code{(":memory:")}, or temporary file \code{(":temp:")}}
+\item{con}{DBI or duckdb connection object \code{(required)}}
 
 \item{overwrite}{whether to overwrite if table already exists in database \code{(required)}}
 

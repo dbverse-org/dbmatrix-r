@@ -16,3 +16,4 @@ Convert a dbSparseMatrix to a dbDenseMatrix.
 TODO
 
 }
+\keyword{internal}
