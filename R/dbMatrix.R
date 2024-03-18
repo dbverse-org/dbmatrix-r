@@ -97,14 +97,82 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
 
   if(nrow(preview_dt) > 0) {
     preview_dt = data.table::dcast(preview_dt, formula = i ~ j, value.var = 'x')
-    colnames(preview_dt) = NULL
   } else {
     print("") # TODO update this for sparse matrix
   }
 
   if(nrow(preview_dt < 7L)) {
-    print(preview_dt, digits = 5L, row.names = 'none')
+
+    output = as.matrix(preview_dt[1:6,2:7])
+    rownames(output) = as.matrix(preview_dt[,1])
+
+    top_left <- format(output[1:3, 1:3], scientific = 2)
+    top_right <- format(output[1:3, (ncol(output)-2):ncol(output)],
+                        scientific = 2)
+    bottom_left <- format(output[(nrow(output)-2):nrow(output), 1:3],
+                          scientific = 2)
+    bottom_right <- format(output[(nrow(output)-2):nrow(output),
+                                  (ncol(output)-2):ncol(output)],
+                           scientific = 2)
+    ellipsis_row <- crayon::silver(c(rep('⋮', 3),  ".", rep('⋮', 3)))
+    ellipsis_col <- crayon::silver(matrix(rep("…", 3), ncol = 1))
+
+    combined <- rbind(
+      cbind(top_left, ellipsis_col, top_right),
+      ellipsis_row,
+      cbind(bottom_left, ellipsis_col, bottom_right)
+    )
+
+    rownames(combined) <- crayon::blue(
+      c(rownames(output)[1:3],
+        "⋮",
+        format(rownames(output)[(nrow(output)-2):nrow(output)], scientific = 2)
+        )
+      )
+
+    colnames(combined) <- crayon::blue(
+      c(colnames(output)[1:3],
+        "…",
+        format(colnames(output)[(ncol(output)-2):ncol(output)], scientific = 2))
+      )
+
+    # attempt to add [] to row and col names results in misalignment
+    # rownames(combined) <- c(paste0("[", rownames(output)[1:3], ",]"),
+    #                         "...",
+    #                         paste0("[", rownames(output)[(nrow(output)-2):nrow(output)], ",]")
+    #                         )
+    #
+    # colnames(combined) <- c(paste0("[,", colnames(output)[1:3], "]"),
+    #                         "...",
+    #                         paste0("[,", colnames(output)[(ncol(output)-2):ncol(output)], "]")
+    #                         )
+
+    # # spice it up
+    # df_colored <- colorDF::colorDF(as.data.frame(combined))
+    #
+    # # Set unique color for row names
+    # colorDF::df_style(df_colored, "row.names") <- list(
+    #   fg = "#e019cc"
+    # )
+    #
+    # # Set unique color for column names
+    # colorDF::df_style(df_colored, "col.names") <- list(
+    #   fg = "#19e097"
+    # )
+    #
+    # # Remove alternating row coloring by setting interleave to NULL
+    # colorDF::df_style(df_colored, "interleave") <- NULL
+    #
+    # colorDF::print_colorDF(df_colored, header = FALSE, sep = " ")
+
+    write.table(combined,
+                quote = FALSE,
+                row.names = TRUE,
+                col.names = NA,
+                sep = "\t",
+                file = "")
   } else {
+    # data.table::setkey(preview_dt, NULL)
     print(preview_dt[1L:3L,], digits = 5L, row.names = 'none')
 
     sprintf(' ........suppressing %d columns and %d rows\n',
@@ -276,7 +344,7 @@ createDBMatrix <- function(value,
                            ...) {
 
   # check value
-  assert_valid_value(value)
+  .check_value(value)
 
   # check connection object
   if (!DBI::dbIsValid(con) | is.null(con)) {
@@ -383,56 +451,150 @@ createDBMatrix <- function(value,
 #'
 #' @examples TODO
 #'
-#' @export
+#' @keywords internal
 toDbDense <- function(db_sparse){
   # check if db_dense is a dbDenseMatrix
   if (!inherits(db_sparse, "dbSparseMatrix")) {
     stop("dbSparseMatrix object conversion currently only supported")
   }
 
-  # get connection info
-  con <- get_con(db_sparse)
-
   # get dbm info
+  con <- get_con(db_sparse)
   dims <- dim(db_sparse)
   dim_names <- dimnames(db_sparse)
   remote_name <- db_sparse@name
   n_rows <- dims[1]
   n_cols <- dims[2]
+
   db_path <- get_dbdir(db_sparse)
 
-  # create empty df of all 'i' and 'j' indices
-  # note: IN MEMORY operation. may fail for very large matrices
-  all_combinations = data.table::CJ(i = 1:n_rows, j = 1:n_cols, x = 0)
+  # see ?dbMatrix::precompute() for more details
+  precompute_mat <- getOption("dbMatrix.precomp", default = NULL)
 
-  # write to db
-  # note: alternatively create VIEW for in-memory computation (faster but limited by mem)
-  # TODO: implement unique table name
-  key <- dplyr::copy_to(df = all_combinations,
-                        name = "temp_densify",
-                        dest = con,
-                        temporary = TRUE,
-                        overwrite = TRUE)
+  if(!is.null(precompute_mat)){
 
-  # create dense matrix on disk
-  # note: time-intensive step
-  cat("densifying sparse matrix on disk...")
-  data <- key |>
-    dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
-    dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
-    dplyr::select(-x.dgc)
+    # if precompute_mat is not atable in con stop throw error
+    if(!precompute_mat %in% DBI::dbListTables(con)){
+      stop("Precomputed matrix is not a valid table in the connection.")
+    }
 
-  # Create new dbSparseMatrix object
-  db_dense <- new(Class = "dbDenseMatrix",
-                  value = data,
-                  name = remote_name,
-                  dims = dims,
-                  dim_names = dim_names,
-                  init = TRUE)
-  cat("done \n")
+    precomp <- dplyr::tbl(con, precompute_mat)
 
-  # show
-  db_dense
+    # get the max i value in precomp tbl
+    n_rows_pre <- precomp |>
+      dplyr::summarize(n_rows = max(i)) |>
+      dplyr::collect() |>
+      dplyr::pull(n_rows)
+
+    n_cols_pre <- precomp |>
+      dplyr::summarize(n_cols = max(j)) |>
+      dplyr::collect() |>
+      dplyr::pull(n_cols)
+
+    # to prevent 1e4 errors and allow >int32
+    n_rows_pre = bit64::as.integer64(n_rows_pre)
+    n_cols_pre = bit64::as.integer64(n_cols_pre)
+
+    if(n_rows_pre < n_rows | n_cols_pre < n_cols){
+      message <- glue::glue(
+        "Precomputed matrix dimensions exceeded. Generate  a larger
+        precomputed matrix with at least {n_rows} rows and {n_cols} columns,
+        see ?precompute for more details.
+
+        Alternatively, set 'options(dbMatrix.precomp = NULL)' to remove
+        the precomputed matrix and densify the dbSparseMatrix on the fly
+        (slow, not recommended).
+        ")
+      stop(message)
+    }
+
+    # input validation
+    # if(!file.exists(precompute_mat)){
+    #   stop("Precomputed matrix file does not exist. Check for valid file path.")
+    # }
+    # con = get_con(db_sparse)
+    # con2 = DBI::dbConnect(duckdb::duckdb(), precompute_mat)
+    #
+    # precompute_mat = dplyr::tbl(con2, precompute_mat_name)
+    #
+    # dim_precomp = dim(precompute_mat)[1] * dim(precompute_mat)[2]
+    #
+    # dim_sparse = dim(db_sparse)[1] * dim(db_sparse)[2]
+    #
+    # if(dim_precomp < dim_sparse){
+    #   stop(paste0("Precomputed matrix is too small.
+    #               Download or generate larger precomputed matrix with at least ",
+    #               dim(db_sparse)[1], " rows and ",
+    #               dim(db_sparse)[2], " columns."))
+    # }
+
+    # attach con2 to con of db_sparse
+    # db_dense <- dplyr::tbl(db_sparse, precompute_mat)
+
+    # possible errors (and solutions)
+    # file doesn't exist (check if path is correct, set again with options(...))
+    # precomp matrix dimensionality < db_sparse dimensionality (download or generate larger precomp matrix)
+    # precomp matrix is not a valid dbDenseMatrix object (check if precomp matrix is valid dbDenseMatrix object)
+
+    # algo
+    # 1. check if precomp matrix exists
+    # 2. check if precomp matrix is valid dbDenseMatrix object
+    # 3. check if precomp matrix dim satisfies db_sparse-->db_dense dim
+    # 4. attach precomp matrix to db_sparse
+    # 5. return db_sparse
+
+    key <- precomp |>
+      dplyr::filter(i <= n_rows, j <= n_cols) |> # filter out rows and cols that are not in db_sparse
+      dplyr::mutate(x = 0)
+
+    data <- key |>
+      dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
+      # dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
+      dplyr::select(-x.dgc)
+
+    # Create new dbSparseMatrix object
+    db_dense <- new(Class = "dbDenseMatrix",
+                    value = data,
+                    name = remote_name,
+                    dims = dims,
+                    dim_names = dim_names,
+                    init = TRUE)
+
+  } else{ # generate dbDenseMatrix from scratch
+
+    warning("Densifying dbSparseMatrix on the fly. See ?precompute to speed up densification.")
+
+    # to prevent 1e4 errors and allow >int32
+    n_rows = bit64::as.integer64(n_rows)
+    n_cols = bit64::as.integer64(n_cols)
+
+    # Generate i and j vectors from scratch
+    sql_i <- glue::glue("SELECT i FROM generate_series(1, {n_rows}) AS t(i)")
+    sequence_i <- dplyr::tbl(con, dplyr::sql(sql_i))
+
+    sql_j <- glue::glue("SELECT j FROM generate_series(1, {n_cols}) AS t(j)")
+    sequence_j <- dplyr::tbl(con, dplyr::sql(sql_j))
+
+    key <- sequence_i |>
+      dplyr::cross_join(sequence_j) |>
+      dplyr::mutate(x = 0)
+
+    data <- key |>
+      dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
+      dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
+      dplyr::select(-x.dgc)
+
+    # Create new dbSparseMatrix object
+    db_dense <- new(Class = "dbDenseMatrix",
+                    value = data,
+                    name = remote_name,
+                    dims = dims,
+                    dim_names = dim_names,
+                    init = TRUE)
+  }
+
+  # cat("done \n")
+  return(db_dense)
 }
 
 #' @name toDbSparse
@@ -646,4 +808,67 @@ read_matrix <- function(con, value, name, overwrite, ...){
   }
 
   return(data)
+}
+
+
+# save ####
+#' Compute or save a dbMatrix to disk
+#'
+#' @param dbMatrix \code{dbMatrix} object
+#' @param name name of table to save to disk
+#' @param overwrite whether to overwrite if table already exists in database
+#' @param ... additional params to pass
+#'
+#' @param description
+#' Saves dbMatrix table to specified name in the dbMatrix connection.
+#' Note: Computing will not persist if the database is in ":memory:".
+#'
+#' @details
+#' This may break functions that rely on the existing table.
+#' TODO: sync \code{dbMatrix} constructor with compute
+#'
+#' @return NULL
+#' @keywords internal
+#'
+#' @examples
+#' dbm <- sim_dbSparseMatrix()
+#' compute(dbm, "new_table", overwrite = TRUE)
+save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
+  # input validation
+  if(!inherits(dbMatrix, "dbMatrix")){
+    stop("Input must be a valid dbMatrix object.")
+  }
+  con <- get_con(dbMatrix)
+  .check_con(conn = con)
+  .check_name(name)
+  .check_overwrite(conn = con, name = name, overwrite = overwrite)
+
+  # note: this may break relations that rely on the existing tbl
+  # idea: check if the table is not computed. if it isn't
+  # don't delete it.
+  # idea2: create graph of relations and check if the table
+  # is a leaf node. if it is, delete it. if it isn't, throw
+  # an error. see {dm} package
+  if(overwrite & DBI::dbExistsTable(con, name)){ # dplyr::compute still doesn't allow overwrite
+    suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
+    temp_name = dbplyr::remote_name(x)
+
+    query <- glue::glue("DROP TABLE IF EXISTS {name}")
+    DBI::dbExecute(con, query)
+
+    # rename tbl to name
+    query <- glue::glue("ALTER TABLE {temp_name} RENAME TO {name}")
+    DBI::dbExecute(con, query)
+  } else {
+    suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
+    name <- dbplyr::remote_name(x)
+  }
+
+
+  # update dbMatrix
+  dbMatrix@value <- dplyr::tbl(con, name)
+  dbMatrix@name <- name
+
+  return(dbMatrix)
+
 }
