@@ -1,3 +1,24 @@
+<!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
+
+# dbMatrix 0.0.0.9019 (2024-03-18)
+
+##  Features
+
+- Add new `precompute` function to speed up matrix densification.
+
+- Add new show function for dbDenseMatrix with pretty color and better spacing.
+
+- Add new `save` function to save a `dbMatrix`. 
+
+- Add new input validation functions.
+
+
+## Chore
+
+- Update docs. 
+
+- Update imports to include `glue`, `bit64` and `crayon`. 
+
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
 # dbMatrix 0.0.0.9018 (2024-02-12)
