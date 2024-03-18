@@ -24,7 +24,9 @@ Imports:
     dbplyr,
     duckdb, 
     data.table (>= 1.12.2),
-    glue
+    glue,
+    bit64,
+    crayon
 Suggests: 
     knitr,
     rmarkdown,
