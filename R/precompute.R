@@ -33,7 +33,7 @@ precompute <- function(conn, m, n, name){
   if(name %in% DBI::dbListTables(conn)){
     options(dbMatrix.precomp = name)
     str <- glue::glue("Precomputed dbMatrix '{name}' with
-                    {n_rows} rows and {n_cols} columns")
+                    {m} rows and {n} columns")
     cat(str, "\n")
     return()
   }
