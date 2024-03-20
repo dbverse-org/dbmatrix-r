@@ -7,7 +7,7 @@
   }
 
   if(!DBI::dbIsValid(conn)) {
-    stop("Invalid connection, check your db connection.")
+    stop("Stale connection. Reconnect your db connection.")
   }
 
   if(!inherits(conn, "duckdb_connection")) {
