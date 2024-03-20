@@ -849,7 +849,7 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
   # idea2: create graph of relations and check if the table
   # is a leaf node. if it is, delete it. if it isn't, throw
   # an error. see {dm} package
-  if(overwrite & DBI::dbExistsTable(con, name)){ # dplyr::compute still doesn't allow overwrite
+  if(overwrite & name != ''){ # dplyr::compute still doesn't allow overwrite
     suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
     temp_name = dbplyr::remote_name(x)
 
@@ -863,7 +863,6 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
     suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
     name <- dbplyr::remote_name(x)
   }
-
 
   # update dbMatrix
   dbMatrix@value <- dplyr::tbl(con, name)
