@@ -29,15 +29,16 @@
 #' precompute(con = con , m = 100, n = 100, name = "precomputed_table")
 precompute <- function(conn, m, n, name){
   # input validation
-  if(name %in% dbListTables(conn)){
+  .check_con(conn = conn)
+  if(name %in% DBI::dbListTables(conn)){
     options(dbMatrix.precomp = name)
     str <- glue::glue("Precomputed dbMatrix '{name}' with
                     {n_rows} rows and {n_cols} columns")
     cat(str, "\n")
     return()
   }
-  .check_con(conn = conn)
   .check_name(name = name)
+
   if(!(is.numeric(m) | is.integer(m)) | !(is.numeric(n) | is.integer(n))){
     stop("m and n must be integers or numerics")
   }
