@@ -48,10 +48,10 @@ precompute <- function(conn, m, n, name){
   n_cols = bit64::as.integer64(n)
 
   sql_i <- glue::glue("SELECT i FROM generate_series(1, {n_rows}) AS t(i)")
-  sequence_i <- dplyr::tbl(con, dplyr::sql(sql_i))
+  sequence_i <- dplyr::tbl(conn, dplyr::sql(sql_i))
 
   sql_j <- glue::glue("SELECT j FROM generate_series(1, {n_cols}) AS t(j)")
-  sequence_j <- dplyr::tbl(con, dplyr::sql(sql_j))
+  sequence_j <- dplyr::tbl(conn, dplyr::sql(sql_j))
 
   key <- sequence_i |>
     dplyr::cross_join(sequence_j) |>
