@@ -106,16 +106,32 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
     output = as.matrix(preview_dt[1:6,2:7])
     rownames(output) = as.matrix(preview_dt[,1])
 
-    top_left <- format(output[1:3, 1:3], scientific = 2)
-    top_right <- format(output[1:3, (ncol(output)-2):ncol(output)],
-                        scientific = 2)
-    bottom_left <- format(output[(nrow(output)-2):nrow(output), 1:3],
-                          scientific = 2)
-    bottom_right <- format(output[(nrow(output)-2):nrow(output),
-                                  (ncol(output)-2):ncol(output)],
-                           scientific = 2)
-    ellipsis_row <- crayon::silver(c(rep('⋮', 3),  ".", rep('⋮', 3)))
-    ellipsis_col <- crayon::silver(matrix(rep("…", 3), ncol = 1))
+    top_left <- output[1:3, 1:3]  |>
+      format(scientific = TRUE, digits = 2)
+    top_right <- output[1:3, (ncol(output)-2):ncol(output)] |>
+      format(scientific = TRUE, digits = 2)
+    bottom_left <- output[(nrow(output)-2):nrow(output), 1:3] |>
+      format(scientific = TRUE, digits = 2)
+    bottom_right <- output[(nrow(output)-2):nrow(output),
+                           (ncol(output)-2):ncol(output)] |>
+      format(scientific = TRUE, digits = 2)
+
+    # Add spacing
+    pad_names <- function(vector, max_length = 8) {
+      # 8 is hard coded for format(scientific = T, digits = 2)
+
+      # Calculate the necessary padding
+      padding <- max_length - nchar(vector)
+
+      # Apply padding to the right of the values
+      sprintf(paste0("%", max_length, "s"), vector)
+    }
+
+    # apply proper padding
+    ellipsis_row <- c(mapply(pad_names, rep('⋮', 3), 10),
+                      mapply(pad_names, ".", 1),
+                      mapply(pad_names, rep('⋮', 3), 10)) |> crayon::silver()
+    ellipsis_col <- matrix(rep("…", 3), ncol = 1) |> crayon::silver()
 
     combined <- rbind(
       cbind(top_left, ellipsis_col, top_right),
@@ -123,18 +139,19 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
       cbind(bottom_left, ellipsis_col, bottom_right)
     )
 
+    # format dim names
     rownames(combined) <- crayon::blue(
-      c(rownames(output)[1:3],
+      c(rownames(top_left),
         "⋮",
-        format(rownames(output)[(nrow(output)-2):nrow(output)], scientific = 2)
-        )
+        rownames(bottom_left)
       )
+    )
 
     colnames(combined) <- crayon::blue(
-      c(colnames(output)[1:3],
+      c(mapply(pad_names, colnames(top_left)),
         "…",
-        format(colnames(output)[(ncol(output)-2):ncol(output)], scientific = 2))
-      )
+        mapply(pad_names, colnames(top_right)))
+    )
 
     # attempt to add [] to row and col names results in misalignment
     # rownames(combined) <- c(paste0("[", rownames(output)[1:3], ",]"),
@@ -757,16 +774,18 @@ read_matrix <- function(con, value, name, overwrite, ...){
   # - the j column retain <chr> data type even after CASTING to DOUBLE, need to fix this
   # - how do we handle row and col names from matrix files?
 
+  # check if the value is a valid path
+  if(!file.exists(value)) {
+    stop("File does not exist, please provide a valid file path.")
+  }
+
+  if(overwrite){
+    query <- paste0("DROP TABLE IF EXISTS ", name)
+    DBI::dbExecute(con, query)
+  }
+
   # ingest via duckdb's reader
   if(grepl("\\.csv|\\.tsv|\\.txt", value)) {
-    # check if the value is a valid path
-    if(!file.exists(value)) {
-      stop("File does not exist, please provide a valid file path.")
-    }
-    if(overwrite){
-      query <- paste0("DROP TABLE IF EXISTS ", name)
-      DBI::dbExecute(con, query)
-    }
 
     # create new table to connection and overwrite if table is there
     query <- paste0("CREATE TABLE ", name,
@@ -800,11 +819,13 @@ read_matrix <- function(con, value, name, overwrite, ...){
       data <- to_ijx_disk(con, name)
     }
 
-  } else {
+  } else if((grepl("\\.csv|\\.tsv|\\.txt", value))) {
     # .mtx reader
     if(grepl("\\.mtx", value)) {
       stop("TODO: Read in .mtx file directly into duckdb")
     }
+  } else {
+    stop("File type not supported.")
   }
 
   return(data)
