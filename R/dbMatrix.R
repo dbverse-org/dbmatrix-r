@@ -117,7 +117,7 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
       format(scientific = TRUE, digits = 2)
 
     # Add spacing
-    pad_names <- function(vector, max_length = 8) {
+    pad_names <- function(vector, max_length = 5) {
       # 8 is hard coded for format(scientific = T, digits = 2)
 
       # Calculate the necessary padding
@@ -128,9 +128,9 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
     }
 
     # apply proper padding
-    ellipsis_row <- c(mapply(pad_names, rep('⋮', 3), 10),
+    ellipsis_row <- c(mapply(pad_names, rep('⋮', 3), 5),
                       mapply(pad_names, ".", 1),
-                      mapply(pad_names, rep('⋮', 3), 10)) |> crayon::silver()
+                      mapply(pad_names, rep('⋮', 3), 5)) |> crayon::silver()
     ellipsis_col <- matrix(rep("…", 3), ncol = 1) |> crayon::silver()
 
     combined <- rbind(
@@ -327,6 +327,12 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' @param class class of the dbMatrix: \code{dbDenseMatrix} or \code{dbSparseMatrix} \code{(required)}
 #' @param dims dimensions of the matrix \code{(optional: [int, int])}
 #' @param dim_names dimension names of the matrix \code{(optional: list(enum, enum))}
+#' @param mtx_rowname_file_path path to .mtx rowname file to be read into \code{(optional)}
+#' database. by default, no header is assumed.
+#' @param mtx_rowname_col_idx column index of row name file \code{(optional)}
+#' @param mtx_colname_file_path path to .mtx colname file to be read into
+#' database. by default, no header is assumed. \code{(optional)}
+#' @param mtx_colname_col_idx column index of column name file \code{(optional)}
 #' @param ... additional params to pass
 #' @details This function reads in data into a pre-existing DuckDB database. Based
 #' on the \code{name} and \code{db_path} a lazy connection is then made
@@ -358,20 +364,17 @@ createDBMatrix <- function(value,
                            name = "dbMatrix",
                            dims = NULL,
                            dim_names = NULL,
+                           mtx_rowname_file_path,
+                           mtx_rowname_col_idx = 1,
+                           mtx_colname_file_path,
+                           mtx_colname_col_idx = 1,
                            ...) {
 
-  # check value
+  # check inputs
   .check_value(value)
-
-  # check connection object
-  if (!DBI::dbIsValid(con) | is.null(con)) {
-    stop("Invalid con: con object is not valid or missing.")
-  }
-
-  # check name
-  if (!grepl("^[a-zA-Z]", name) | grepl("-", name)) {
-    stop("Invalid name: name must start with a letter and not contain '-'")
-  }
+  .check_con(con)
+  .check_name(name)
+  .check_overwrite(conn = con, overwrite = overwrite, name = name)
 
   # check class
   if (is.null(class)) {
@@ -405,9 +408,31 @@ createDBMatrix <- function(value,
     dim_names <- dim_names
   } else { # data must be read in
     if (is.character(value)) { # read in from file
-      stopf("TODO: read in matrix from file... See read_matrix()")
-      # data <- read_matrix(con = con, value = value, name = name,
-      #                     overwrite = overwrite, ...)
+      if(grepl("\\.csv|\\.tsv|\\.txt", value)){
+        stop("File type not yet supported. Please use .mtx file format.")
+        # TODO: implement dense to sparse conversion. Long to wide pivot not yet
+        #       supported for out of memory in duckdb.
+      } else if(grepl("\\.mtx", value)){
+        data <- readMM(
+          con = con,
+          value = value,
+          name = name,
+          overwrite = overwrite
+        )
+
+        dims <- get_MM_dim(value)
+
+        dim_names <- get_MM_dimnames(
+          mtx_file_path = value,
+          mtx_rowname_file_path = mtx_rowname_file_path,
+          mtx_rowname_col_idx = mtx_rowname_col_idx,
+          mtx_colname_file_path = mtx_colname_file_path,
+          mtx_colname_col_idx = mtx_colname_col_idx
+        )
+
+      } else {
+        stop("Invalid file type. Please provide a .mtx, .csv, .txt, or .tsv file.")
+      }
     } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplet vector ijx format
       if(inherits(value, "dgTMatrix")){
@@ -422,17 +447,16 @@ createDBMatrix <- function(value,
                              name = name,
                              df = ijx,
                              overwrite = overwrite,
-                             temporary = FALSE)
+                             temporary = TRUE)
 
       dims <- dim(value)
       dim_names <- list(rownames(value), colnames(value))
     } else {
-      stopf("value must be an in-memory matrix, tbl_duckdb_connection, or
-            filepath to matrix data.")
+      stopf('Invalid "value" provided. See ?createDBMatrix for help.')
     }
   }
 
-  # 0.0.0.9000 release: hardcode dimnames as enums
+  # Set dimnames if not provided
   if(is.null(unlist(dim_names))) {
     row_names = as.factor(paste0("row", 1:dims[1]))
     col_names = as.factor(paste0("col", 1:dims[2]))
@@ -569,6 +593,30 @@ toDbDense <- function(db_sparse){
       # dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
       dplyr::select(-x.dgc)
 
+    # data |> dplyr::compute(temporary = F)
+
+    # tictoc::tic()
+    # query <- glue::glue('
+    # SELECT
+    #     {precompute_mat}.i,
+    #     {precompute_mat}.j,
+    #     COALESCE({remote_name}.x, {precompute_mat}.x) as x
+    # FROM
+    #     (
+    #         SELECT *
+    #         FROM {precompute_mat}
+    #         WHERE i <= {n_rows} AND j <= {n_cols}
+    #     ) as {precompute_mat}
+    #     LEFT JOIN {remote_name}
+    #         ON {precompute_mat}.i = {remote_name}.i
+    #         AND {precompute_mat}.j = {remote_name}.j
+    # ')
+    #
+    # dplyr::tbl(con, dplyr::sql(query)) |>
+    #   dplyr::compute(temporary=F)
+    # tictoc::toc();
+    # browser()
+
     # Create new dbSparseMatrix object
     db_dense <- new(Class = "dbDenseMatrix",
                     value = data,
@@ -598,7 +646,7 @@ toDbDense <- function(db_sparse){
 
     data <- key |>
       dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
-      dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
+      # dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
       dplyr::select(-x.dgc)
 
     # Create new dbSparseMatrix object
@@ -768,69 +816,249 @@ to_ijx_disk <- function(con, name){
 }
 
 # readers ####
-read_matrix <- function(con, value, name, overwrite, ...){
-  # Notes 11.03.2023
-  # - this function is not used in the package
-  # - the j column retain <chr> data type even after CASTING to DOUBLE, need to fix this
-  # - how do we handle row and col names from matrix files?
+#' read_matrix
+#' @description Read tabular matrix files into database
+#' @details
+#' Construct a database VIEW of a .csv, .tsv, or .txt files or their .gz/.gzip
+#' variants
+#' @param value path to .txt, .csv, .tsv or .gzip/.gz variants \code{(required)}
+#' @param name name to assign file within database \code{(optional)}.
+#' default: "dbMatrix"
+#' @param con DBI or duckdb connection object \code{(required)}
+#' @param overwrite whether to overwrite if `name` already exists in database.
+#' \code{(required)}. default: FALSE
+#' @param ... additional params to pass
+#'
+#' @return tbl_dbi object
+#' @export
+#'
+#' @examples
+#' print('TODO')
+read_matrix <- function(con,
+                        value,
+                        name = "dbMatrix",
+                        overwrite = FALSE,
+                        ...) {
+  # check inputs
+  .check_con(con)
+  .check_value(value)
+  .check_name(name)
+  .check_overwrite(conn = con, overwrite = overwrite, name = name)
 
-  # check if the value is a valid path
-  if(!file.exists(value)) {
-    stop("File does not exist, please provide a valid file path.")
-  }
-
-  if(overwrite){
-    query <- paste0("DROP TABLE IF EXISTS ", name)
-    DBI::dbExecute(con, query)
-  }
-
-  # ingest via duckdb's reader
+  # Read in files
   if(grepl("\\.csv|\\.tsv|\\.txt", value)) {
 
-    # create new table to connection and overwrite if table is there
-    query <- paste0("CREATE TABLE ", name,
-                    " AS SELECT * FROM read_csv_auto('", value, "')")
-    DBI::dbExecute(con, query)
-    data <- dplyr::tbl(con, name)
+    sql <- glue::glue(
+      "CREATE OR REPLACE VIEW {name} AS
+       SELECT * FROM read_csv_auto('{value}', header = TRUE);"
+    )
 
-    # grab col and row names
-    query <- glue::glue("DESCRIBE {name};")
-    col_names <- DBI::dbGetQuery(con, query) |>
-      dplyr::pull("column_name")
-
-    # if all values of col_names start with "V" then set value exists_cnames to FALSE
-    if(all(grepl("^V", col_names))) {
-      col_names <- col_names
-    } else {
-      col_names <- NULL
+    if (!overwrite) {
+      sql <- gsub("OR REPLACE ", "", sql, fixed = TRUE)
     }
 
-    # check if input is valid (only contains integer or double)
-    query <- paste0("SELECT column_name, data_type FROM ",
-                    "information_schema.columns WHERE table_name = '",
-                    name, "'")
-    data_types <- DBI::dbGetQuery(con, query)
+    DBI::dbExecute(con, sql)
 
-    if(!all(data_types$data_type %in% c("BIGINT", "DOUBLE", "INTEGER"))) {
-      stop("Input file contains invalid data types,
-           please provide a file with only integer or double values.")
-    } else {
-      # pass to_ijx_disk
-      data <- to_ijx_disk(con, name)
-    }
-
-  } else if((grepl("\\.csv|\\.tsv|\\.txt", value))) {
-    # .mtx reader
-    if(grepl("\\.mtx", value)) {
-      stop("TODO: Read in .mtx file directly into duckdb")
-    }
+    res <- dplyr::tbl(con, name)
   } else {
     stop("File type not supported.")
   }
 
-  return(data)
+  return(res)
 }
 
+#' read_MM
+#' @description Read matrix market file (.mtx or .mtx.gz)  into database
+#' @details
+#' Construct a database VIEW of a .mtx or .mtx.gz file with columns 'i', 'j',
+#' and 'x' representing the row index, column index, and value of the matrix,
+#' respectively.
+#'
+#' By default 'i' and 'j' are of type BIGINT and 'x' is of type DOUBLE.
+#' Note: lack of support in R for BIGINT may cause errors when pulling data
+#' into memory without proper type conversion.
+#'
+#' By default, .mtx files are expected to contain two lines representing the
+#' standard header information.
+#' @param value path to .mtx or .mtx.gz file \code{(required)}
+#' @param name name to assign file within database \code{(optional)}.
+#' default: "dbMatrix"
+#' @param con DBI or duckdb connection object \code{(required)}
+#' @param overwrite whether to overwrite if `name` already exists in database.
+#' \code{(required)}. default: FALSE
+#' @param ... additional params to pass
+#'
+#' @return tbl_dbi object
+#' @export
+#'
+#' @examples
+#' print('TODO')
+readMM <- function(con,
+                   value,
+                   name = "dbMatrix",
+                   overwrite = FALSE,
+                   ...) {
+  # check inputs
+  .check_con(con)
+  .check_value(value)
+  .check_name(name)
+  .check_overwrite(conn = con, name = name, overwrite = overwrite)
+
+  if(grepl("\\.csv|\\.tsv|\\.txt", value)){
+    stop("Please use read_matrix() for .csv, .tsv, .txt files.")
+  }
+
+  # Read in .mtx or .mtx.gz file
+  if((grepl("\\.mtx", value))) {
+    # .mtx reader
+    sql <- glue::glue(
+      "CREATE OR REPLACE VIEW {name} AS
+       SELECT * FROM read_csv_auto(
+          '{value}',
+          sep = ' ',
+          skip = 2,
+          columns = {{
+              'i': 'BIGINT',
+              'j': 'BIGINT',
+              'x': 'DOUBLE'
+          }},
+          header = TRUE
+      );"
+    )
+
+    if (!overwrite) {
+      sql <- gsub("OR REPLACE ", "", sql, fixed = TRUE)
+    }
+
+    DBI::dbExecute(con, sql)
+
+    res <- dplyr::tbl(con, name)
+  } else {
+    stop("File type not supported.")
+  }
+
+  return(res)
+}
+
+#' get_MM_dim
+#' @description Internal function to read dimensions of a .mtx file
+#' @details
+#' Scans for the header of an mtx file (starting with %) and takes one more line
+#' representing the dimensions and number of nonzero values.
+#'
+#' Note: the header size can vary depending on the .mtx file.
+#'
+#' @param mtx_file_path path to .mtx file to be read into database
+#' @return integer vector of dimensions
+#' @keywords internal
+get_MM_dim <- function(mtx_file_path) {
+  if (!file.exists(mtx_file_path)) {
+    stop("File does not exist. Check for valid file path.")
+  }
+
+  # Read all lines starting with '%' and one additional line representing dims
+  con <- file(mtx_file_path, "r")
+  header <- character(0)
+  while (TRUE) {
+    line <- readLines(con, n = 1)
+    if (length(line) == 0 || !startsWith(line, "%")) {
+      break
+    }
+    header <- c(header, line)
+  }
+  header <- c(header, line)  # Add the dims
+  close(con)
+
+  # Extract dimensions from the last line (dims)
+  dims <- as.integer(strsplit(header[length(header)], " ")[[1]][1:2])
+
+  return(dims)
+}
+
+#' get_MM_dimnames
+#' @description Internal function to read row and column names of a .mtx file
+#' @details
+#' Can be used to read row and column names from .mtx files. Note: these files
+#' must not contain a header (colnames).
+#'
+#' The mtx_rowname_col_idx and mtx_colname_col_idx can be used to specify the column
+#' index of the row and column name files, respectively. By default, the first
+#' column is used for both.
+#'
+#' TODO: Support for reading in only rownames or colnames.
+#'
+#' @param mtx_file_path path to .mtx file to be read into database
+#' @param mtx_rowname_file_path path to .mtx rowname file to be read into
+#' database. by default, no header is assumed.
+#' @param mtx_rowname_col_idx column index of row name file
+#' @param mtx_colname_file_path path to .mtx colname file to be read into
+#' database. by default, no header is assumed.
+#' @param mtx_colname_col_idx column index of column name file
+#' @param ... additional params to pass to \link{data.table::fread}
+#'
+#' @return list of row and column name character vectors
+#' @keywords internal
+get_MM_dimnames <- function(mtx_file_path,
+                            mtx_rowname_file_path,
+                            mtx_rowname_col_idx = 1,
+                            mtx_colname_file_path,
+                            mtx_colname_col_idx = 1,
+                            ...){
+
+  # check inputs
+  if (!file.exists(mtx_file_path) ||
+      !file.exists(mtx_rowname_file_path) ||
+      !file.exists(mtx_colname_file_path)) {
+    stop("File does not exist. Check for valid file path.")
+  }
+  if (!is.numeric(mtx_rowname_col_idx) || !is.numeric(mtx_colname_col_idx)) {
+    stop("Column index must be an integer.")
+  }
+
+  dims = get_MM_dim(mtx_file_path)
+
+  # Read row and column name files using data.table fread
+  rowname_file <- data.table::fread(mtx_rowname_file_path, header = FALSE)
+  dim_rownames = dim(rowname_file)
+  colname_file <- data.table::fread(mtx_colname_file_path, header = FALSE)
+  dim_colnames = dim(colname_file)
+
+  # check dimname and column indices
+  if(mtx_rowname_col_idx > dim_rownames[2]){
+    stop("'mtx_rowname_col_idx' exceeds number of columns in 'mtx_rowname_file_path'")
+  }
+
+  if(mtx_colname_col_idx > dim_colnames[2]){
+    stop("'mtx_colname_col_idx' exceeds number of columns in 'mtx_colname_file_path'")
+  }
+
+  # Extract row and column names
+  rownames = rowname_file[ , ..mtx_rowname_col_idx][[1]]
+  colnames = colname_file[ , ..mtx_colname_col_idx][[1]]
+
+  # Make unique
+  # Note: first replicates will be labeled --1, second --2, and so on...
+  rownames <- make.unique(rownames, sep = "--")
+  colnames <- make.unique(colnames, sep = "--")
+
+  # check for duplicates and matching dimensions
+  if(length(unique(rownames)) != dims[1]){
+    stop("Number of unique row names does not match the number of rows in the
+         matrix. Check selected col_idx of 'mtx_rowname_file_path' for valid
+         row names.")
+  }
+
+  if(length(unique(colnames)) != dims[2]){
+    stop("Number of unique column names does not match the number of columns in
+         the matrix. Check selected col_idx of 'mtx_colname_file_path' for
+         valid column names.")
+  }
+
+  dimnames = list(rownames, colnames)
+
+  return(dimnames)
+
+}
 
 # save ####
 #' Compute or save a dbMatrix to disk
@@ -873,9 +1101,6 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
   if(overwrite & name != ''){ # dplyr::compute still doesn't allow overwrite
     suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
     temp_name = dbplyr::remote_name(x)
-
-    query <- glue::glue("DROP TABLE IF EXISTS {name}")
-    DBI::dbExecute(con, query)
 
     # rename tbl to name
     query <- glue::glue("ALTER TABLE {temp_name} RENAME TO {name}")

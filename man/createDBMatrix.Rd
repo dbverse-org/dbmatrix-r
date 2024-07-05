@@ -12,6 +12,10 @@ createDBMatrix(
   name = "dbMatrix",
   dims = NULL,
   dim_names = NULL,
+  mtx_rowname_file_path,
+  mtx_rowname_col_idx = 1,
+  mtx_colname_file_path,
+  mtx_colname_col_idx = 1,
   ...
 )
 }
@@ -29,6 +33,16 @@ createDBMatrix(
 \item{dims}{dimensions of the matrix \code{(optional: [int, int])}}
 
 \item{dim_names}{dimension names of the matrix \code{(optional: list(enum, enum))}}
+
+\item{mtx_rowname_file_path}{path to .mtx rowname file to be read into \code{(optional)}
+database. by default, no header is assumed.}
+
+\item{mtx_rowname_col_idx}{column index of row name file \code{(optional)}}
+
+\item{mtx_colname_file_path}{path to .mtx colname file to be read into
+database. by default, no header is assumed. \code{(optional)}}
+
+\item{mtx_colname_col_idx}{column index of column name file \code{(optional)}}
 
 \item{...}{additional params to pass}
 }
