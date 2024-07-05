@@ -117,26 +117,26 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
       format(scientific = TRUE, digits = 2)
 
     # Add spacing
-    pad_names <- function(vector, max_length = 5) {
-      # 8 is hard coded for format(scientific = T, digits = 2)
-
-      # Calculate the necessary padding
-      padding <- max_length - nchar(vector)
-
-      # Apply padding to the right of the values
-      sprintf(paste0("%", max_length, "s"), vector)
+    pad_names <- function(vector, max_length = 8) {
+      sapply(vector, function(x) {
+        padding <- max_length - nchar(x)
+        left_pad <- floor(padding / 2)
+        right_pad <- ceiling(padding / 2)
+        paste0(strrep(" ", left_pad), x, strrep(" ", right_pad))
+      })
     }
 
     # apply proper padding
-    ellipsis_row <- c(mapply(pad_names, rep('⋮', 3), 5),
-                      mapply(pad_names, ".", 1),
-                      mapply(pad_names, rep('⋮', 3), 5)) |> crayon::silver()
-    ellipsis_col <- matrix(rep("…", 3), ncol = 1) |> crayon::silver()
+    ellipsis_row <- c(mapply(pad_names, rep('⋮', 3), 8),
+                      mapply(pad_names, "⋮", 2),
+                      mapply(pad_names, rep('   ⋮', 3), 8)) |> crayon::silver()
+    ellipsis_col_top <- matrix(rep("   …   ", 3), ncol = 1) |> crayon::silver()
+    ellipsis_col_bot <- matrix(rep("  …   ", 3), ncol = 1) |> crayon::silver()
 
     combined <- rbind(
-      cbind(top_left, ellipsis_col, top_right),
+      cbind(top_left, ellipsis_col_top, top_right),
       ellipsis_row,
-      cbind(bottom_left, ellipsis_col, bottom_right)
+      cbind(bottom_left, ellipsis_col_bot, bottom_right)
     )
 
     # format dim names
@@ -148,45 +148,16 @@ setMethod('show', signature(object = 'dbDenseMatrix'), function(object) {
     )
 
     colnames(combined) <- crayon::blue(
-      c(mapply(pad_names, colnames(top_left)),
-        "…",
-        mapply(pad_names, colnames(top_right)))
+      c(pad_names(colnames(top_left), 9),
+        " …   ",
+        pad_names(colnames(top_right), 9))
     )
-
-    # attempt to add [] to row and col names results in misalignment
-    # rownames(combined) <- c(paste0("[", rownames(output)[1:3], ",]"),
-    #                         "...",
-    #                         paste0("[", rownames(output)[(nrow(output)-2):nrow(output)], ",]")
-    #                         )
-    #
-    # colnames(combined) <- c(paste0("[,", colnames(output)[1:3], "]"),
-    #                         "...",
-    #                         paste0("[,", colnames(output)[(ncol(output)-2):ncol(output)], "]")
-    #                         )
-
-    # # spice it up
-    # df_colored <- colorDF::colorDF(as.data.frame(combined))
-    #
-    # # Set unique color for row names
-    # colorDF::df_style(df_colored, "row.names") <- list(
-    #   fg = "#e019cc"
-    # )
-    #
-    # # Set unique color for column names
-    # colorDF::df_style(df_colored, "col.names") <- list(
-    #   fg = "#19e097"
-    # )
-    #
-    # # Remove alternating row coloring by setting interleave to NULL
-    # colorDF::df_style(df_colored, "interleave") <- NULL
-    #
-    # colorDF::print_colorDF(df_colored, header = FALSE, sep = " ")
 
     write.table(combined,
                 quote = FALSE,
                 row.names = TRUE,
                 col.names = NA,
-                sep = "\t",
+                sep = " ",
                 file = "")
   } else {
     # data.table::setkey(preview_dt, NULL)
@@ -374,7 +345,12 @@ createDBMatrix <- function(value,
   .check_value(value)
   .check_con(con)
   .check_name(name)
-  .check_overwrite(conn = con, overwrite = overwrite, name = name)
+  .check_overwrite(
+    conn = con,
+    overwrite = overwrite,
+    name = name,
+    skip_value_check = TRUE
+  )
 
   # check class
   if (is.null(class)) {
@@ -843,7 +819,12 @@ read_matrix <- function(con,
   .check_con(con)
   .check_value(value)
   .check_name(name)
-  .check_overwrite(conn = con, overwrite = overwrite, name = name)
+  .check_overwrite(
+    conn = con,
+    overwrite = overwrite,
+    name = name,
+    skip_value_check = TRUE
+  )
 
   # Read in files
   if(grepl("\\.csv|\\.tsv|\\.txt", value)) {
@@ -902,7 +883,12 @@ readMM <- function(con,
   .check_con(con)
   .check_value(value)
   .check_name(name)
-  .check_overwrite(conn = con, name = name, overwrite = overwrite)
+  .check_overwrite(
+    conn = con,
+    overwrite = overwrite,
+    name = name,
+    skip_value_check = FALSE
+  )
 
   if(grepl("\\.csv|\\.tsv|\\.txt", value)){
     stop("Please use read_matrix() for .csv, .tsv, .txt files.")
@@ -1090,7 +1076,12 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
   con <- get_con(dbMatrix)
   .check_con(conn = con)
   .check_name(name)
-  .check_overwrite(conn = con, name = name, overwrite = overwrite)
+  .check_overwrite(
+    conn = con,
+    overwrite = overwrite,
+    name = name,
+    skip_value_check = FALSE
+  )
 
   # note: this may break relations that rely on the existing tbl
   # idea: check if the table is not computed. if it isn't

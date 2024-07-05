@@ -193,6 +193,7 @@ sim_dbSparseMatrix = function(num_rows = 50,
                        name = name,
                        dims = dim,
                        dim_names = dim_names,
+                       overwrite = TRUE,
                        class = "dbSparseMatrix",
                        init = TRUE)
 
@@ -241,6 +242,7 @@ sim_dbDenseMatrix = function(num_rows = 50,
                        name = name,
                        dims = dim,
                        dim_names = dim_names,
+                       overwrite = TRUE,
                        class = "dbDenseMatrix",
                        init = TRUE)
 

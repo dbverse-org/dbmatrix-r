@@ -63,7 +63,7 @@
 
 #' Input validation for overwrite arg
 #' @keywords internal
-.check_overwrite <- function(conn, overwrite, name) {
+.check_overwrite <- function(conn, overwrite, name, skip_value_check) {
   if (!is.logical(overwrite)) {
     stop("overwrite must be logical")
   }
@@ -73,6 +73,11 @@
 
   if (!overwrite && object_exists) {
     stop("Object already exists. Set overwrite = TRUE to overwrite.")
+  }
+
+  # Hacky workaround for deleting tbl that is being overwritten
+  if(skip_value_check){
+    return()
   }
 
   if (overwrite && object_exists) {
