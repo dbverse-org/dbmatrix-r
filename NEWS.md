@@ -1,8 +1,29 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# dbMatrix 0.0.0.9021 (2024-07-05)
+
+## Bug fixes
+
+- Improve show function for dbDenseMatrix.
+
+- Updated simulate functions to include overwrite param.
+
+- Update .check_overwrite() internal function to avoid bug in overwritting passed table.
+
+
 # dbMatrix 0.0.0.9020 (2024-07-05)
 
-- Same as previous version.
+## Features
+
+- Add initial support for reading in .mtx files and creating dbMatrix objects.
+
+## Bug fixes
+
+- Update `check_overwrite` input validation
+
+## Chore
+
+- Update Royxgen
 
 
 # dbMatrix 0.0.0.9019 (2024-03-18)
