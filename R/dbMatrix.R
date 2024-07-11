@@ -1108,3 +1108,139 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
   return(dbMatrix)
 
 }
+
+# dimnames ####
+#' Create database table with ijx and dimnames
+#' @details
+#' Constructs a table in a database that contains the accompanying dimnames
+#' for a dbMatrix. The resulting columns in the table:
+#' * i (row index)
+#' * colName_i (rownames),
+#' * j (col index)
+#' * j_names (colnames)
+#' * x (counts of i,j occcurences)
+#' @param dbMatrix dbMatrix object
+#' @param name name of table to add to database
+#' @param colName_i name of column rownames to add to database
+#' @param colName_j name of column colnames to add to database
+#' @param overwrite whether to overwrite if table already exists in database
+#' default: 'FALSE'.
+.make_ijx_dimnames <- function(dbMatrix,
+                               name,
+                               overwrite = FALSE,
+                               colName_i,
+                               colName_j) {
+  .check_name(name)
+  .check_name(colName_i)
+  .check_name(colName_j)
+  con <- get_con(dbMatrix)
+  .check_con(con)
+  .check_overwrite(
+    conn = con,
+    overwrite = overwrite,
+    name = name,
+    skip_value_check = TRUE
+  )
+  dimnames <- dimnames(dbMatrix)
+
+  colName_i = rlang::sym(colName_i)
+  colName_j = rlang::sym(colName_j)
+
+  # add dimnames to database
+  dimnames1_tbl <- dplyr::copy_to(
+    con,
+    data.frame(i = seq_along(dimnames[[1]]), colName_i = dimnames[[1]]),
+    overwrite = TRUE,
+    temporary = TRUE
+  )
+
+  dimnames2_tbl <- dplyr::copy_to(
+    con,
+    data.frame(j = seq_along(dimnames[[2]]), colName_j = dimnames[[2]]),
+    overwrite = TRUE,
+    temporary = TRUE
+  )
+
+  res <- dplyr::tbl(con, "dbMatrix") |>
+    dplyr::left_join(dimnames1_tbl, by = "i") |>
+    dplyr::left_join(dimnames2_tbl, by = "j") |>
+    dplyr::select(
+      i,
+      !!colName_i := colName_i, # !! to unquote
+      j,
+      !!colName_j := colName_j, # !! to unquote
+      x
+    ) |>
+    dplyr::compute(
+      name = "dbMatrixWithDimnames",
+      temporary = TRUE,
+      overwrite = overwrite
+    )
+
+  # DBI::dbRemoveTable(con, "dimnames1")
+  # DBI::dbRemoveTable(con, "dimnames2")
+
+  return(res)
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
