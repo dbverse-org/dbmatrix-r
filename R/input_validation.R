@@ -75,7 +75,7 @@
     stop("Object already exists. Set overwrite = TRUE to overwrite.")
   }
 
-  # Hacky workaround for deleting tbl that is being overwritten
+  # Workaround for preventing deletion of tbl that is being overwritten
   if(skip_value_check){
     return()
   }
