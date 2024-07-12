@@ -1124,7 +1124,8 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
 #' @param colName_i name of column rownames to add to database
 #' @param colName_j name of column colnames to add to database
 #' @param overwrite whether to overwrite if table already exists in database
-#' default: 'FALSE'.
+#' default: 'FALSE'.'
+#' @keywords internal
 .make_ijx_dimnames <- function(dbMatrix,
                                name,
                                overwrite = FALSE,
@@ -1151,6 +1152,7 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
     con,
     data.frame(i = seq_along(dimnames[[1]]), colName_i = dimnames[[1]]),
     overwrite = TRUE,
+    name = "tmp_dimnames1",
     temporary = TRUE
   )
 
@@ -1158,6 +1160,7 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
     con,
     data.frame(j = seq_along(dimnames[[2]]), colName_j = dimnames[[2]]),
     overwrite = TRUE,
+    name = "tmp_dimnames2",
     temporary = TRUE
   )
 
@@ -1172,13 +1175,13 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
       x
     ) |>
     dplyr::compute(
-      name = "dbMatrixWithDimnames",
+      name = name,
       temporary = TRUE,
       overwrite = overwrite
     )
 
-  # DBI::dbRemoveTable(con, "dimnames1")
-  # DBI::dbRemoveTable(con, "dimnames2")
+  DBI::dbRemoveTable(con, "tmp_dimnames1")
+  DBI::dbRemoveTable(con, "tmp_dimnames2")
 
   return(res)
 
