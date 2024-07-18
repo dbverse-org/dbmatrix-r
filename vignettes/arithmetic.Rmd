@@ -39,11 +39,11 @@ Let's create a `dbSparseMatrix` object from the above `dgc` object.
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm <- createDBMatrix(value = dgc, 
-                       con = con, 
-                       name = 'visium', 
-                       class = "dbSparseMatrix",
-                       overwrite = TRUE)
+dbsm <- dbMatrix(value = dgc, 
+                 con = con, 
+                 name = 'visium', 
+                 class = "dbSparseMatrix",
+                 overwrite = TRUE)
 
 # preview the object
 dbsm
