@@ -4,7 +4,7 @@
 # to elements internal to the object.
 
 # For pre-object construction data operations/massaging, see the constructor
-# function createDBMatrix()
+# function dbMatrix()
 #' @keywords internal
 #' @noRd
 setMethod(
@@ -288,7 +288,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 # Basic function to generate a dbMatrix obj given input data
 
 #' @title Create a sparse or dense dbMatrix object
-#' @name createDBMatrix
+#' @name dbMatrix
 #' @description
 #' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 #' @param value data to be added to the database. See details for supported data types \code{(required)}
@@ -324,11 +324,11 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 #' @export
 #' @examples
 #' dgc <- dbMatrix:::sim_dgc()
-#' dbSparse <- createDBMatrix(value = dgc, db_path = ":memory:",
+#' dbSparse <- dbMatrix(value = dgc, db_path = ":memory:",
 #'                            name = "sparse_matrix", class = "dbSparseMatrix",
 #'                            overwrite = TRUE)
 #' dbSparse
-createDBMatrix <- function(value,
+dbMatrix <- function(value,
                            class = NULL,
                            con = NULL,
                            overwrite = FALSE,
@@ -428,7 +428,7 @@ createDBMatrix <- function(value,
       dims <- dim(value)
       dim_names <- list(rownames(value), colnames(value))
     } else {
-      stopf('Invalid "value" provided. See ?createDBMatrix for help.')
+      stopf('Invalid "value" provided. See ?dbMatrix for help.')
     }
   }
 
@@ -1126,11 +1126,11 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
 #' @param overwrite whether to overwrite if table already exists in database
 #' default: 'FALSE'.'
 #' @keywords internal
-.make_ijx_dimnames <- function(dbMatrix,
-                               name,
-                               overwrite = FALSE,
-                               colName_i,
-                               colName_j) {
+make_ijx_dimnames <- function(dbMatrix,
+                              name,
+                              overwrite = FALSE,
+                              colName_i,
+                              colName_j) {
   .check_name(name)
   .check_name(colName_i)
   .check_name(colName_j)
@@ -1164,7 +1164,7 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
     temporary = TRUE
   )
 
-  res <- dplyr::tbl(con, "dbMatrix") |>
+  res <- dbMatrix@value |>
     dplyr::left_join(dimnames1_tbl, by = "i") |>
     dplyr::left_join(dimnames2_tbl, by = "j") |>
     dplyr::select(

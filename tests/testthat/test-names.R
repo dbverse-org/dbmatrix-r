@@ -7,11 +7,11 @@ dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm = dbMatrix::createDBMatrix(value = dgc,
-                                con = con1,
-                                name = 'dgc',
-                                class = "dbSparseMatrix",
-                                overwrite = TRUE)
+dbsm = dbMatrix::dbMatrix(value = dgc,
+                          con = con1,
+                          name = 'dgc',
+                          class = "dbSparseMatrix",
+                          overwrite = TRUE)
 
 # ---------------------------------------------------------------------------- #
 # Test name equivalence
