@@ -24,10 +24,9 @@ setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = '
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'missing'),
           function(x, i, ...) {
-
             # get dbMatrix info
-            con = x[][[1]]$con  # TODO: use proper getter
-            tbl_name = x@name # TODO: use proper getter
+            con = get_con(x)
+            tbl_name = get_tblName(x)
 
             # create mapping of filtered rownames to row index
             # note: https://duckdb.org/docs/sql/statements/create_sequence.html
@@ -46,7 +45,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'm
                                        temporary = TRUE)
 
             # subset dbMatrix
-            x[] <- x[] |>
+            x@value <- x@value |>
               dplyr::filter(i %in% !!map$i) |>
               dplyr::inner_join(map_temp, by = c("i" = "i")) |>
               dplyr::select(i = new_i, j, x)
@@ -64,8 +63,8 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'm
 setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'missing'),
           function(x, j, ...) {
             # get dbMatrix info
-            con = x[][[1]]$con  # TODO: use proper getter
-            tbl_name = x@name # TODO: use proper getter
+            con = get_con(x)
+            tbl_name = get_tblName(x)
 
             # create mapping of filtered colnames to col index
             # note: https://duckdb.org/docs/sql/statements/create_sequence.html
@@ -85,7 +84,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'm
             map_temp <- dplyr::tbl(con, "map_temp_j")
 
             # subset dbMatrix
-            x[] <- x[] |>
+            x@value <- x@value |>
               dplyr::filter(j %in% !!map$j) |>
               dplyr::inner_join(map_temp, by = c("j" = "j")) |>
               dplyr::select(i, j = new_j, x)
@@ -103,8 +102,8 @@ setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'm
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
           function(x, i, j, ...) {
             # get dbMatrix info
-            con = x[][[1]]$con  # TODO: use proper getter
-            tbl_name = x@name # TODO: use proper getter
+            con = get_con(x)
+            tbl_name = get_tblName(x)
 
             # create mapping of dim indices and dimnames
             map_i = data.frame(i = seq_along(rownames(x)),
@@ -135,7 +134,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
                                  temporary = TRUE)
             map_temp <- dplyr::tbl(con, "map_temp_ij_i")
 
-            x[] <- x[] |>
+            x@value <- x@value |>
               dplyr::filter(j %in% !!map_j$j) |>
               dplyr::inner_join(map_temp, by = c("j" = "j")) |>
               dplyr::select(i, j = new_j, x)
@@ -150,7 +149,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
 
             map_temp <- dplyr::tbl(con, "map_temp_ij_j")
 
-            x[] <- x[] |>
+            x@value <- x@value |>
               dplyr::filter(i %in% !!map_i$i) |>
               dplyr::inner_join(map_temp, by = c("i" = "i")) |>
               dplyr::select(i=new_i, j , x)
