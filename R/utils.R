@@ -142,17 +142,24 @@ as_matrix <- function(x){
     stop("Invalid input. Only dbMatrix is currently supported.")
   }
 
-  check_class = class(x)
+  check_class <- class(x)
+  dims <- dim(x)
+  dim_names <- dimnames(x)
 
-  # Get dbMatrix in triplet vector format (TSparseMatrix)
-  df = x@value |> as.data.frame()
+  # convert db table into in-memory dt
+  if (dims[1] > 1e5 || dims[2] > 1e5){
+    cli::cli_alert_warning(
+    "Warning: Converting large dbMatrix to in-memory Matrix.")
+  }
 
-  dims = dim(x)
-  dim_names = dimnames(x)
+  dt <- data.table::CJ(i = 1:dims[1], j = 1:dims[2], x= 0)
+  dt2 <- data.table::as.data.table(x@value)
+  dt[dt2, on = .(i, j), x := i.x]
 
   # Create mat
   # Note: casting to sparseMatrix automatically converts to 0-based indexing
-  mat = Matrix::sparseMatrix(i = df$i , j = df$j , x = df$x)
+  mat <- Matrix::sparseMatrix(i = dt$i , j = dt$j , x = dt$x)
+  mat <- Matrix::drop0(mat)
   dimnames(mat) = dim_names
   dim(mat) = dims
 
