@@ -43,7 +43,7 @@ dbMatrix(
 
 \item{overwrite}{whether to overwrite if table already exists in database \code{(required)}}
 
-\item{name}{table name to assign within database \code{(optional, default: "dbMatrix")}}
+\item{name}{table name to assign within database \code{(required, default: "dbMatrix")}}
 
 \item{dims}{dimensions of the matrix \code{(optional: [int, int])}}
 
