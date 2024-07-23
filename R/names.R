@@ -18,7 +18,7 @@ setMethod('names<-', signature(x = 'dbDataFrame', value = 'dbIndex'), function(x
 # rownames ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('rownames', signature(x = 'dbData'), function(x) {
+setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
   rownames(x@value)
 })
 
@@ -41,7 +41,7 @@ setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
 # colnames ####
 #' @rdname hidden_aliases
 #' @export
-setMethod('colnames', signature(x = 'dbData'), function(x) {
+setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
   colnames(x@value)
 })
 
