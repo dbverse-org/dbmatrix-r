@@ -58,20 +58,6 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 
   dbm[] = eval(str2lang(build_call))
 
-  # } else { # if on disk use faster duckdb cli
-  #   # close pool connection
-  #   DBI::dbDisconnect(conn, shutdown = TRUE)
-  #
-  #   # construct query
-  #   query <- paste0("UPDATE ", remote_name ," SET x = x ", generic_char, " ", num_vect, ";")
-  #
-  #   # send query to duckdb cli for faster processing
-  #   system(paste("duckdb", db_path, shQuote(query)))
-  # }
-
-  # return to pool connector
-  # cPool(dbm) = p
-
   # show
   return(dbm)
 }
@@ -245,8 +231,7 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # calc rowsum for nonzero values in ijx
@@ -314,8 +299,7 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # calc colsum for nonzero values in ijx
@@ -360,8 +344,7 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             val_names = rownames(x)
@@ -385,8 +368,7 @@ setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # get non-zero row idx (factors) and convert to integers
@@ -414,18 +396,20 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('colMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             val_names = colnames(x)
+
             vals = x[] |>
               dplyr::group_by(j) |>
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
               dplyr::arrange(j) |>
               dplyr::collapse() |>
               dplyr::pull(mean_x)
+
             names(vals) = val_names
+
             vals
           })
 
@@ -433,8 +417,7 @@ setMethod('colMeans', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('colMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # get non-zero column idx (factors) and convert to integers
@@ -463,8 +446,7 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -483,8 +465,7 @@ setMethod('colSds', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('colSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -511,8 +492,7 @@ setMethod('colSds', signature(x = 'dbSparseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -531,8 +511,7 @@ setMethod('rowSds', signature(x = 'dbDenseMatrix'),
 #' @rdname hidden_aliases
 #' @export
 setMethod('rowSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -626,7 +605,7 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   # x = reconnect(x)
 
   if (is.na(x@dims[1L])) {
-    conn = pool::localCheckout(cPool(x))
+    conn = get_con(x)
     res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT i from %s',
                                                remoteName(x)))
   } else {
@@ -653,7 +632,7 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   # x = reconnect(x)
 
   if (is.na(x@dims[2L])) {
-    conn = pool::localCheckout(cPool(x))
+    conn = get_con(x)
     res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT j from %s',
                                                remoteName(x)))
   } else {
@@ -742,7 +721,7 @@ setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
 #' @param ... additional params to pass
 #' @export
 setMethod('colTypes', signature(x = 'dbData'), function(x, ...) {
-  vapply(data.table::as.data.table(head(x[], 1L)), typeof, character(1L))
+  vapply(data.table::as.data.table(head(slot(x, "value"), 1L)), typeof, character(1L))
 })
 
 ## castNumeric ####

@@ -4,7 +4,8 @@ sim_duckdb = function(value = datasets::iris,
                       name = 'test',
                       con = NULL,
                       memory = TRUE) {
-  # setup in-memory db if no pool connection provided
+
+  # setup in-memory db
   if(is.null(con)) {
     if(memory){
       drv = duckdb::duckdb(dbdir = ':memory:')
