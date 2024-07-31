@@ -243,9 +243,9 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
             # get row_idx for non-zero values in ijx
             nonzero_row_indices = x[] |>
+              dplyr::distinct(i) |>
               dplyr::arrange(i) |>
-              dplyr::pull(i) |>
-              unique()
+              dplyr::pull(i)
 
             # format data for join operation
             nonzero_rownames = rownames(x)[nonzero_row_indices]
@@ -311,9 +311,9 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
 
             # get col_idx for non-zero values in ijx
             nonzero_col_indices = x[] |>
+              dplyr::distinct(j) |>
               dplyr::arrange(j) |>
-              dplyr::pull(j) |>
-              unique()
+              dplyr::pull(j)
 
             # format data for join operation
             nonzero_colnames = colnames(x)[nonzero_col_indices]
@@ -373,9 +373,9 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
 
             # get non-zero row idx (factors) and convert to integers
             row_indices = x[] |>
+              dplyr::distinct(i) |>
               dplyr::arrange(i) |>
               dplyr::pull(i) |>
-              unique() |>
               as.integer()
 
             # get non-zero row names by row idx
@@ -422,11 +422,10 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
 
             # get non-zero column idx (factors) and convert to integers
             col_indices = x[] |>
+              dplyr::distinct(j) |>
               dplyr::arrange(j) |>
               dplyr::pull(j) |>
-              unique() |>
-              as.integer() |>
-              sort()
+              as.integer()
 
             # get non-zero column names by column idx
             val_names = factor(colnames(x)[col_indices])
