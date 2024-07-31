@@ -27,7 +27,9 @@ Imports:
     glue,
     bit64,
     crayon,
-    cli
+    cli,
+    R.utils,
+    checkmate
 Suggests: 
     knitr,
     rmarkdown,
