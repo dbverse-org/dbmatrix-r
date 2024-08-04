@@ -614,14 +614,6 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
-#' @title nrow
-#' @rdname hidden_aliases
-#' @export
-setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  dim(x)[1L]
-})
-
 ### ncol ####
 
 #' @title ncol
@@ -639,22 +631,6 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   }
 
   return(base::nrow(res))
-})
-
-#' @title ncol
-#' @rdname hidden_aliases
-#' @export
-setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  ncol(x@data)
-})
-
-#' @title ncol
-#' @rdname hidden_aliases
-#' @export
-setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  ncol(x@data)
 })
 
 ### dim ####
@@ -682,13 +658,6 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
-#' @title head
-#' @export
-setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
-  x[] = x[] %in% head(x, n = n)
-  return(x)
-})
-
 ### tail ####
 #' @title tail
 #' @export
@@ -696,13 +665,6 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset = (x@dims[1L] - n):x@dims[1L]
   x[] = x[] |> dplyr::filter(i %in% n_subset)
   x@dims[1L] = min(x@dims[1L], as.integer(n))
-  return(x)
-})
-
-#' @title tail
-#' @export
-setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
-  x[] = x[] %in% tail(x, n = n)
   return(x)
 })
 

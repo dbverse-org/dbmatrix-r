@@ -69,29 +69,6 @@ dbSparseMatrix = setClass(
   contains = "dbMatrix"
 )
 
-### dbDataFrame ####
-
-
-#' @title S4 dbDataFrame class
-#' @description
-#' Representation of dataframes using an on-disk database. Each object
-#' is used as a connection to a single table that exists within the database.
-#' @slot data dplyr tbl that represents the database data
-#' @slot hash unique hash ID for backend
-#' @slot remote_name name of table within database that contains the data
-#' @slot key column to set as key for ordering and subsetting on i
-#' @export
-dbDataFrame = setClass(
-  Class = 'dbDataFrame',
-  contains = 'dbData',
-  slots = list(
-    key = 'character'
-  ),
-  prototype = list(
-    key = NA_character_
-  )
-)
-
 ## dbIndex ####
 #' @title Virtual Class "dbIndex" - Simple Class for dbData indices
 #' @name dbIndex
@@ -104,27 +81,3 @@ dbDataFrame = setClass(
 #' @noRd
 setClassUnion(name = 'dbIndex',
               members = c('logical', 'numeric', 'integer', 'character'))
-
-#' @title Virtual Class "dbIndexNonChar" - Simple Class for dbData indices
-#' @name dbIndex
-#' @description
-#' This is a virtual class used for indices (in signatures) for indexing
-#' and sub-assignment of 'dbData' objects. Simple class union of 'logical' and
-#' 'numeric'.
-#' Based on the 'index' class implemented in \pkg{Matrix}
-#' @keywords internal
-#' @noRd
-setClassUnion(name = 'dbIndexNonChar',
-              members = c('logical', 'numeric'))
-
-## dbMF ####
-#' @title Virtual Class "dbMFData" - Simple class for dbMatrix and dbDF
-#' @name dbMFData
-#' @description
-#' This is a virtual class used to refer to dbMatrix and dbDataFrame objects as
-#' a single signature.
-#' @keywords internal
-#' @noRd
-setClassUnion(name = 'dbMFData',
-              members = c('dbMatrix', 'dbDataFrame'))
-

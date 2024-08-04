@@ -6,22 +6,12 @@
 \alias{[,dbMatrix,dbIndex,missing,missing-method}
 \alias{[,dbMatrix,missing,dbIndex,missing-method}
 \alias{[,dbMatrix,dbIndex,dbIndex,missing-method}
-\alias{[,dbDataFrame,dbIndex,missing,ANY-method}
-\alias{[,dbDataFrame,missing,dbIndex,ANY-method}
-\alias{[,dbDataFrame,dbIndex,dbIndex,ANY-method}
-\alias{[,dbDataFrame,missing,missing,missing-method}
-\alias{[<-,dbDataFrame,missing,missing,ANY-method}
-\alias{names,dbDataFrame-method}
-\alias{names<-,dbDataFrame,dbIndex-method}
 \alias{rownames,dbMatrix-method}
 \alias{rownames<-,dbMatrix-method}
 \alias{colnames,dbMatrix-method}
 \alias{colnames<-,dbMatrix,ANY-method}
-\alias{colnames<-,dbDataFrame,dbIndex-method}
 \alias{dimnames,dbMatrix-method}
 \alias{dimnames<-,dbMatrix,list-method}
-\alias{dimnames,dbDataFrame-method}
-\alias{dimnames<-,dbDataFrame,list-method}
 \alias{Arith,dbMatrix,ANY-method}
 \alias{Arith,ANY,dbMatrix-method}
 \alias{Arith,dbMatrix,dbMatrix-method}
@@ -44,9 +34,7 @@
 \alias{mean,dbSparseMatrix-method}
 \alias{log,dbMatrix-method}
 \alias{t,dbMatrix-method}
-\alias{nrow,dbDataFrame-method}
 \alias{ncol,dbMatrix-method}
-\alias{ncol,dbDataFrame-method}
 \alias{dim,dbMatrix-method}
 \title{rowSums}
 \usage{
@@ -60,20 +48,6 @@
 
 \S4method{[}{dbMatrix,dbIndex,dbIndex,missing}(x, i, j, ..., drop = TRUE)
 
-\S4method{[}{dbDataFrame,dbIndex,missing,ANY}(x, i, j, ..., drop = TRUE)
-
-\S4method{[}{dbDataFrame,missing,dbIndex,ANY}(x, i, j, ..., drop = TRUE)
-
-\S4method{[}{dbDataFrame,dbIndex,dbIndex,ANY}(x, i, j, ..., drop = FALSE)
-
-\S4method{[}{dbDataFrame,missing,missing,missing}(x, i, j)
-
-\S4method{[}{dbDataFrame,missing,missing,ANY}(x, i, j) <- value
-
-\S4method{names}{dbDataFrame}(x)
-
-\S4method{names}{dbDataFrame,dbIndex}(x) <- value
-
 \S4method{rownames}{dbMatrix}(x)
 
 \S4method{rownames}{dbMatrix}(x)
@@ -86,15 +60,9 @@
 
 \S4method{colnames}{dbMatrix,ANY}(x) <- value
 
-\S4method{colnames}{dbDataFrame,dbIndex}(x) <- value
-
 \S4method{dimnames}{dbMatrix}(x)
 
 \S4method{dimnames}{dbMatrix,list}(x) <- value
-
-\S4method{dimnames}{dbDataFrame}(x)
-
-\S4method{dimnames}{dbDataFrame,list}(x) <- value
 
 \S4method{Arith}{dbMatrix,ANY}(e1, e2)
 
@@ -140,13 +108,7 @@
 
 \S4method{t}{dbMatrix}(x)
 
-\S4method{nrow}{dbDataFrame}(x)
-
 \S4method{ncol}{dbMatrix}(x)
-
-\S4method{ncol}{dbDataFrame}(x)
-
-\S4method{ncol}{dbDataFrame}(x)
 
 \S4method{dim}{dbMatrix}(x)
 }
@@ -182,12 +144,6 @@ mean
 log
 
 Transpose
-
-nrow
-
-ncol
-
-ncol
 
 ncol
 

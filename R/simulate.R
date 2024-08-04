@@ -139,20 +139,6 @@ sim_ijx_matrix = function(mat_type = NULL,
   return(ijx)
 }
 
-#' @describeIn simulate_objects Simulate a dbDataFrame in memory
-#' @export
-sim_dbDataFrame = function(value = NULL, name = 'df_test', key = NA_character_) {
-  if(is.null(data)) {
-    data = sim_duckdb(name = name)
-  }
-  if(!inherits(data, 'tbl_sql')) {
-    checkmate::assert_class(data, 'data.frame')
-    data = sim_duckdb(data = data, name = name)
-  }
-  dbDataFrame(data = data, remote_name = name, hash = 'ID_dummy',
-              init = TRUE, key = key)
-}
-
 #' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
 #' @description  Simulate a dbSparseMatrix in memory
 #' @export
