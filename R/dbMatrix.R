@@ -366,7 +366,6 @@ dbMatrix <- function(value,
                      mtx_colname_file_path,
                      mtx_colname_col_idx = 1,
                      ...) {
-
   # check inputs
   .check_value(value)
   .check_con(con)
@@ -820,6 +819,89 @@ to_ijx_disk <- function(con, name){
   res <- dplyr::tbl(con, name)
 
   return(res)
+}
+
+#' as_matrix
+#'
+#' @param x dbSparseMatrix
+#' @details
+#' this is a helper function to convert dbMatrix to dgCMatrix or matrix
+#' Warning: this fn can lead memory issue if the dbMatrix is large
+#'
+#'
+#' @return dgCMatrix or matrix
+#' @noRd
+as_matrix <- function(x){
+  # check that x is a dbSparseMatrix
+  if(!inherits(x = x, what = "dbSparseMatrix")){
+    stop("Invalid input. Only dbSparseMatrix is currently supported.")
+  }
+  con <- dbplyr::remote_con(x[])
+  .check_con(con)
+  dims <- dim(x)
+  n_rows <- dims[1]
+  n_cols <- dims[2]
+  dim_names <- dimnames(x)
+
+  # convert db table into in-memory dt
+  if (dims[1] > 1e5 || dims[2] > 1e5){
+    cli::cli_alert_warning(
+      "Warning: Converting large dbMatrix to in-memory Matrix.")
+  }
+
+  max_i <- x[] |> dplyr::summarise(max_i = max(i)) |> dplyr::pull(max_i)
+  max_j <- x[] |> dplyr::summarise(max_j = max(j)) |> dplyr::pull(max_j)
+
+  temp_file <- tempfile(tmpdir = getwd(), fileext = ".parquet")
+
+  if (max_i == n_rows & max_j == n_cols){
+    x[] |> arrow::to_arrow() |> arrow::write_parquet(temp_file)
+  } else {
+    # Generate i and j vectors from scratch
+    sql_i <- glue::glue("SELECT i FROM generate_series(1, {n_rows}) AS t(i)")
+    sequence_i <- dplyr::tbl(con, dplyr::sql(sql_i))
+
+    sql_j <- glue::glue("SELECT j FROM generate_series(1, {n_cols}) AS t(j)")
+    sequence_j <- dplyr::tbl(con, dplyr::sql(sql_j))
+
+    key <- sequence_i |>
+      dplyr::cross_join(sequence_j) |>
+      dplyr::mutate(x = 0)
+
+    key |>
+      dplyr::left_join(x[], by = c("i", "j"), suffix = c("", ".dgc")) |>
+      dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
+      dplyr::select(-x.dgc) |>
+      arrow::to_arrow() |>
+      arrow::write_parquet(temp_file)
+  }
+
+  # Create mat
+  dt <- arrow::read_parquet(temp_file)
+  mat <- Matrix::sparseMatrix(i = dt$i , j = dt$j , x = dt$x, index1 = TRUE)
+  mat <- Matrix::drop0(mat)
+  dimnames(mat) = dim_names
+  dim(mat) = dims
+  unlink(temp_file)
+
+  return(mat)
+}
+
+#' @title as_ijx
+#' @param x dgCMatrix or matrix
+#' @noRd
+as_ijx <- function(x){
+  # check that x is a dgCMatrix or matrix
+  stopifnot(is(x, "dgCMatrix") || is(x, "matrix"))
+
+  # Convert dgc into TsparseMatrix class from {Matrix}
+  ijx <- as(x, "TsparseMatrix")
+
+  # Get dbMatrix in triplet vector format (TSparseMatrix)
+  # Convert to 1-based indexing
+  df = data.frame(i = ijx@i + 1, j = ijx@j + 1, x = ijx@x)
+
+  return(df)
 }
 
 #' dbMatrix_from_tbl
@@ -1308,7 +1390,7 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
 }
 
 # dimnames ####
-#' Create database table with ijx and dimnames
+#' Map dimnames to i,j indices
 #' @details
 #' Constructs a table in a database that contains the accompanying dimnames
 #' for a dbMatrix. The resulting columns in the table:
@@ -1318,29 +1400,19 @@ save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
 #' * j_names (colnames)
 #' * x (counts of i,j occcurences)
 #' @param dbMatrix dbMatrix object
-#' @param name name of table to add to database
 #' @param colName_i name of column rownames to add to database
 #' @param colName_j name of column colnames to add to database
-#' @param overwrite whether to overwrite if table already exists in database
 #' default: 'FALSE'.'
 #' @keywords internal
-make_ijx_dimnames <- function(dbMatrix,
-                              name,
-                              overwrite = FALSE,
-                              colName_i,
-                              colName_j) {
+map_ijx_dimnames <- function(dbMatrix,
+                             colName_i,
+                             colName_j) {
   # input validation
-  .check_name(name)
   .check_name(colName_i)
   .check_name(colName_j)
   con <- get_con(dbMatrix)
   .check_con(con)
-  .check_overwrite(
-    conn = con,
-    overwrite = overwrite,
-    name = name,
-    skip_value_check = TRUE
-  )
+
   dimnames <- dimnames(dbMatrix)
 
   # map dimnames to indices in-memory
@@ -1367,9 +1439,6 @@ make_ijx_dimnames <- function(dbMatrix,
                   j,
                   !!colName_j := colName_j, # !! to unquote
                   x)
-
-  # DBI::dbExecute(con, glue::glue("DROP VIEW IF EXISTS temp_rownames"))
-  # DBI::dbExecute(con, glue::glue("DROP VIEW IF EXISTS temp_colnames"))
 
   return(res)
 

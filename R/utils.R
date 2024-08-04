@@ -30,9 +30,9 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
   cat(..., sep = sep) |>
     capture.output() |>
-    strwrap(., prefix =  ' ', initial = '', # indent later lines, no indent first line
+    strwrap(prefix =  ' ', initial = '', # indent later lines, no indent first line
             width = min(80, getOption("width"), strWidth)) |>
-    paste(., collapse = '\n')
+    paste(collapse = '\n')
 }
 
 
@@ -124,65 +124,3 @@ setMethod('dbListTables', signature(x = 'dbMatrix'),
             con <- get_con(x)
             DBI::dbListTables(conn = con)
           })
-
-# Converters ####
-#' as_matrix
-#'
-#' @param x dbSparseMatrix
-#' @details
-#' this is a helper function to convert dbMatrix to dgCMatrix or matrix
-#' Warning: this fn can lead memory issue if the dbMatrix is large
-#'
-#'
-#' @return dgCMatrix or matrix
-#' @noRd
-as_matrix <- function(x){
-  # check that x is a dbSparseMatrix
-  if(!inherits(x = x, what = "dbMatrix")){
-    stop("Invalid input. Only dbMatrix is currently supported.")
-  }
-
-  check_class <- class(x)
-  dims <- dim(x)
-  dim_names <- dimnames(x)
-
-  # convert db table into in-memory dt
-  if (dims[1] > 1e5 || dims[2] > 1e5){
-    cli::cli_alert_warning(
-    "Warning: Converting large dbMatrix to in-memory Matrix.")
-  }
-
-  dt <- data.table::CJ(i = 1:dims[1], j = 1:dims[2], x= 0)
-  dt2 <- data.table::as.data.table(x@value)
-  dt[dt2, on = .(i, j), x := i.x]
-
-  # Create mat
-  # Note: casting to sparseMatrix automatically converts to 0-based indexing
-  mat <- Matrix::sparseMatrix(i = dt$i , j = dt$j , x = dt$x)
-  mat <- Matrix::drop0(mat)
-  dimnames(mat) = dim_names
-  dim(mat) = dims
-
-  if(check_class == "dbSparseMatrix"){
-    return(mat)
-  } else {
-    return(as.matrix(mat))
-  }
-}
-
-#' @title as_ijx
-#' @param x dgCMatrix or matrix
-#' @noRd
-as_ijx <- function(x){
-  # check that x is a dgCMatrix or matrix
-  stopifnot(is(x, "dgCMatrix") || is(x, "matrix"))
-
-  # Convert dgc into TsparseMatrix class from {Matrix}
-  ijx <- as(x, "TsparseMatrix")
-
-  # Get dbMatrix in triplet vector format (TSparseMatrix)
-  # Convert to 1-based indexing
-  df = data.frame(i = ijx@i + 1, j = ijx@j + 1, x = ijx@x)
-
-  return(df)
-}
