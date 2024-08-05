@@ -36,9 +36,9 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 
   # handle dimnames
   r_names = rownames(dbm)
-  if (is.factor(r_names)) {
-    r_names = 1:length(r_names)
-  }
+  # if (is.factor(r_names)) {
+  #   r_names = 1:length(r_names)
+  # }
 
   # perform matching of vect by rownames on dbm
   vect_tbl = dplyr::tibble(i = match(names(num_vect), r_names),
