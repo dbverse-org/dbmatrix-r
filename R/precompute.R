@@ -39,7 +39,7 @@ precompute <- function(conn, m, n, name){
   }
   .check_name(name = name)
 
-  if(!(is.numeric(m) | is.integer(m)) | !(is.numeric(n) | is.integer(n))){
+  if(!(is.numeric(m)) || !(is.numeric(n))){
     stop("m and n must be integers or numerics")
   }
 
