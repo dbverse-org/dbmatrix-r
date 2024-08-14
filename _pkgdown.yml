@@ -3,6 +3,17 @@ template:
   bootstrap: 5
   light-switch: true
 
+navbar:
+  structure:
+    left:  [intro, reference, articles, tutorials, news]
+    right: [search, github, lightswitch]
+
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/drieslab/dbMatrix
+      aria-label: GitHub
+
 reference:
   - title: "dbMatrix objects"
     desc: "Functions for `dbMatrix` objects"

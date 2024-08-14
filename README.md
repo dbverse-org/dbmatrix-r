@@ -18,6 +18,10 @@ status](https://www.r-pkg.org/badges/version/dbMatrix)](https://CRAN.R-project.o
 The goal of `{dbMatrix}` is to support larger-than-memory matrix
 computations.
 
+**Note: Work in progress! Bugs or unexpected behavior are likely to
+occur. We welcome user feedback and reporting issues on the [Github
+page](https://github.com/drieslab/dbMatrix/). **
+
 ## Installation
 
 You can install the development version of dbMatrix from Github like so:
