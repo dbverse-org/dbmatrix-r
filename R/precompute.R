@@ -4,6 +4,7 @@
 #' @param m number of rows of precomputed dbMatrix table
 #' @param n number of columns of precomputed dbMatrix table
 #' @param name name of the precomputed dbMatrix table to be created
+#' @param verbose logical, print progress messages. default: TRUE.
 #' @description
 #' Precomputes a dbMatrix table in a specificied database connection.
 #' This can speed up operations that involve breaking
@@ -21,22 +22,18 @@
 #' \code{n_rows} and \code{num_cols}, or to manually remove the precomputed
 #' table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 #'
-#' @return NULL
-#' @export
-#'
+#' @return tbl_dbi
+#' @keywords internal
+#' @concept dbMatrix
 #' @examples
 #' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' precompute(con = con , m = 100, n = 100, name = "precomputed_table")
-precompute <- function(conn, m, n, name){
+precompute <- function(conn, m, n, name, verbose = TRUE){
+  # create a random sufix with precomp_ as suffix if name is NULL using
+  # dbplyr internal random name generator
+
   # input validation
   .check_con(conn = conn)
-  if(name %in% DBI::dbListTables(conn)){
-    options(dbMatrix.precomp = name)
-    str <- glue::glue("Precomputed dbMatrix '{name}' with
-                    {m} rows and {n} columns")
-    cat(str, "\n")
-    return()
-  }
   .check_name(name = name)
 
   if(!(is.numeric(m)) || !(is.numeric(n))){
@@ -61,7 +58,11 @@ precompute <- function(conn, m, n, name){
   # set global variable for precomputed matrix
   options(dbMatrix.precomp = name)
 
-  str <- glue::glue("Precomputed dbMatrix '{name}' with
+  if(verbose){
+    str <- glue::glue("Precomputed tbl '{name}' with
                     {n_rows} rows and {n_cols} columns")
-  cat(str, "\n")
+    cat(str, "\n")
+  }
+
+  return(key)
 }
