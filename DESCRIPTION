@@ -15,9 +15,10 @@ URL: https://dbverse-org.github.io/dbmatrix-r/
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.3.2
 Depends:
-    R (>= 4.1.0),
-    MatrixGenerics (>= 1.12.3)
+    R (>= 4.1.0)
 Imports:
+    MatrixGenerics (>= 1.12.3),
+    methods,
     Matrix,
     DBI,
     dplyr,
