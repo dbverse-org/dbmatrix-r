@@ -2,8 +2,9 @@
 ## Empty ####
 ### Extract [] ####
 #' @rdname hidden_aliases
+#' @concept dbMatrix
 #' @export
-setMethod('[', signature(x = 'dbData', i = 'missing', j = 'missing', drop = 'missing'),
+setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing', drop = 'missing'),
           function(x, i, j) {
             x@value
           })
@@ -11,8 +12,9 @@ setMethod('[', signature(x = 'dbData', i = 'missing', j = 'missing', drop = 'mis
 ### Set [] ####
 # no initialize to prevent slowdown
 #' @rdname hidden_aliases
+#' @concept dbMatrix
 #' @export
-setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = 'ANY'),
+setMethod('[<-', signature(x = 'dbMatrix', i = 'missing', j = 'missing', value = 'ANY'),
           function(x, i, j, value) {
             x@value = value
             x
@@ -21,101 +23,136 @@ setMethod('[<-', signature(x = 'dbData', i = 'missing', j = 'missing', value = '
 # dbMatrix ####
 ## rows only ####
 #' @rdname hidden_aliases
+#' @concept dbMatrix
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing', drop = 'missing'),
+setMethod('[',
+          signature(
+            x = 'dbMatrix',
+            i = 'dbIndex',
+            j = 'missing',
+            drop = 'missing'
+          ),
           function(x, i, ...) {
             # get dbMatrix info
             con = get_con(x)
-            tbl_name = get_tblName(x)
+            dim = dim(x)
+
+            # check inputs
+            .check_extract(x = x, i = i, j = NULL, dim = dim)
 
             # create mapping of filtered rownames to row index
-            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
             map = data.frame(i = seq_along(rownames(x)), rowname = rownames(x))
-            filter_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
+            filter_i = get_dbM_sub_idx(index = i,
+                                       dbM_dimnames = x@dim_names, dims = 1)
             map = map |>
               dplyr::filter(rowname %in% filter_i) |>
               dplyr::mutate(new_i = seq_along(filter_i)) # reset index
 
             # send map to db for subsetting
-            # TODO: implement unique naming of temp tables
-            map_temp <- dplyr::copy_to(dest = con,
-                                       df = map,
-                                       name = 'map_temp_i',
-                                       overwrite = TRUE,
-                                       temporary = TRUE)
+            name = unique_table_name('temp_i')
+
+            # FIXME: workaround for lack of support for writing
+            # tables to a custom schema that is invisible to the user
+            # i.e. not present in DBI::dbListTables(con)
+            #
+            # To see the tables in the arrow schema,
+            # use duckdb::duckdb_list_arrow(conn = con)
+            map_temp <- arrow::to_duckdb(
+              .data = map, # converts to arrow-compliant object
+              con = con,
+              table_name = name,
+              auto_disconnect = TRUE # remove tbl when gc
+            )
 
             # subset dbMatrix
-            x@value <- x@value |>
+            x[] <- x[] |>
               dplyr::filter(i %in% !!map$i) |>
               dplyr::inner_join(map_temp, by = c("i" = "i")) |>
               dplyr::select(i = new_i, j, x)
 
             # update dbMatrix attributes
             x@dim_names[[1L]] = filter_i
-            x@dims[1L] <- ifelse(is.logical(i), sum(i), length(i))
+            x@dims[1L] <- length(filter_i)
 
             return(x)
           })
 
 ## cols only ####
 #' @rdname hidden_aliases
+#' @concept dbMatrix
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex', drop = 'missing'),
+setMethod('[',
+          signature(
+            x = 'dbMatrix',
+            i = 'missing',
+            j = 'dbIndex',
+            drop = 'missing'
+          ),
           function(x, j, ...) {
             # get dbMatrix info
-            con = get_con(x)
-            tbl_name = get_tblName(x)
+            con <- get_con(x)
+            dim = dim(x)
+
+            # check for dims
+            .check_extract(x = x, i = NULL, j = j, dim = dim)
 
             # create mapping of filtered colnames to col index
-            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
-            map = data.frame(j = seq_along(colnames(x)), colname = colnames(x))
-            filter_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
-            map = map |>
+            map <- data.frame(j = seq_along(colnames(x)), colname = colnames(x))
+            filter_j <- get_dbM_sub_idx(index = j,
+                                       dbM_dimnames = x@dim_names, dims = 2)
+            map <- map |>
               dplyr::filter(colname %in% filter_j) |>
               dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
             # send map to db for subsetting
-            # TODO: implement unique table name
-            duckdb::dbWriteTable(conn = con,
-                                 name = 'map_temp_j',
-                                 overwrite = TRUE,
-                                 value = map,
-                                 temporary = TRUE)
-            map_temp <- dplyr::tbl(con, "map_temp_j")
+            name <- unique_table_name('temp_j')
 
-            # subset dbMatrix
-            x@value <- x@value |>
+            # FIXME:
+            map_temp <- arrow::to_duckdb(
+              .data = map, # converts to arrow-compliant object
+              con = con,
+              table_name = name,
+              auto_disconnect = TRUE # remove tbl when gc
+            )
+
+            # Subset with arrow virtual table
+            x[] <- x[] |>
               dplyr::filter(j %in% !!map$j) |>
               dplyr::inner_join(map_temp, by = c("j" = "j")) |>
               dplyr::select(i, j = new_j, x)
 
-            # update dbMatrix attributes
-            x@dim_names[[2L]] = filter_j
-            x@dims[2L] <- ifelse(is.logical(j), sum(j), length(j))
+            # Update dbMatrix attributes
+            x@dim_names[[2L]] <- filter_j
+            x@dims[2L] <- length(filter_j)
 
             return(x)
           })
 
 ## rows and cols ####
 #' @rdname hidden_aliases
+#' @concept dbMatrix
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
           function(x, i, j, ...) {
             # get dbMatrix info
             con = get_con(x)
-            tbl_name = get_tblName(x)
+            dim = dim(x)
+
+            # check for dims
+            .check_extract(x = x, i = i, j = j, dim = dim)
 
             # create mapping of dim indices and dimnames
             map_i = data.frame(i = seq_along(rownames(x)),
-                             rowname = rownames(x))
+                               rowname = rownames(x))
 
             map_j = data.frame(j = seq_along(colnames(x)),
                                colname = colnames(x))
 
             # subset map by filtered dimnames
-            # note: https://duckdb.org/docs/sql/statements/create_sequence.html
-            filter_i = get_dbM_sub_i(index = i, dbM_dimnames = x@dim_names)
-            filter_j = get_dbM_sub_j(index = j, dbM_dimnames = x@dim_names)
+            filter_i = get_dbM_sub_idx(index = i,
+                                       dbM_dimnames = x@dim_names, dims = 1)
+            filter_j = get_dbM_sub_idx(index = j,
+                                       dbM_dimnames = x@dim_names, dims = 2)
 
             map_i = map_i |>
               dplyr::filter(rowname %in% filter_i) |>
@@ -125,142 +162,103 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
               dplyr::filter(colname %in% filter_j) |>
               dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
-            # subset dbMatrix j
-            # TODO: implement unique table name
-            duckdb::dbWriteTable(conn = con,
-                                 name = 'map_temp_ij_i',
-                                 overwrite = TRUE,
-                                 value = map_j,
-                                 temporary = TRUE)
-            map_temp <- dplyr::tbl(con, "map_temp_ij_i")
+            name = unique_table_name('temp_map_ij_i')
+            map_temp_j <- arrow::to_duckdb(
+              .data = map_j, # converts to arrow-compliant object
+              con = con,
+              table_name = name,
+              auto_disconnect = TRUE # remove tbl when gc
+            )
 
-            x@value <- x@value |>
-              dplyr::filter(j %in% !!map_j$j) |>
-              dplyr::inner_join(map_temp, by = c("j" = "j")) |>
-              dplyr::select(i, j = new_j, x)
+            name = unique_table_name('temp_map_ij_j')
+            map_temp_i <- arrow::to_duckdb(
+              .data = map_i, # converts to arrow-compliant object
+              con = con,
+              table_name = name,
+              auto_disconnect = TRUE # remove tbl when gc
+            )
 
-            # subset dbMatrix i
-            # TODO: implement unique table name
-            duckdb::dbWriteTable(conn = con,
-                                 name = 'map_temp_ij_j',
-                                 overwrite = TRUE,
-                                 value = map_i,
-                                 temporary = TRUE)
-
-            map_temp <- dplyr::tbl(con, "map_temp_ij_j")
-
-            x@value <- x@value |>
-              dplyr::filter(i %in% !!map_i$i) |>
-              dplyr::inner_join(map_temp, by = c("i" = "i")) |>
-              dplyr::select(i=new_i, j , x)
+            x[] <- x[] |>
+              dplyr::filter(i %in% !!map_i$i, j %in% !!map_j$j) |>
+              dplyr::inner_join(map_temp_i, by = c("i" = "i")) |>
+              dplyr::inner_join(map_temp_j, by = c("j" = "j")) |>
+              dplyr::select(i = new_i, j = new_j, x)
 
             # update dbMatrix attributes
             x@dim_names[[1L]] = filter_i
             x@dim_names[[2L]] = filter_j
-            x@dims[1L] <- ifelse(is.logical(i), sum(i), length(i))
-            x@dims[2L] <- ifelse(is.logical(j), sum(j), length(j))
+            x@dims[1L] <- length(filter_i)
+            x@dims[2L] <- length(filter_j)
 
             return(x)
           })
-
+#' @description
+#' Internal function to index `dbMatrix` objects by `dbIndex` superclass.
+#' Can apply to both rows (dims = 1) and columns (dims = 2)
+#' @keywords internal
 #' @noRd
-get_dbM_sub_i = function(index, dbM_dimnames) {
-  if(is.character(index)) return(index)
-  i_names = dbM_dimnames[[1L]]
-  return(i_names[index])
+get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
+  # check that idx is 1 or 2
+  if(dims != 1 && dims != 2){
+    stop("dims must be 1 (rows) or 2 (columns)")
+  }
+  dims = as.integer(dims)
+
+  if(is.character(index)){
+    return(index)
+  }
+
+  if (is.logical(index)) {
+    index <- recycle_boolean_index(index, length(dbM_dimnames[[dims]]))
+  }
+
+  sub_names = dbM_dimnames[[dims]]
+  return(sub_names[index])
+}
+
+#' @details
+#' Recycles a logical index to the length of a vector. This is to emulate the
+#' strange behavior of what occurs in R when indexing matrices with a logical
+#' vector.
+#' Note:
+#' Recycle indexing behavior is unique to logic indexing, not numerical nor
+#' character indexing for matrices.
+#' @noRd
+#' @keywords internal
+recycle_boolean_index <- function(index, length) {
+  if (is.logical(index) && length(index) < length) {
+    recycled <- rep_len(index, length)
+    return(which(recycled))
+  }
+  return(index)
 }
 
 #' @noRd
-get_dbM_sub_j = function(index, dbM_dimnames) {
-  if(is.character(index)) return(index)
-  j_names = dbM_dimnames[[2L]]
-  return(j_names[index])
-}
-
-
-# dbDataFrame ####
-## rows only ####
-#' @rdname hidden_aliases
-#' @export
-setMethod(
-  '[', signature(x = 'dbDataFrame', i = 'dbIndex', j = 'missing', drop = 'ANY'),
-  function(x, i, ..., drop = FALSE) {
-    x = reconnect(x)
-    if(any(is.na(x@key))) stopf('Set dbDataFrame key with `keyCol()` to subset on \'i\'')
-
-    # numerics and logical
-    if(is.logical(i) | is.numeric(i)) {
-      if(is.logical(i)) i = which(i)
-      x@data = x@data |>
-        flex_window_order(x@key) |>
-        dplyr::mutate(.n = dplyr::row_number()) |>
-        dplyr::collapse() |>
-        dplyr::filter(.n %in% i) |>
-        dplyr::select(-.n) |>
-        dplyr::collapse()
-    } else { # character
-      x@data = x@data |>
-        flex_window_order(x@key) |>
-        dplyr::filter(!!as.name(x@key) %in% i) |>
-        dplyr::collapse()
+#' @keywords internal
+.check_extract <- function(x = x, i = NULL, j = NULL, dim){
+  if (!is.null(j)) {
+    if (is.numeric(j) & max(j) > dim[2]) {
+      stopf("Index exceeds column dimension of", dim[2])
     }
-    x
-  })
+    else if(is.character(j) & !all(j %in% colnames(x))) {
+      missing_cols <- j[!j %in% colnames(x)]
+      stopf("Column(s) not found in dbMatrix: \n", missing_cols)
+    }
+    else if (is.logical(j) & length(j) > dim[2]) {
+      stopf("Index exceeds column dimension of", dim[2])
+    }
+  }
+  if (!is.null(i)) {
+    if (is.numeric(i) & max(i) > dim[1]) {
+      stopf("Index exceeds row dimension of", dim[1])
+    }
+    else if(is.character(i) & !all(i %in% colnames(x))) {
+      missing_cols <- i[!i %in% rownames(x)]
+      stopf("Row(s) not found in dbMatrix: \n", missing_cols)
+    }
+    else if (is.logical(i) & length(i) > dim[1]) {
+      stopf("Index exceeds row dimension of", dim[1])
+    }
+  }
 
-## cols only ####
-#' @rdname hidden_aliases
-#' @export
-setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'dbIndex', drop = 'ANY'),
-          function(x, j, ..., drop = FALSE) {
-            x = reconnect(x)
-            checkmate::assert_logical(drop)
-
-            if(is.logical(j)) j = which(j)
-            x@data = x@data |> dplyr::select(dplyr::all_of(j))
-            x
-          })
-
-#' @rdname hidden_aliases
-#' @export
-setMethod('[', signature(x = 'dbDataFrame', i = 'dbIndex', j = 'dbIndex', drop = 'ANY'),
-          function(x, i, j, ..., drop = FALSE) {
-            x = reconnect(x)
-            x = x[i,]
-            x = x[, j]
-            x
-          })
-
-## Empty ####
-### Extract [] ####
-#' @rdname hidden_aliases
-#' @export
-setMethod('[', signature(x = 'dbDataFrame', i = 'missing', j = 'missing', drop = 'missing'),
-          function(x, i, j) {
-            x@data
-          })
-
-### Set [] ####
-# no initialize to prevent slowdown
-#' @rdname hidden_aliases
-#' @export
-setMethod('[<-', signature(x = 'dbDataFrame', i = 'missing', j = 'missing', value = 'ANY'),
-          function(x, i, j, value) {
-            x@data = value
-            x
-          })
-
-#'@ flex_window_order
-#'
-#'@param x dbplyr::tbl_lazy
-#'@param order_cols character vector of column names
-#'@description
-#'workaround for multiple dbplyr window column ordering
-#'
-#'
-#'@keywords internal
-flex_window_order = function(x, order_cols) {
-  keys = paste0('!!as.name("', order_cols, '")')
-  keys = paste0(keys, collapse = ', ')
-  call_str = paste0('x |> dbplyr::window_order(', keys, ')')
-  eval(str2lang(call_str))
 }

@@ -1,22 +1,25 @@
 url: https://drieslab.github.io/dbMatrix/
 template:
   bootstrap: 5
-navbar:
-  title: ~
-  type: inverse
-  left:
-  - text: Home
-    href: index.html
-  - text: Articles
-    menu:
-    - text: Overview
-      href: articles/overview.html
-    - text: Operations
-      href: articles/operations.html
-    - text: Arithmetic
-      href: articles/arithmetic.html
-  - text: Documentation
-    href: reference/index.html
-  - text: Changelog
-    href: news/index.html
+  light-switch: true
 
+reference:
+  - title: "dbMatrix objects"
+    desc: "Functions for `dbMatrix` objects"
+    contents:
+      - has_concept("dbMatrix")
+
+  - title: "Matrix Summary Statistics"
+    desc: "Functions/methods to compute summary statistics for `dbMatrix` objects"
+    contents:
+      - has_concept("summary")
+
+  - title: "Matrix Transformations"
+    desc: "Functions/methods for transforming `dbMatrix` objects"
+    contents:
+      - has_concept("transform")
+
+  - title: "Matrix Properties"
+    desc: "Functions/methods to get basic properties of `dbMatrix` objects"
+    contents:
+      - has_concept("matrix_props")

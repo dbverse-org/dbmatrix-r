@@ -5,7 +5,6 @@ NULL
 # Print Formatting ####
 
 #' @title Wrap message
-#' @name wrap_msg
 #' @param ... additional strings and/or elements to pass to wrap_txt
 #' @param sep how to join elements of string (default is one space)
 #' @keywords internal
@@ -15,7 +14,6 @@ wrap_msg = function(..., sep = ' ') {
 }
 
 #' @title Wrap text
-#' @name wrap_txt
 #' @param ... additional params to pass
 #' @param sep how to join elements of string (default is one space)
 #' @param strWidth externally set wrapping width. (default value of 100 is not effected)
@@ -30,16 +28,16 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
   cat(..., sep = sep) |>
     capture.output() |>
-    strwrap(., prefix =  ' ', initial = '', # indent later lines, no indent first line
+    strwrap(prefix =  ' ', initial = '', # indent later lines, no indent first line
             width = min(80, getOption("width"), strWidth)) |>
-    paste(., collapse = '\n')
+    paste(collapse = '\n')
 }
 
 
 
 # Custom stop function
 stopf = function(...) {
-  wrap_txt('dbMatrix:', ..., errWidth = TRUE) |>
+  wrap_txt('dbMatrix:\n', ..., errWidth = TRUE) |>
     stop(call. = FALSE)
 }
 
@@ -52,7 +50,6 @@ vector_to_string = function(x) {
 }
 
 #' @title Generate array for pretty printing of matrix values
-#' @name print_array
 #' @param i,j,x matched vectors of integers in i and j, with value in x
 #' @param dims dimensions of the array (integer vector of 2)
 #' @param fill fill character
@@ -105,77 +102,36 @@ ij_array_map = function(i, j, dims) {
 
 # DBI ####
 
-## dbDisconnect ####
-#' @title dbDisconnect
-#' @rdname DBI
-#' @export
-setMethod('dbDisconnect', signature(x = 'dbMatrix'),
-          function(x, ...){
-            con <- get_con(x)
-            DBI::dbDisconnect(conn = con, shutdown = TRUE)
-          })
-
-## dbListTables ####
-#' @title dbListTables
-#' @rdname DBI
-#' @export
-setMethod('dbListTables', signature(x = 'dbMatrix'),
-          function(x, ...){
-            con <- get_con(x)
-            DBI::dbListTables(conn = con)
-          })
-
-# Converters ####
-#' as_matrix
+#' ## dbDisconnect ####
+#' #' @title dbDisconnect
+#' #' @rdname DBI
+#' #' @export
+#' setMethod('dbDisconnect', signature(x = 'dbMatrix'),
+#'           function(x, ...){
+#'             con <- get_con(x)
+#'             DBI::dbDisconnect(conn = con, shutdown = TRUE)
+#'           })
 #'
-#' @param x dbSparseMatrix
+#' ## dbListTables ####
+#' #' @title dbListTables
+#' #' @rdname DBI
+#' #' @export
+#' setMethod('dbListTables', signature(x = 'dbMatrix'),
+#'           function(x, ...){
+#'             con <- get_con(x)
+#'             DBI::dbListTables(conn = con)
+#'           })
+
+# dbplyr ####
+
+#' Generate table names
 #' @details
-#' this is a helper function to convert dbMatrix to dgCMatrix or matrix
-#' Warning: this fn can lead memory issue if the dbMatrix is large
+#' based on dbplyr::unique_table_name
 #'
-#'
-#' @return dgCMatrix or matrix
 #' @noRd
-as_matrix <- function(x){
-  # check that x is a dbSparseMatrix
-  if(!inherits(x = x, what = "dbMatrix")){
-    stop("Invalid input. Only dbMatrix is currently supported.")
-  }
-
-  check_class = class(x)
-
-  # Get dbMatrix in triplet vector format (TSparseMatrix)
-  df = x@value |> as.data.frame()
-
-  dims = dim(x)
-  dim_names = dimnames(x)
-
-  # Create mat
-  # Note: casting to sparseMatrix automatically converts to 0-based indexing
-  mat = Matrix::sparseMatrix(i = df$i , j = df$j , x = df$x)
-  dimnames(mat) = dim_names
-  dim(mat) = dims
-
-  if(check_class == "dbSparseMatrix"){
-    return(mat)
-  } else {
-    return(as.matrix(mat))
-  }
-}
-
-#' @title as_ijx
-#' @param x dgCMatrix or matrix
-#' @noRd
-as_ijx <- function(x){
-  # check that x is a dgCMatrix or matrix
-  stopifnot(is(x, "dgCMatrix") || is(x, "matrix"))
-
-  # Convert dgc into TsparseMatrix class from {Matrix}
-  ijx <- as(x, "TsparseMatrix")
-
-  # Get dbMatrix in triplet vector format (TSparseMatrix)
-  # Convert to 1-based indexing
-  df = data.frame(i = ijx@i + 1, j = ijx@j + 1, x = ijx@x)
-
-  return(df)
+#' @keywords internal
+unique_table_name <- function(prefix = ""){
+  vals <- c(letters, LETTERS, 0:9)
+  name <- paste0(sample(vals, 10, replace = TRUE), collapse = "")
+  paste0(prefix, "_", name)
 }

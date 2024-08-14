@@ -75,11 +75,6 @@ dbsm * dbsm
 #### Matrix product
 TODO
 
-### Shutdown
-```{r}
-dbMatrix::dbDisconnect(dbsm, shutdown = TRUE)
-```
-
 ### Session Info
 ```{r}
 sessionInfo()

@@ -24,8 +24,8 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
   if (length(num_vect) > 1L)
     return(arith_call_dbm_vect_multi(dbm, num_vect, generic_char, ordered_args))
 
-  build_call =
-    paste0('dbm[] |> dplyr::mutate(x = `', generic_char, ordered_args)
+  build_call = paste0('dbm[] |> dplyr::mutate(x = `',
+                      generic_char, ordered_args)
 
   dbm[] = eval(str2lang(build_call))
   dbm
@@ -33,55 +33,75 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
 
 #' @noRd
 arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
+  dim = dim(dbm)
+  mat = .recycle_vector_to_matrix(num_vect, dim)
+  vect_tbl = as_ijx(mat)
 
-  # handle dimnames
-  r_names = rownames(dbm)
-  if (is.factor(r_names)) {
-    r_names = 1:length(r_names)
+  ordered_args <- if (ordered_args == '`(x, num_vect))') {
+    '`(x.x, x.y))'
+  } else {
+    '`(x.y, x.x))'
   }
 
-  # perform matching of vect by rownames on dbm
-  vect_tbl = dplyr::tibble(i = match(names(num_vect), r_names),
-                           num_vect = unname(num_vect[match(names(num_vect),
-                                                            r_names)]))
-
-  # run dplyr chain
-  build_call = paste0(
+  build_call <- glue::glue(
     'dbm[] |> ',
-    'dplyr::inner_join(vect_tbl, by = \'i\', copy = TRUE) |> ',
-    'dplyr::mutate(x = `',
-    generic_char,
-    ordered_args,
-    ' |> ',
-    'dplyr::select(i, j, x)'
+    'dplyr::full_join(vect_tbl, by = c("i", "j"), copy = TRUE) |> ',
+    'dplyr::mutate(',
+    'x.x = coalesce(x.x, 0), ',
+    'x.y = coalesce(x.y, 0), ',
+    'x = `', generic_char, ordered_args,' |> ',
+    'dplyr::select(i, j, x) |> ',
+    'dplyr::filter(x != 0)'
   )
 
-  dbm[] = eval(str2lang(build_call))
-
-  # } else { # if on disk use faster duckdb cli
-  #   # close pool connection
-  #   DBI::dbDisconnect(conn, shutdown = TRUE)
-  #
-  #   # construct query
-  #   query <- paste0("UPDATE ", remote_name ," SET x = x ", generic_char, " ", num_vect, ";")
-  #
-  #   # send query to duckdb cli for faster processing
-  #   system(paste("duckdb", db_path, shQuote(query)))
   # }
 
-  # return to pool connector
-  # cPool(dbm) = p
+  dbm[] = eval(str2lang(build_call))
 
   # show
   return(dbm)
 }
 
+#' @noRd
+.recycle_vector_to_matrix <- function(vec, dimensions) {
+  if (length(vec) == 0) {
+    return(matrix(0, nrow = dimensions[1], ncol = dimensions[2]))
+  }
+
+  # Recycle the vector to match the total number of elements in the matrix
+  recycled_vec <- rep(vec, length.out = prod(dimensions))
+
+  # Create the matrix column-wise
+  mat <- matrix(
+    recycled_vec,
+    nrow = dimensions[1],
+    ncol = dimensions[2],
+    byrow = FALSE  # This ensures column-wise filling
+  )
+
+  # Throw warning if length of vec is not a multiple of dimensions[2]
+  # if (length(vec) %% dimensions[2] != 0) {
+  #   warning('longer object length is not a multiple of shorter object length',
+  #           call. = FALSE)
+  # }
+
+  return(mat)
+}
+
 # Math Ops ####
 
 ## Arith: dbm_e2 ####
-#' @rdname hidden_aliases
+#' Arith dbMatrix, e2
+#' @description
+#' See ?\link{\code{methods::Arith}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
+  if (any(e2 == 0) && as.character(.Generic) %in% c('/', '^', '%%', '%/%')) {
+    stopf("Arith operations with '/', '^', '%%', '%/%' containing zero values are not yet supported for dbMatrix objects.")
+  }
+
   dbm = castNumeric(e1)
 
   num_vect = if(typeof(e2) != 'double'){
@@ -105,9 +125,17 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 })
 
 ## Arith: e1_dbm ####
-#' @rdname hidden_aliases
+#' Arith e1, dbMatrix
+#' @description
+#' See ?\link{\code{methods::Arith}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
-setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
+setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'),
+          function(e1, e2) {
+  if (any(e1 == 0) && as.character(.Generic) %in% c('/', '^', '%%', '%/%')) {
+    stopf("Arith operations with '/', '^', '%%', '%/%' containing zero values are not yet supported for dbMatrix objects.")
+  }
   dbm = castNumeric(e2)
 
   num_vect = if (typeof(e1) != 'double'){
@@ -117,7 +145,7 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
   }
 
   # Only densify if not 0 and if op is + or -
-  if (class(dbm) == 'dbSparseMatrix' && e1 != 0 && as.character(.Generic) %in% c('-', '+')) {
+  if (class(dbm) == 'dbSparseMatrix' && any(e1 != 0) && as.character(.Generic) %in% c('-', '+')) {
     dbm = toDbDense(dbm)
   }
 
@@ -130,76 +158,92 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
 })
 
 ## Arith: dbm_dbm ####
-#' @rdname hidden_aliases
+#' Arith dbMatrix, e2
+#' @description
+#' See ?\link{\code{methods::Arith}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
-setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
-{
-  if (!identical(e1@dims, e2@dims))
+setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'),
+          function(e1, e2){
+  if (!identical(e1@dims, e2@dims)) {
     stopf('non-conformable arrays')
+  }
+  generic_char = as.character(.Generic)
+
+  if(generic_char %in% c('-','/', '^', '%%', '%/%')){
+    stopf("Arith operations with '-', '/', '^', '%%', '%/%' are not yet supported between dbMatrix objects.")
+  }
 
   e1 = castNumeric(e1)
   e2 = castNumeric(e2)
 
-  build_call = str2lang(
-    paste0(
-      "e1[] |>
-      dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y'), copy = TRUE) |>
-      dplyr::mutate(x = `",
-      as.character(.Generic),
-      "`(x, x.y)) |>
-      dplyr::select(c('i', 'j', 'x'))"
-    )
+  build_call = glue::glue(
+    "e1[] |>
+     dplyr::left_join(e2[], by = c('i', 'j')) |>
+     dplyr::mutate(x = `{generic_char}`(x.x, x.y)) |>
+     dplyr::select(i, j, x)"
   )
-  e1[] = eval(build_call)
+  e1[] = eval(str2lang(build_call))
   e1
 })
 
 
 ## Ops: dbm_e2 ####
-#' @rdname hidden_aliases
+#' Ops dbMatrix, e2
+#' @description
+#' See ?\link{\code{methods::Ops}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
-  # e1 = reconnect(e1)
+  browser()
 
-  build_call = str2lang(paste0(
+  build_call = glue::glue(
     'e1[] |> dplyr::mutate(x = `',
     as.character(.Generic)
     ,
     '`(x, e2))'
-  ))
-  e1[] = eval(build_call)
+  )
+  e1[] = eval(str2lang(build_call))
   e1
 })
 
 ## Ops: e1_dbm ####
-#' @rdname hidden_aliases
+#' Ops e1, dbMatrix
+#' @description
+#' See ?\link{\code{methods::Ops}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 {
   # e2 = reconnect(e2)
 
-  build_call = str2lang(paste0(
+  build_call = glue::glue(
     'e2[] |> dplyr::mutate(x = `',
     as.character(.Generic)
     ,
     '`(e1, x))'
-  ))
-  e2[] = eval(build_call)
+  )
+  e2[] = eval(str2lang(build_call))
   e2
 })
 
 ## Ops: dbm_dbm ####
-#' @rdname hidden_aliases
+#' Ops dbMatrix, dbMatrix
+#' @description
+#' See ?\link{\code{methods::Ops}} for more details.
+#' @noRd
+#' @rdname summary
 #' @export
-setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
-{
+setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
   if (!identical(e1@dims, e2@dims)){
     stopf('non-conformable arrays')
   }
 
-  build_call = str2lang(
-    paste0(
+  build_call = glue::glue(
       "e1[] |>
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
     dplyr::mutate(x = `",
@@ -207,17 +251,17 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2)
       "`(x, x.y)) |>
     dplyr::select(c('i', 'j', 'x'))"
     )
-  )
-  e1[] = eval(build_call)
-  # print(e1[])
+  e1[] = eval(str2lang(build_call))
   e1
 })
 
 # Math Summary Ops ####
-## rowSums ####
-
-#' @title rowSums
-#' @rdname hidden_aliases
+## rowSums dbdm ####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::rowSums}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('rowSums', signature(x = 'dbDenseMatrix'),
           function(x, ...){
@@ -241,12 +285,15 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
           }
         )
 
-#' @title rowSums
-#' @rdname hidden_aliases
+## rowSums dbsm ####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::rowSums}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('rowSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # calc rowsum for nonzero values in ijx
@@ -258,9 +305,9 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
             # get row_idx for non-zero values in ijx
             nonzero_row_indices = x[] |>
+              dplyr::distinct(i) |>
               dplyr::arrange(i) |>
-              dplyr::pull(i) |>
-              unique()
+              dplyr::pull(i)
 
             # format data for join operation
             nonzero_rownames = rownames(x)[nonzero_row_indices]
@@ -284,10 +331,13 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
           })
 
-## colSums ####
+## colSums dbdm####
 
-#' @title colSums
-#' @rdname hidden_aliases
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::colSums}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('colSums', signature(x = 'dbDenseMatrix'),
           function(x, ...){
@@ -310,12 +360,15 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
             vals
           })
 
-#' @title colSums
-#' @rdname hidden_aliases
+## colSums dbsm ####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::colSums}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('colSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # calc colsum for nonzero values in ijx
@@ -327,9 +380,9 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
 
             # get col_idx for non-zero values in ijx
             nonzero_col_indices = x[] |>
+              dplyr::distinct(j) |>
               dplyr::arrange(j) |>
-              dplyr::pull(j) |>
-              unique()
+              dplyr::pull(j)
 
             # format data for join operation
             nonzero_colnames = colnames(x)[nonzero_col_indices]
@@ -352,16 +405,16 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
             res
           })
 
+## rowMeans dbdm ####
 
-
-## rowMeans ####
-
-#' @title rowMeans
-#' @rdname hidden_aliases
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::rowMeans}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             val_names = rownames(x)
@@ -381,19 +434,22 @@ setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
             vals
           })
 
-#' @title rowMeans
-#' @rdname hidden_aliases
+## rowMeans dbsm ####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::rowMeans}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # get non-zero row idx (factors) and convert to integers
             row_indices = x[] |>
+              dplyr::distinct(i) |>
               dplyr::arrange(i) |>
               dplyr::pull(i) |>
-              unique() |>
               as.integer()
 
             # get non-zero row names by row idx
@@ -408,42 +464,48 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
             vals
           })
 
-## colMeans ####
-
-#' @title colMeans
-#' @rdname hidden_aliases
+## colMeans dbdm####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::colMeans}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('colMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             val_names = colnames(x)
+
             vals = x[] |>
               dplyr::group_by(j) |>
               dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
               dplyr::arrange(j) |>
               dplyr::collapse() |>
               dplyr::pull(mean_x)
+
             names(vals) = val_names
+
             vals
           })
 
-#' @title colMeans
-#' @rdname hidden_aliases
+## colMeans dbsm ####
+#' Form Row and Column Sums and Means
+#' @description
+#' See ?\link{\code{base::colMeans}} for more details.
+#' @concept summary
+#' @rdname row_col_sums_means
 #' @export
 setMethod('colMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             x = castNumeric(x)
 
             # get non-zero column idx (factors) and convert to integers
             col_indices = x[] |>
+              dplyr::distinct(j) |>
               dplyr::arrange(j) |>
               dplyr::pull(j) |>
-              unique() |>
-              as.integer() |>
-              sort()
+              as.integer()
 
             # get non-zero column names by column idx
             val_names = factor(colnames(x)[col_indices])
@@ -457,14 +519,16 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
             vals
           })
 
-## colSds ####
+## colSds dbdm ####
 
-#' @title colSds
-#' @rdname hidden_aliases
+#' Calculates the standard deviation for each row (column) of a matrix-like object
+#' @description
+#' See ?\link{\code{MatrixGenerics::colSds}} for more details.
+#' @concept summary
+#' @rdname sds
 #' @export
 setMethod('colSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -479,12 +543,15 @@ setMethod('colSds', signature(x = 'dbDenseMatrix'),
             vals
           })
 
-#' @title colSds
-#' @rdname hidden_aliases
+## colSds dbsm ####
+#' Calculates the standard deviation for each row (column) of a matrix-like object
+#' @description
+#' See ?\link{\code{MatrixGenerics::colSds}} for more details.
+#' @concept summary
+#' @rdname sds
 #' @export
 setMethod('colSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -506,13 +573,15 @@ setMethod('colSds', signature(x = 'dbSparseMatrix'),
             # vals
           })
 
-## rowSds ####
-#' @title rowSds
-#' @rdname hidden_aliases
+## rowSds dbdm####
+#' Calculates the standard deviation for each row (column) of a matrix-like object
+#' @description
+#' See ?\link{\code{MatrixGenerics::rowSds}} for more details.
+#' @concept summary
+#' @rdname sds
 #' @export
 setMethod('rowSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -527,12 +596,15 @@ setMethod('rowSds', signature(x = 'dbDenseMatrix'),
             vals
           })
 
-#' @title rowSds
-#' @rdname hidden_aliases
+## rowSds dbsm ####
+#' Calculates the standard deviation for each row (column) of a matrix-like object
+#' @description
+#' See ?\link{\code{MatrixGenerics::rowSds}} for more details.
+#' @concept summary
+#' @rdname sds
 #' @export
 setMethod('rowSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...)
-          {
+          function(x, ...){
             # x = reconnect(x)
             x = castNumeric(x)
 
@@ -549,10 +621,13 @@ setMethod('rowSds', signature(x = 'dbSparseMatrix'),
             # vals
           })
 
-## mean ####
+## mean dbdm####
 
-#' @title mean
-#' @rdname hidden_aliases
+#' Arithmetic Mean
+#' @description
+#' See ?\link{\code{base::mean}} for more details.
+#' @concept summary
+#' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
   x = castNumeric(x)
@@ -565,8 +640,12 @@ setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
 
 })
 
-#' @title mean
-#' @rdname hidden_aliases
+## mean dbsm####
+#' Arithmetic Mean
+#' @description
+#' See ?\link{\code{base::mean}} for more details.
+#' @concept summary
+#' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
   x = castNumeric(x)
@@ -586,8 +665,10 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 
 ## log ####
 
-#' @title log
-#' @rdname hidden_aliases
+#' Logarithms and Exponentials
+#' @description
+#' See ?\link{\code{base::log}} for more details.
+#' @concept transform
 #' @export
 setMethod('log', signature(x = 'dbMatrix'), function(x, ...) {
   x = castNumeric(x)
@@ -603,8 +684,10 @@ setMethod('log', signature(x = 'dbMatrix'), function(x, ...) {
 
 ### t ####
 
-#' @title Transpose
-#' @rdname hidden_aliases
+#' Matrix Transpose
+#' @description
+#' See ?\link{\code{base::t}} for more details.
+#' @concept transform
 #' @export
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
   x[] = x[] |> dplyr::select(i = j, j = i, x)
@@ -615,18 +698,17 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 
 ### nrow ####
 
-#' @name nrow
-#' @title The number of rows/cols
+#' The Number of Rows/Columns of an Array
 #' @description
-#' \code{nrow} and \code{ncol} return the number of rows or columns present in
-#' \code{x}.
-#' @aliases ncol
+#' See ?\link{\code{base::nrow}} for more details.
+#' @concept matrix_props
+#' @rdname nrow_ncol
 #' @export
 setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   # x = reconnect(x)
 
   if (is.na(x@dims[1L])) {
-    conn = pool::localCheckout(cPool(x))
+    conn = get_con(x)
     res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT i from %s',
                                                remoteName(x)))
   } else {
@@ -636,24 +718,19 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
-#' @title nrow
-#' @rdname hidden_aliases
-#' @export
-setMethod('nrow', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  dim(x)[1L]
-})
-
 ### ncol ####
 
-#' @title ncol
-#' @rdname hidden_aliases
+#' The Number of Rows/Columns of an Array
+#' @description
+#' See ?\link{\code{base::ncol}} for more details.
+#' @concept matrix_props
+#' @rdname nrow_ncol
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   # x = reconnect(x)
 
   if (is.na(x@dims[2L])) {
-    conn = pool::localCheckout(cPool(x))
+    conn = get_con(x)
     res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT j from %s',
                                                remoteName(x)))
   } else {
@@ -663,26 +740,12 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
   return(base::nrow(res))
 })
 
-#' @title ncol
-#' @rdname hidden_aliases
-#' @export
-setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  ncol(x@data)
-})
-
-#' @title ncol
-#' @rdname hidden_aliases
-#' @export
-setMethod('ncol', signature(x = 'dbDataFrame'), function(x) {
-  # x = reconnect(x)
-  ncol(x@data)
-})
-
 ### dim ####
 
-#' @title dim
-#' @rdname hidden_aliases
+#' Dimensions of an Object
+#' @description
+#' See ?\link{\code{base::dim}} for more details.
+#' @concept matrix_props
 #' @export
 setMethod('dim',
           signature(x = 'dbMatrix'),
@@ -695,7 +758,11 @@ setMethod('dim',
           })
 
 ### head ####
-#' @title head
+#' Return the First or Last Parts of an Object
+#' @description
+#' See ?\link{\code{utils::head}} for more details.
+#' @concept matrix_props
+#' @rdname head_tail
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset = 1:n
@@ -704,15 +771,12 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
-#' @title head
-#' @export
-setMethod('head', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
-  x[] = x[] %in% head(x, n = n)
-  return(x)
-})
-
 ### tail ####
-#' @title tail
+#' Return the First or Last Parts of an Object
+#' @description
+#' See ?\link{\code{utils::tail}} for more details.
+#' @concept matrix_props
+#' @rdname head_tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset = (x@dims[1L] - n):x@dims[1L]
@@ -721,33 +785,20 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
-#' @title tail
-#' @export
-setMethod('tail', signature(x = 'dbDataFrame'), function(x, n = 6L, ...) {
-  x[] = x[] %in% tail(x, n = n)
-  return(x)
-})
-
 # Column data types ####
-# Due to how these functions will be commonly seen within other functions, a
-# call to `reconnect()` is omitted.
 
 ## colTypes ####
 
-#' @name colTypes
-#' @title Column data types of dbData objects
-#' @description
-#' Get the column data types of objects that inherit from \code{'dbData'}
-#' @param x dbData data object
-#' @param ... additional params to pass
+#' Return the column types of a dbMatrix object
+#' @concept matrix_props
+#' @rdname colTypes
 #' @export
-setMethod('colTypes', signature(x = 'dbData'), function(x, ...) {
-  vapply(data.table::as.data.table(head(x[], 1L)), typeof, character(1L))
+setMethod('colTypes', signature(x = 'dbMatrix'), function(x, ...) {
+  vapply(data.table::as.data.table(head(slot(x, "value"), 1L)), typeof, character(1L))
 })
 
 ## castNumeric ####
 
-#' @name castNumeric
 #' @title Set a column to numeric
 #' @description
 #' Sets a column to numeric after first checking the column data type. Does
@@ -756,9 +807,10 @@ setMethod('colTypes', signature(x = 'dbData'), function(x, ...) {
 #' @param x dbData data object
 #' @param col column to cast to numeric
 #' @param ... additional params to pass
-#' @export
+#' @noRd
+#' @keywords internal
 setMethod('castNumeric',
-          signature(x = 'dbData', col = 'character'),
+          signature(x = 'dbMatrix', col = 'character'),
           function(x, col, ...) {
             if (colTypes(x)[col] != 'double') {
               sym_col = dplyr::sym(col)

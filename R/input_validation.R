@@ -20,16 +20,18 @@
 #' @param x A \link{Matrix}, \link{matrix}, or \link{tbl_duckdb_connection} object
 #' @keywords internal
 .check_value <- function(value){
-  is_mat = inherits(value, 'Matrix') | inherits(value, 'matrix')
-  is_duckdb = inherits(value, 'tbl_duckdb_connection')
-  is_null = is.null(value)
   if(is.character(value)){
-    is_valid_file = file.exists(value)
-  } else {
-    is_valid_file = FALSE
+    if(!file.exists(value)){
+      stopf(
+        'File does not exist. Please provide a valid file path.'
+      )
+    }
+    return(invisible(NULL))
   }
+  is_valid <- inherits(value,
+                       c('Matrix', 'matrix', 'tbl_duckdb_connection')) || is.null(value)
 
-  if(!(is_mat | is_duckdb | is_null | is_valid_file)) {
+  if(!(is_valid)) {
     stopf(
       'Invalid "value" input passed.'
     )

@@ -5,7 +5,6 @@
 \alias{sim_dgc}
 \alias{sim_denseMat}
 \alias{sim_ijx_matrix}
-\alias{sim_dbDataFrame}
 \alias{sim_dbSparseMatrix}
 \alias{sim_dbDenseMatrix}
 \title{sim_dgc}
@@ -17,8 +16,6 @@ sim_dgc(num_rows = 50, num_cols = 50, n_vals = 50)
 sim_denseMat(num_rows = 50, num_cols = 50)
 
 sim_ijx_matrix(mat_type = NULL, num_rows = 50, num_cols = 50, seed_num = 42)
-
-sim_dbDataFrame(value = NULL, name = "df_test", key = NA_character_)
 
 sim_dbSparseMatrix(
   num_rows = 50,
@@ -71,8 +68,6 @@ a non-zero value.
 \item \code{sim_denseMat()}: Simulate a dense matrix
 
 \item \code{sim_ijx_matrix()}: Simulate a duckdb connection dplyr tbl_Pool in memory
-
-\item \code{sim_dbDataFrame()}: Simulate a dbDataFrame in memory
 
 \item \code{sim_dbSparseMatrix()}: Simulate a dbSparseMatrix in memory
 
