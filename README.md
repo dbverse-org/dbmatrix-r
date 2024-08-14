@@ -20,7 +20,7 @@ computations.
 
 **Note: Work in progress! Bugs or unexpected behavior are likely to
 occur. We welcome user feedback and reporting issues on the [Github
-page](https://github.com/drieslab/dbMatrix/). **
+page](https://github.com/drieslab/dbMatrix/).**
 
 ## Installation
 
