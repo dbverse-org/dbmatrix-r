@@ -5,7 +5,6 @@ NULL
 # Print Formatting ####
 
 #' @title Wrap message
-#' @name wrap_msg
 #' @param ... additional strings and/or elements to pass to wrap_txt
 #' @param sep how to join elements of string (default is one space)
 #' @keywords internal
@@ -15,7 +14,6 @@ wrap_msg = function(..., sep = ' ') {
 }
 
 #' @title Wrap text
-#' @name wrap_txt
 #' @param ... additional params to pass
 #' @param sep how to join elements of string (default is one space)
 #' @param strWidth externally set wrapping width. (default value of 100 is not effected)
@@ -39,7 +37,7 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
 # Custom stop function
 stopf = function(...) {
-  wrap_txt('dbMatrix:', ..., errWidth = TRUE) |>
+  wrap_txt('dbMatrix:\n', ..., errWidth = TRUE) |>
     stop(call. = FALSE)
 }
 
@@ -52,7 +50,6 @@ vector_to_string = function(x) {
 }
 
 #' @title Generate array for pretty printing of matrix values
-#' @name print_array
 #' @param i,j,x matched vectors of integers in i and j, with value in x
 #' @param dims dimensions of the array (integer vector of 2)
 #' @param fill fill character
@@ -105,22 +102,36 @@ ij_array_map = function(i, j, dims) {
 
 # DBI ####
 
-## dbDisconnect ####
-#' @title dbDisconnect
-#' @rdname DBI
-#' @export
-setMethod('dbDisconnect', signature(x = 'dbMatrix'),
-          function(x, ...){
-            con <- get_con(x)
-            DBI::dbDisconnect(conn = con, shutdown = TRUE)
-          })
+#' ## dbDisconnect ####
+#' #' @title dbDisconnect
+#' #' @rdname DBI
+#' #' @export
+#' setMethod('dbDisconnect', signature(x = 'dbMatrix'),
+#'           function(x, ...){
+#'             con <- get_con(x)
+#'             DBI::dbDisconnect(conn = con, shutdown = TRUE)
+#'           })
+#'
+#' ## dbListTables ####
+#' #' @title dbListTables
+#' #' @rdname DBI
+#' #' @export
+#' setMethod('dbListTables', signature(x = 'dbMatrix'),
+#'           function(x, ...){
+#'             con <- get_con(x)
+#'             DBI::dbListTables(conn = con)
+#'           })
 
-## dbListTables ####
-#' @title dbListTables
-#' @rdname DBI
-#' @export
-setMethod('dbListTables', signature(x = 'dbMatrix'),
-          function(x, ...){
-            con <- get_con(x)
-            DBI::dbListTables(conn = con)
-          })
+# dbplyr ####
+
+#' Generate table names
+#' @details
+#' based on dbplyr::unique_table_name
+#'
+#' @noRd
+#' @keywords internal
+unique_table_name <- function(prefix = ""){
+  vals <- c(letters, LETTERS, 0:9)
+  name <- paste0(sample(vals, 10, replace = TRUE), collapse = "")
+  paste0(prefix, "_", name)
+}
