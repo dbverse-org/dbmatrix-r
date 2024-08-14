@@ -27,7 +27,10 @@ library(Matrix)
 
 ## dbMatrix generics
 
-`dbMatrix` subclasses currently support basic generic functions listed below with support for more operations coming soon.
+`dbMatrix` objects currently support several statistical matrix operations listed below with support for more coming soon.
+
+✅  - implemented
+🟧 - not yet implemented
 
 |          | dbSparseMatrix | dbDenseMatrix |
 |----------|----------------|---------------|

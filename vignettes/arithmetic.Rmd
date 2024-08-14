@@ -19,6 +19,12 @@ library(dbMatrix)
 ```
 
 
+## dbMatrix arithmetic
+
+`dbMatrix` objects support `Arith` and `Ops` operations. We will demonstrate how to perform arithmetic operations on `dbSparseMatrix` objects.
+
+**Note:** Some operations with zero values are not yet supported with dbMatrix objects. In addition, certain arithmetic operations between `dbMatrix` objects are also not yet supported. We welcome user feedback and reporting issues on the [Github page ](https://github.com/drieslab/dbMatrix/).
+
 ### Get test data
 The test file is a `dgCMatrix`or compressed sparse column matrix representing a single cell gene expression matrix. The file is in the `data` directory of the package.
 
