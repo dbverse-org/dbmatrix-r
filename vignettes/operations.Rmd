@@ -169,11 +169,6 @@ dbMatrix::mean(dense)
 dim(dense)
 ```
 
-## Shutdown
-```{r}
-dbMatrix::dbDisconnect(dense, shutdown = TRUE)
-```
-
 ## Session Info
 ```{r eval=TRUE, message=FALSE}
 sessionInfo()
