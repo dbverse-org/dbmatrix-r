@@ -1,5 +1,36 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# dbMatrix 0.0.0.9022 (2024-08-14)
+
+## Breaking changes
+
+- Rename dbMatrix constructor to `dbMatrix::dbMatrix()`.
+
+## Features
+
+- Add more tests for `dbMatrix` and `dbDenseMatrix`.
+
+- Add internal function `map_ijx_dimnames`.
+
+- Add internal function `dbMatrix_from_tbl`.
+
+- Extract now constructs unique temporary virtual tables in the arrow schema.
+
+## Chore
+
+- Document pkgdown website. 
+
+- Add `cli` to imports.
+
+- Update generics.
+
+## Bug fixes
+
+- Be more explicit about non-supported `Arith` and `Ops` operations.
+
+- Fix `show()` method for `dbDenseMatrix` objects.
+
+
 # dbMatrix 0.0.0.9021 (2024-07-05)
 
 ## Bug fixes
