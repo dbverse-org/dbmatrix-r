@@ -1,7 +1,7 @@
 # internal functions ####
 #' get_tblName
 #'
-#' @param dbData
+#' @param dbMatrix
 #'
 #' @keywords internal
 get_tblName <- function(dbMatrix){

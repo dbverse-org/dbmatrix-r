@@ -4,7 +4,7 @@
 \alias{precompute}
 \title{Precompute a dbMatrix table in a database}
 \usage{
-precompute(conn, m, n, name)
+precompute(conn, m, n, name, verbose = TRUE)
 }
 \arguments{
 \item{conn}{duckdb database connection}
@@ -14,6 +14,11 @@ precompute(conn, m, n, name)
 \item{n}{number of columns of precomputed dbMatrix table}
 
 \item{name}{name of the precomputed dbMatrix table to be created}
+
+\item{verbose}{logical, print progress messages. default: TRUE.}
+}
+\value{
+tbl_dbi
 }
 \description{
 Precomputes a dbMatrix table in a specificied database connection.
@@ -36,3 +41,5 @@ table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 precompute(con = con , m = 100, n = 100, name = "precomputed_table")
 }
+\concept{dbMatrix}
+\keyword{internal}

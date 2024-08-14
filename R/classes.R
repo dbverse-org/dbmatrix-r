@@ -1,6 +1,5 @@
 # dbData ####
 
-#' @name dbData
 #' @title dbData
 #' @description Base class for all db objects
 #' @slot value dplyr tbl that represents the database data
@@ -24,12 +23,14 @@ setClass(
 
 ### dbMatrix ####
 
-#' @title S4 dbMatrix class
+#' @title S4 virtual class for `dbMatrix`
 #' @description
-#' Representation of sparse matrices using an on-disk database. Each object
+#' Representation of sparse and dense matrices in a database. Each object
 #' is used as a connection to a single table that exists within the database.
+#' Inherits from `dbData`.
 #' @slot dim_names row [1] and col [2] names
 #' @slot dims dimensions of the matrix
+#' @noRd
 #' @export
 dbMatrix = setClass(
   Class = 'dbMatrix',
@@ -45,12 +46,12 @@ dbMatrix = setClass(
 )
 
 #### dbDenseMatrix ####
-#' @title S4 Class for dbDenseMatrix
+#' @title S4 Class for `dbDenseMatrix`
 #'
 #' @description Representation of dense matrices using an on-disk database.
-#' Inherits from dbMatrix.
+#' Inherits from \link{dbMatrix}.
 #'
-#' @slot data A dense ijx dataframe/tibble
+#' @noRd
 #' @export
 dbDenseMatrix = setClass(
   Class = "dbDenseMatrix",
@@ -61,8 +62,8 @@ dbDenseMatrix = setClass(
 #' @title S4 Class for dbSparseMatrix
 #'
 #' @description Representation of sparse matrices using an on-disk database.
-#' Inherits from dbMatrix.
-#'
+#' Inherits from \link{dbMatrix.}
+#' @noRd
 #' @export
 dbSparseMatrix = setClass(
   Class = "dbSparseMatrix",
@@ -70,8 +71,7 @@ dbSparseMatrix = setClass(
 )
 
 ## dbIndex ####
-#' @title Virtual Class "dbIndex" - Simple Class for dbData indices
-#' @name dbIndex
+#' @title S4 virtual class - Simple Class for dbData indices
 #' @description
 #' This is a virtual class used for indices (in signatures) for indexing
 #' and sub-assignment of 'dbData' objects. Simple class union of 'logical',

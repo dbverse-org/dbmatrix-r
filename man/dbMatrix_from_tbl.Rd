@@ -26,7 +26,7 @@ dbMatrix_from_tbl(
 \item{con}{DBI or duckdb connection object \code{(required)}}
 }
 \value{
-dbMatrix object
+`dbMatrix` object
 }
 \description{
 Construcst a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.

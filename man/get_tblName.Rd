@@ -7,7 +7,7 @@
 get_tblName(dbMatrix)
 }
 \arguments{
-\item{dbData}{}
+\item{dbMatrix}{}
 }
 \description{
 get_tblName
