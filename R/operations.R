@@ -198,7 +198,6 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'),
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 {
-  browser()
 
   build_call = glue::glue(
     'e1[] |> dplyr::mutate(x = `',
