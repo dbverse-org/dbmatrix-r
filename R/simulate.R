@@ -25,7 +25,7 @@ sim_duckdb = function(value = datasets::iris,
   }
 
   # add table to database
-  DBI::dbWriteTable(con, name, value)
+  DBI::dbWriteTable(con, name, value, temporary = TRUE)
 
   # show
   dplyr::tbl(con, name)
