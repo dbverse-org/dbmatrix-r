@@ -4,7 +4,7 @@
 \alias{.check_overwrite}
 \title{Input validation for overwrite arg}
 \usage{
-.check_overwrite(conn, overwrite, name, skip_value_check)
+.check_overwrite(conn, overwrite, name, skip_value_check = FALSE)
 }
 \description{
 Input validation for overwrite arg

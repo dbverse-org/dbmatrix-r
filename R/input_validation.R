@@ -42,7 +42,7 @@
 #' @keywords internal
 .check_name <- function(name){
   if(missing(name)) {
-    stop("Please provide a table name")
+    stop("Please provide a 'name' for the database table")
   }
 
   if(!is.character(name)) {
@@ -65,7 +65,7 @@
 
 #' Input validation for overwrite arg
 #' @keywords internal
-.check_overwrite <- function(conn, overwrite, name, skip_value_check) {
+.check_overwrite <- function(conn, overwrite, name, skip_value_check = FALSE) {
   if (!is.logical(overwrite)) {
     stop("overwrite must be logical")
   }
