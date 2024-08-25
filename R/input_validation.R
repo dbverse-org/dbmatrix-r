@@ -42,16 +42,16 @@
 #' @keywords internal
 .check_name <- function(name){
   if(missing(name)) {
-    stop("Please provide a 'name' for the database table")
+    stopf("Please provide a 'name' to compute the dbMatrix table")
   }
 
   if(!is.character(name)) {
-    stop("name must be a character string")
+    stopf("name must be a character string")
   }
 
   # if name starts with a number, add warning
   if(grepl("^[0-9]", name)) {
-    stop("Table names should not start with a number")
+    stopf("Table names should not start with a number")
   }
 
   # reserved name check
@@ -67,12 +67,11 @@
 #' @keywords internal
 .check_overwrite <- function(conn, overwrite, name, skip_value_check = FALSE) {
   if (!is.logical(overwrite)) {
-    stop("overwrite must be logical")
+    stop("'overwrite' must be logical")
   }
 
   # Check if the object exists (either as a table or a view)
   object_exists <- DBI::dbExistsTable(conn, name)
-
   if (!overwrite && object_exists) {
     stop("Object already exists. Set overwrite = TRUE to overwrite.")
   }
