@@ -71,8 +71,9 @@ setMethod('[',
               dplyr::select(i = new_i, j, x)
 
             # update dbMatrix attributes
-            x@dim_names[[1L]] = filter_i
+            x@dim_names[[1L]] <- filter_i
             x@dims[1L] <- length(filter_i)
+            x@name <- NA_character_
 
             return(x)
           })
@@ -124,6 +125,7 @@ setMethod('[',
             # Update dbMatrix attributes
             x@dim_names[[2L]] <- filter_j
             x@dims[2L] <- length(filter_j)
+            x@name <- NA_character_
 
             return(x)
           })
@@ -189,6 +191,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
             x@dim_names[[2L]] = filter_j
             x@dims[1L] <- length(filter_i)
             x@dims[2L] <- length(filter_j)
+            x@name <- NA_character_
 
             return(x)
           })

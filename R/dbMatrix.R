@@ -24,10 +24,11 @@ setMethod(
     # default values if no input provided #
     # ----------------------------------- #
     if(is.null(.Object@value)) {
-
       .Object@dims = c(0L, 0L)
       .Object@dim_names = list(NULL, NULL)
     }
+    tbl_name = dbplyr::remote_name(.Object[])
+    .Object@name = ifelse(is.null(tbl_name), NA_character_, tbl_name)
 
     # check and return #
     # ---------------- #
@@ -539,7 +540,7 @@ toDbDense <- function(db_sparse){
     dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
     dplyr::select(-x.dgc)
 
-  # Create new dbSparseMatrix object
+  # Create new dbMatrix object
   db_dense <- new(
     Class = "dbDenseMatrix",
     value = data,
@@ -1105,69 +1106,6 @@ get_MM_dimnames <- function(mtx_file_path,
   dimnames = list(rownames, colnames)
 
   return(dimnames)
-
-}
-
-# save ####
-#' Compute or save a dbMatrix to disk
-#'
-#' @param dbMatrix \code{dbMatrix} object
-#' @param name name of table to save to disk
-#' @param overwrite whether to overwrite if table already exists in database
-#' @param ... additional params to pass
-#'
-#' @param description
-#' Saves dbMatrix table to specified name in the dbMatrix connection.
-#' Note: Computing will not persist if the database is in ":memory:".
-#'
-#' @details
-#' This may break functions that rely on the existing table.
-#' TODO: sync \code{dbMatrix} constructor with compute
-#'
-#' @return NULL
-#' @keywords internal
-#'
-#' @examples
-#' dbm <- sim_dbSparseMatrix()
-#' compute(dbm, "new_table", overwrite = TRUE)
-save <- function(dbMatrix, name = '', overwrite = FALSE, ...){
-  # input validation
-  if(!inherits(dbMatrix, "dbMatrix")){
-    stop("Input must be a valid dbMatrix object.")
-  }
-  con <- get_con(dbMatrix)
-  .check_con(conn = con)
-  .check_name(name)
-  .check_overwrite(
-    conn = con,
-    overwrite = overwrite,
-    name = name,
-    skip_value_check = FALSE
-  )
-
-  # note: this may break relations that rely on the existing tbl
-  # idea: check if the table is not computed. if it isn't
-  # don't delete it.
-  # idea2: create graph of relations and check if the table
-  # is a leaf node. if it is, delete it. if it isn't, throw
-  # an error. see {dm} package
-  if(overwrite & name != ''){ # dplyr::compute still doesn't allow overwrite
-    suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
-    temp_name = dbplyr::remote_name(x)
-
-    # rename tbl to name
-    query <- glue::glue("ALTER TABLE {temp_name} RENAME TO {name}")
-    DBI::dbExecute(con, query)
-  } else {
-    suppressWarnings(x <- dplyr::compute(dbMatrix[], temporary = FALSE))
-    name <- dbplyr::remote_name(x)
-  }
-
-  # update dbMatrix
-  dbMatrix@value <- dplyr::tbl(con, name)
-  dbMatrix@name <- name
-
-  return(dbMatrix)
 
 }
 
