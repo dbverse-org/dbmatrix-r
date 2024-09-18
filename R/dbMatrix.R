@@ -27,8 +27,8 @@ setMethod(
       .Object@dims = c(0L, 0L)
       .Object@dim_names = list(NULL, NULL)
     }
-    tbl_name = dbplyr::remote_name(.Object[])
-    .Object@name = ifelse(is.null(tbl_name), NA_character_, tbl_name)
+    # tbl_name = dbplyr::remote_name(.Object[])
+    # .Object@name = ifelse(is.null(tbl_name), NA_character_, tbl_name)
 
     # check and return #
     # ---------------- #
