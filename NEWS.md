@@ -1,5 +1,55 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# dbMatrix 0.0.0.9023 (2024-09-18)
+
+## Breaking Changes 
+
+- dbMatrix summary methods now return `dbDenseMatrix` objects instead of in-memory vectors.
+
+- Removed colTypes from castNumeric.
+
+- Removed @name check in initialize.
+
+## Features
+
+- New `compute` method for saving dbMatrix objects. This writes the dbMatrix object to a table in the database along with its row and column names (e.g. 'dbMatrixname_rownames').
+
+- New `load` method for loading computed dbMatrix objects. The dbMatrix::compute() method must be called before loading the object.
+
+- Updated `.check_overwrite` to allow for passing overwrite arg.
+
+- New internal function `write_dimnames` to enable saving dbMatrix objects.
+
+- New `sum` method for dbMatrix objects.
+
+- Improvements to precomputed table: Use existing precomputed table in db if available.
+
+- Improvements to precomputed table: Transpose precomputed table of sufficient dimensions if it exists instead of creating a new one. This is done via a TEMPORARY VIEW to avoid writing to disk and modifying existing precomputed table which may be referenced by other tables.
+
+- Custom SQL statement for `todbDense` conversion creates a TEMPORARY VIEW with name `dbDenseMatrix_hash`. 
+
+## Chore 
+
+- Update whitespace.
+
+- Update dbMatrix constructor roxygen.
+
+- Update roxygen in toDbDense.
+
+## Docs
+
+- Update reference page.
+
+- Update mean documentation.
+
+- Update log documentation.
+
+- Update roxygen.
+
+## Bug fixes
+
+- Do not recycle matrix if not needed.
+
 # dbMatrix 0.0.0.9022 (2024-08-14)
 
 ## Breaking changes
