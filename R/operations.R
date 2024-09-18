@@ -744,16 +744,17 @@ setMethod('rowSds', signature(x = 'dbSparseMatrix'),
 
 ## mean dbdm####
 
-#' Arithmetic Mean
-#' @description
-#' See ?\link{\code{base::mean}} for more details.
+#' Arithmetic Mean for dbMatrix objects
+#' @inheritParams base::mean
+#' @inherit base::mean description
+#' @param x dbMatrix object
 #' @concept summary
 #' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
-  x = castNumeric(x)
+  x <- castNumeric(x)
 
-  res = x[] |>
+  res <- x[] |>
     dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
     dplyr::pull(mean_x)
 
@@ -762,23 +763,20 @@ setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
 })
 
 ## mean dbsm####
-#' Arithmetic Mean
-#' @description
-#' See ?\link{\code{base::mean}} for more details.
 #' @concept summary
 #' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
-  x = castNumeric(x)
+  x <- castNumeric(x)
 
-  dim = dim(x)
-  n = dim[1] * dim[2]
+  dim <- dim(x)
+  n <- dim[1] * dim[2]
 
-  res = x[] |>
+  res <- x[] |>
     dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
     dplyr::pull(sum_x)
 
-  res = res / n
+  res <- res / n
 
   return(res)
 
