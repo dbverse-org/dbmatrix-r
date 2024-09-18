@@ -1,7 +1,7 @@
 # dbData ####
 ## Empty ####
 ### Extract [] ####
-#' @rdname hidden_aliases
+#' @noRd
 #' @concept dbMatrix
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing', drop = 'missing'),
@@ -11,7 +11,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing', drop = 'm
 
 ### Set [] ####
 # no initialize to prevent slowdown
-#' @rdname hidden_aliases
+#' @noRd
 #' @concept dbMatrix
 #' @export
 setMethod('[<-', signature(x = 'dbMatrix', i = 'missing', j = 'missing', value = 'ANY'),
@@ -22,7 +22,7 @@ setMethod('[<-', signature(x = 'dbMatrix', i = 'missing', j = 'missing', value =
 
 # dbMatrix ####
 ## rows only ####
-#' @rdname hidden_aliases
+#' @noRd
 #' @concept dbMatrix
 #' @export
 setMethod('[',
@@ -79,7 +79,7 @@ setMethod('[',
           })
 
 ## cols only ####
-#' @rdname hidden_aliases
+#' @noRd
 #' @concept dbMatrix
 #' @export
 setMethod('[',
@@ -131,7 +131,7 @@ setMethod('[',
           })
 
 ## rows and cols ####
-#' @rdname hidden_aliases
+#' @noRd
 #' @concept dbMatrix
 #' @export
 setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
@@ -240,28 +240,20 @@ recycle_boolean_index <- function(index, length) {
 #' @keywords internal
 .check_extract <- function(x = x, i = NULL, j = NULL, dim){
   if (!is.null(j)) {
-    if (is.numeric(j) & max(j) > dim[2]) {
+    if ((is.numeric(j) || is.logical(j)) && max(j) > dim[2]) {
       stopf("Index exceeds column dimension of", dim[2])
-    }
-    else if(is.character(j) & !all(j %in% colnames(x))) {
+    } else if (is.character(j) && !all(j %in% colnames(x))) {
       missing_cols <- j[!j %in% colnames(x)]
       stopf("Column(s) not found in dbMatrix: \n", missing_cols)
     }
-    else if (is.logical(j) & length(j) > dim[2]) {
-      stopf("Index exceeds column dimension of", dim[2])
-    }
-  }
-  if (!is.null(i)) {
-    if (is.numeric(i) & max(i) > dim[1]) {
-      stopf("Index exceeds row dimension of", dim[1])
-    }
-    else if(is.character(i) & !all(i %in% colnames(x))) {
-      missing_cols <- i[!i %in% rownames(x)]
-      stopf("Row(s) not found in dbMatrix: \n", missing_cols)
-    }
-    else if (is.logical(i) & length(i) > dim[1]) {
-      stopf("Index exceeds row dimension of", dim[1])
-    }
   }
 
+  if (!is.null(i)) {
+    if ((is.numeric(i) || is.logical(i)) && max(i) > dim[1]) {
+      stopf("Index exceeds row dimension of", dim[1])
+    } else if (is.character(i) && !all(i %in% rownames(x))) {
+      missing_rows <- i[!i %in% rownames(x)]
+      stopf("Row(s) not found in dbMatrix: \n", missing_rows)
+    }
+  }
 }
