@@ -15,22 +15,27 @@ navbar:
       aria-label: GitHub
 
 reference:
-  - title: "dbMatrix objects"
-    desc: "Functions for `dbMatrix` objects"
+  - title: "Constructor"
+    desc: "Function for creating `dbMatrix` objects"
     contents:
       - has_concept("dbMatrix")
 
-  - title: "Matrix Summary Statistics"
-    desc: "Functions/methods to compute summary statistics for `dbMatrix` objects"
+  - title: "Matrix Summary Operations"
+    desc: "Methods to compute summary statistics for `dbMatrix` objects"
     contents:
       - has_concept("summary")
 
   - title: "Matrix Transformations"
-    desc: "Functions/methods for transforming `dbMatrix` objects"
+    desc: "Methods for transforming `dbMatrix` objects"
     contents:
       - has_concept("transform")
 
   - title: "Matrix Properties"
-    desc: "Functions/methods to get basic properties of `dbMatrix` objects"
+    desc: "Methods to retrieve basic properties of `dbMatrix` objects"
     contents:
       - has_concept("matrix_props")
+
+  - title: "dbData objects"
+    desc: "Convenience methods for `dbData` objects"
+    contents:
+      - has_concept("dbData")
