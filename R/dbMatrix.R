@@ -276,7 +276,7 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
 
 # constructors ####
 
-#' @title Create a sparse or dense dbMatrix objects
+#' @title Create a \code{dbSparseMatrix} or \code{dbDenseMatrix} object
 #' @description
 #' Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 #' @param value data to be added to the database. See details for supported data types \code{(required)}
