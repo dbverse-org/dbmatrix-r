@@ -915,45 +915,29 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 
 # Column data types ####
 
-## colTypes ####
-
-#' Return the column types of a dbMatrix object
-#' @concept matrix_props
-#' @rdname colTypes
-#' @export
-setMethod('colTypes', signature(x = 'dbMatrix'), function(x, ...) {
-  vapply(data.table::as.data.table(head(slot(x, "value"), 1L)), typeof, character(1L))
-})
-
 ## castNumeric ####
 
 #' @title Set a column to numeric
 #' @description
-#' Sets a column to numeric after first checking the column data type. Does
-#' nothing if the column is already a \code{double}
-#' This precaution is to avoid truncation of values.
-#' @param x dbData data object
+#' Sets a column to numeric type if not already
+#' This precaution is to avoid truncation of values
+#' @param x dbData object
 #' @param col column to cast to numeric
 #' @param ... additional params to pass
 #' @noRd
 #' @keywords internal
-setMethod('castNumeric',
-          signature(x = 'dbMatrix', col = 'character'),
+setMethod('castNumeric', signature(x = 'dbMatrix', col = 'character'),
           function(x, col, ...) {
-            if (colTypes(x)[col] != 'double') {
-              sym_col = dplyr::sym(col)
-              x[] = x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
-            }
+            sym_col <- dplyr::sym(col)
+            x[] <- x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
             return(x)
           })
 
-#' @rdname castNumeric
+#' @noRd
 #' @export
 setMethod('castNumeric',
           signature(x = 'dbMatrix', col = 'missing'),
           function(x, ...) {
-            if (colTypes(x)['x'] != 'double') {
-              x[] = x[] |> dplyr::mutate(x := as.numeric(x))
-            }
+            x[] <- x[] |> dplyr::mutate(x := as.numeric(x))
             return(x)
           })
