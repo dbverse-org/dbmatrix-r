@@ -470,13 +470,26 @@ toDbDense <- function(db_sparse){
   n_rows <- dims[1]
   n_cols <- dims[2]
 
-  db_path <- get_dbdir(db_sparse)
-
   # see ?dbMatrix::precompute() for more details
   precompute_name <- getOption("dbMatrix.precomp", default = NULL)
 
-  if(!is.null(precompute_name) && (precompute_name %in% DBI::dbListTables(con))){
+  # Use existing precomputed table in db if available
+  tables <- DBI::dbListTables(con)
+  precompute_names <- tables[grep("^precomp_", tables)]
+  if (length(precompute_names) > 0) {
+    # determine which precompute table to use based on product of dims
+    # FIXME: use n_rows, n_cols to find the best precomp table to use
+    numbers <- strsplit(gsub("precomp_", "", precompute_names), "x")
+    products <- sapply(numbers, function(x) as.numeric(x[1]) * as.numeric(x[2]))
+    largest_index <- which.max(products)
+    precompute_name  <- precompute_names[largest_index]
+    options(dbMatrix.precomp = precompute_name)
+  } else {
+    precompute_name <- NULL
+    options(dbMatrix.precomp = precompute_name)
+  }
 
+  if (!is.null(precompute_name)) {
     precomp <- dplyr::tbl(con, precompute_name)
 
     # get the max i value in precomp tbl
