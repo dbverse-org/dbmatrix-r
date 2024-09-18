@@ -66,6 +66,12 @@
 #' Input validation for overwrite arg
 #' @keywords internal
 .check_overwrite <- function(conn, overwrite, name, skip_value_check = FALSE) {
+  if(overwrite == "PASS") {
+    # FIXME: workaround for passing lazy tables into dbMatrix constructor
+    # without overwriting the passed lazy table
+    return()
+  }
+
   if (!is.logical(overwrite)) {
     stop("'overwrite' must be logical")
   }
