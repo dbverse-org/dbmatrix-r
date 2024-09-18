@@ -3,15 +3,18 @@
 \name{mean,dbDenseMatrix-method}
 \alias{mean,dbDenseMatrix-method}
 \alias{mean,dbSparseMatrix-method}
-\title{Arithmetic Mean}
+\title{Arithmetic Mean for dbMatrix objects}
 \usage{
 \S4method{mean}{dbDenseMatrix}(x, ...)
 
 \S4method{mean}{dbSparseMatrix}(x, ...)
 }
-\description{
-See ?\link{\code{base::mean}} for more details.
+\arguments{
+\item{x}{dbMatrix object}
 
-See ?\link{\code{base::mean}} for more details.
+\item{...}{further arguments passed to or from other methods.}
+}
+\description{
+Generic function for the (trimmed) arithmetic mean.
 }
 \concept{summary}

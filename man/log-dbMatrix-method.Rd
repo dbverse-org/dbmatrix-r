@@ -4,9 +4,27 @@
 \alias{log,dbMatrix-method}
 \title{Logarithms and Exponentials}
 \usage{
-\S4method{log}{dbMatrix}(x, ...)
+\S4method{log}{dbMatrix}(x, base = exp(1))
+}
+\arguments{
+\item{x}{a numeric or complex vector.}
+
+\item{base}{a positive or complex number: the base with respect to which
+    logarithms are computed.  Defaults to \eqn{e}=\code{exp(1)}.}
 }
 \description{
-See ?\link{\code{base::log}} for more details.
+\code{log} computes logarithms, by default natural logarithms,
+  \code{log10} computes common (i.e., base 10) logarithms, and
+  \code{log2} computes binary (i.e., base 2) logarithms.
+  The general form \code{log(x, base)} computes logarithms with base
+  \code{base}.
+
+  \code{log1p(x)} computes \eqn{\log(1+x)}{log(1+x)} accurately also for
+  \eqn{|x| \ll 1}{|x| << 1}.
+
+  \code{exp} computes the exponential function.
+
+  \code{expm1(x)} computes \eqn{\exp(x) - 1}{exp(x) - 1} accurately also for
+  \eqn{|x| \ll 1}{|x| << 1}.
 }
 \concept{transform}

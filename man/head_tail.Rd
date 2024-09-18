@@ -9,9 +9,25 @@
 
 \S4method{tail}{dbMatrix}(x, n = 6L, ...)
 }
-\description{
-See ?\link{\code{utils::head}} for more details.
+\arguments{
+\item{x}{an object}
 
-See ?\link{\code{utils::tail}} for more details.
+\item{n}{an integer vector of length up to \code{dim(x)} (or 1,
+    for non-dimensioned objects).  A \code{logical} is silently coerced to
+    integer.  Values specify the indices to be
+    selected in the corresponding dimension (or along the length) of the
+    object. A positive value of \code{n[i]} includes the first/last
+    \code{n[i]} indices in that dimension, while a negative value
+    excludes the last/first \code{abs(n[i])}, including all remaining
+    indices. \code{NA} or non-specified values (when \code{length(n) <
+      length(dim(x))}) select all indices in that dimension. Must
+    contain at least one non-missing value.}
+
+\item{...}{arguments to be passed to or from other methods.}
+}
+\description{
+Returns the first or last parts of a vector, matrix, table, data frame
+  or function.  Since \code{head()} and \code{tail()} are generic
+  functions, they may also have been extended to other classes.
 }
 \concept{matrix_props}

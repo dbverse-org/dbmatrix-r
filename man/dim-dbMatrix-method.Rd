@@ -6,7 +6,10 @@
 \usage{
 \S4method{dim}{dbMatrix}(x)
 }
+\arguments{
+\item{x}{dbMatrix object}
+}
 \description{
-See ?\link{\code{base::dim}} for more details.
+Retrieve the dimension of an object.
 }
 \concept{matrix_props}

@@ -3,15 +3,16 @@
 \name{nrow,dbMatrix-method}
 \alias{nrow,dbMatrix-method}
 \alias{ncol,dbMatrix-method}
-\title{The Number of Rows/Columns of an Array}
+\title{The Number of Rows/Columns of a dbMatrix Object}
 \usage{
 \S4method{nrow}{dbMatrix}(x)
 
 \S4method{ncol}{dbMatrix}(x)
 }
+\arguments{
+\item{x}{dbMatrix object}
+}
 \description{
-See ?\link{\code{base::nrow}} for more details.
-
-See ?\link{\code{base::ncol}} for more details.
+nrow and ncol return the number of rows or columns present in x.
 }
 \concept{matrix_props}

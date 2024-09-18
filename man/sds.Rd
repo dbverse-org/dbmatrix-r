@@ -5,7 +5,7 @@
 \alias{colSds,dbSparseMatrix-method}
 \alias{rowSds,dbDenseMatrix-method}
 \alias{rowSds,dbSparseMatrix-method}
-\title{Calculates the standard deviation for each row (column) of a matrix-like object}
+\title{Row (column) standard deviations for dbMatrix objects}
 \usage{
 \S4method{colSds}{dbDenseMatrix}(
   x,
@@ -47,13 +47,28 @@
   useNames = TRUE
 )
 }
+\arguments{
+\item{x}{An NxK matrix-like object.}
+
+\item{rows, cols}{Always NULL for dbMatrix queries. Included for compatibility
+with the generic.}
+
+\item{na.rm}{Always TRUE for dbMatrix queries. Included for compatibility
+with the generic.}
+
+\item{center}{Always NULL for dbMatrix queries. Included for compatibility
+with the generic.}
+
+\item{...}{Additional arguments passed to specific methods.}
+
+\item{useNames}{Always TRUE for dbMatrix queries. Included for compatibility
+with the generic.}
+
+\item{dim}{Always NULL for dbMatrix queries. Included for compatibility with
+the generic.}
+}
 \description{
-See ?\link{\code{MatrixGenerics::colSds}} for more details.
-
-See ?\link{\code{MatrixGenerics::colSds}} for more details.
-
-See ?\link{\code{MatrixGenerics::rowSds}} for more details.
-
-See ?\link{\code{MatrixGenerics::rowSds}} for more details.
+Calculates the standard deviation for each row (column) of a matrix-like
+object.
 }
 \concept{summary}

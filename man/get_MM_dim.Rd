@@ -16,7 +16,7 @@ integer vector of dimensions
 Internal function to read dimensions of a .mtx file
 }
 \details{
-Scans for the header of an mtx file (starting with %) and takes one more line
+Scans for the header of an mtx file (starting with \%) and takes one more line
 representing the dimensions and number of nonzero values.
 
 Note: the header size can vary depending on the .mtx file.

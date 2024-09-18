@@ -20,10 +20,12 @@ Map dimnames to i,j indices
 \details{
 Constructs a table in a database that contains the accompanying dimnames
 for a dbMatrix. The resulting columns in the table:
-* i (row index)
-* colName_i (rownames),
-* j (col index)
-* j_names (colnames)
-* x (counts of i,j occcurences)
+\itemize{
+\item i (row index)
+\item colName_i (rownames),
+\item j (col index)
+\item j_names (colnames)
+\item x (counts of i,j occcurences)
+}
 }
 \keyword{internal}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dbMatrix.R
 \name{dbMatrix}
 \alias{dbMatrix}
-\title{Create a sparse or dense dbMatrix objects}
+\title{Create a \code{dbSparseMatrix} or \code{dbDenseMatrix} object}
 \usage{
 dbMatrix(
   value,
@@ -53,14 +53,14 @@ Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 This function reads in data into a pre-existing DuckDB database.
 Supported \code{value} data types:
 \itemize{
- \item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
- \item \code{dgTMatrix} In-memory triplet vector or COO matrix
- \item \code{matrix} In-memory dense matrix from base R
- \item \code{.mtx} Path to .mtx file
- \item \code{.csv} Path to .csv file
- \item \code{tbl_duckdb_connection} Table in DuckDB database in ijx format from
- existing \code{dbMatrix} object. \code{dims} and \code{dim_names} must be
- specified if \code{value} is \code{tbl_duckdb_connection}.
+\item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
+\item \code{dgTMatrix} In-memory triplet vector or COO matrix
+\item \code{matrix} In-memory dense matrix from base R
+\item \code{.mtx} Path to .mtx file
+\item \code{.csv} Path to .csv file
+\item \code{tbl_duckdb_connection} Table in DuckDB database in ijx format from
+existing \code{dbMatrix} object. \code{dims} and \code{dim_names} must be
+specified if \code{value} is \code{tbl_duckdb_connection}.
 }
 }
 \examples{

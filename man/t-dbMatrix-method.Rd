@@ -6,7 +6,13 @@
 \usage{
 \S4method{t}{dbMatrix}(x)
 }
+\arguments{
+\item{x}{dbMatrix object}
+}
+\value{
+dbMatrix object
+}
 \description{
-See ?\link{\code{base::t}} for more details.
+Given a dbMatrix x, t returns the transpose of x.
 }
 \concept{transform}
