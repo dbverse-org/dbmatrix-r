@@ -34,27 +34,79 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
 #' @noRd
 arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
   dim = dim(dbm)
-  mat = .recycle_vector_to_matrix(num_vect, dim)
-  vect_tbl = as_ijx(mat)
 
-  ordered_args <- if (ordered_args == '`(x, num_vect))') {
-    '`(x.x, x.y))'
+  if(length(num_vect) != dim[1] & length(num_vect) != dim[2]){
+    # FIXME: .recycle_vector_to_matrix is not OOM
+    mat = .recycle_vector_to_matrix(num_vect, dim)
+    vect_tbl = as_ijx(mat)
+
+    # handle order
+    ordered_args <- if (ordered_args == '`(x, num_vect))') {
+      '`(x.x, x.y))'
+    } else {
+      '`(x.y, x.x))'
+    }
+
+    build_call <- glue::glue(
+      'dbm[] |> ',
+      'dplyr::full_join(vect_tbl, by = c("i", "j"), copy = TRUE) |> ',
+      'dplyr::mutate(',
+      'x.x = coalesce(x.x, 0), ',
+      'x.y = coalesce(x.y, 0), ',
+      'x = `', generic_char, ordered_args,' |> ',
+      'dplyr::select(i, j, x) |> ',
+      'dplyr::filter(x != 0)'
+    )
   } else {
-    '`(x.y, x.x))'
+    r_names = rownames(dbm)
+    c_names = colnames(dbm)
+    # check to see if all names(num_vect)[1:10] is in r_names or c_names
+    if(all(names(num_vect) %in% r_names)){
+      vect_tbl = dplyr::tibble(
+        i = match(names(num_vect), r_names),
+        num_vect = unname(num_vect[match(names(num_vect),r_names)])
+      )
+
+      vect_tbl <- arrow::to_duckdb(
+        .data = vect_tbl,
+        con = dbplyr::remote_con(dbm[]),
+        auto_disconnect = TRUE
+      )
+
+      build_call = paste0(
+        'dbm[] |> ',
+        'dplyr::inner_join(vect_tbl, by = \'i\') |> ',
+        'dplyr::mutate(x = `',
+        generic_char,
+        ordered_args,
+        ' |> ',
+        'dplyr::select(i, j, x)'
+      )
+    } else if(all(names(num_vect) %in% c_names)){
+      vect_tbl = dplyr::tibble(
+        j = match(names(num_vect), c_names),
+        num_vect = unname(num_vect[match(names(num_vect),c_names)])
+      )
+
+      vect_tbl <- arrow::to_duckdb(
+        .data = vect_tbl,
+        con = dbplyr::remote_con(dbm[]),
+        auto_disconnect = TRUE
+      )
+
+      build_call = paste0(
+        'dbm[] |> ',
+        'dplyr::inner_join(vect_tbl, by = \'j\') |> ',
+        'dplyr::mutate(x = `',
+        generic_char,
+        ordered_args,
+        ' |> ',
+        'dplyr::select(i, j, x)'
+      )
+    } else{
+      stop('Names of num_vect must be in either row or column names of dbMatrix')
+    }
   }
-
-  build_call <- glue::glue(
-    'dbm[] |> ',
-    'dplyr::full_join(vect_tbl, by = c("i", "j"), copy = TRUE) |> ',
-    'dplyr::mutate(',
-    'x.x = coalesce(x.x, 0), ',
-    'x.y = coalesce(x.y, 0), ',
-    'x = `', generic_char, ordered_args,' |> ',
-    'dplyr::select(i, j, x) |> ',
-    'dplyr::filter(x != 0)'
-  )
-
-  # }
 
   dbm[] = eval(str2lang(build_call))
 
