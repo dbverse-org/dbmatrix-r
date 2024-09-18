@@ -18,7 +18,7 @@ dbsm = dbMatrix::dbMatrix(value = dgc,
 
 res_dgc = dgc + dgc
 res_dbsm = dbsm + dbsm
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("+ matrix equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -30,14 +30,14 @@ test_that("+ matrix equal", {
 # How to handle this?
 # res_dgc = dgc - dgc
 # res_dbsm = dbsm - dbsm
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 # test_that("- matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })
 
 res_dgc = dgc * dgc
 res_dbsm = dbsm * dbsm
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 test_that("* matrix equal", {
   expect_equal(res_dgc, res_dbsm)
 })
@@ -46,7 +46,7 @@ test_that("* matrix equal", {
 # Support for division by 0
 # res_dgc = dgc / dgc
 # res_dbsm = dbsm / dbsm
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 # test_that("/ matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })
@@ -54,7 +54,7 @@ test_that("* matrix equal", {
 # FIXME: NaN and 1 logic
 # res_dgc = dgc ^ dgc
 # res_dbsm = dbsm ^ dbsm
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 # test_that("^ matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })
@@ -62,7 +62,7 @@ test_that("* matrix equal", {
 # FIXME: division by 0, NaN and 1 logic
 # res_dgc = dgc %% dgc
 # res_dbsm = dbsm %% dbsm
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 # test_that("%% matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })
@@ -70,7 +70,7 @@ test_that("* matrix equal", {
 # FIXME: division by 0, Nan and 1 logic
 # res_dgc = dgc %/% dgc
 # res_dbsm = dbsm %/% dbsm
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 # test_that("%/% matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })

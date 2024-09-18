@@ -19,7 +19,7 @@ dbsm = dbMatrix::dbMatrix(value = dgc,
 res_dgc = dgc + c(1,2,3)
 res_dgc = res_dgc |> as.matrix() #dgeMatrix casting
 res_dbsm = dbsm + c(1,2,3)
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("+ 1 equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -29,7 +29,7 @@ test_that("+ 1 equal", {
 res_dgc = dgc - c(1,2,3)
 res_dgc = as.matrix(res_dgc) #dgeMatrix casting
 res_dbsm = dbsm - c(1,2,3)
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("-1 equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -38,7 +38,7 @@ test_that("-1 equal", {
 
 res_dgc = dgc * c(1,2,3)
 res_dbsm = dbsm * c(1,2,3)
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("* 10 equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -48,7 +48,7 @@ test_that("* 10 equal", {
 res_dgc = dgc + c(1,2,3)
 res_dgc = as.matrix(res_dgc) #dgeMatrix casting
 res_dbsm = dbsm + c(1,2,3)
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("+0 equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -56,7 +56,7 @@ test_that("+0 equal", {
 
 res_dgc = dgc / c(1,2,3)
 res_dbsm = dbsm / c(1,2,3)
-res_dbsm = as_matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm)
 
 test_that("/10 equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -65,7 +65,7 @@ test_that("/10 equal", {
 #FIXME: support for division by zero
 # res_dgc = dgc / 0
 # res_dbsm = dbsm / 0
-# res_dbsm = as_matrix(res_dbsm)
+# res_dbsm = as.matrix(res_dbsm)
 #
 # test_that("/ 0 equal", {
 #   expect_equal(res_dgc, res_dbsm)

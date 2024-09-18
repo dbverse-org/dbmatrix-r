@@ -20,7 +20,7 @@ dbdm = dbMatrix::dbMatrix(value = mat,
 res_mat = mat + 1
 res_mat = res_mat |> as.matrix() #dgeMatrix casting
 res_dbdm = dbdm + 1
-res_dbdm = as_matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm)
 
 test_that("+ 1 equal", {
   expect_equal(res_mat, res_dbdm)
@@ -30,7 +30,7 @@ test_that("+ 1 equal", {
 res_mat = mat - 1
 res_mat = res_mat |> as.matrix() #dgeMatrix casting
 res_dbdm = dbdm - 1
-res_dbdm = as_matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm)
 
 test_that("-1 equal", {
   expect_equal(res_mat, res_dbdm)
@@ -39,7 +39,7 @@ test_that("-1 equal", {
 
 res_mat = mat * 10
 res_dbdm = dbdm * 10
-res_dbdm = as_matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm)
 
 test_that("* 10 equal", {
   expect_equal(res_mat, res_dbdm)
@@ -48,7 +48,7 @@ test_that("* 10 equal", {
 
 res_mat = mat + 0
 res_dbdm = dbdm + 0
-res_dbdm = as_matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm)
 
 test_that("+0 equal", {
   expect_equal(res_mat, res_dbdm)
@@ -56,7 +56,7 @@ test_that("+0 equal", {
 
 res_mat = mat / 10
 res_dbdm = dbdm / 10
-res_dbdm = as_matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm)
 
 test_that("/10 equal", {
   expect_equal(res_mat, res_dbdm)
@@ -64,7 +64,7 @@ test_that("/10 equal", {
 
 # res_mat = mat / 0
 # res_dbdm = dbdm / 0
-# res_dbdm = as_matrix(res_dbdm)
+# res_dbdm = as.matrix(res_dbdm)
 #
 # test_that("/ 0 equal", {
 #   expect_equal(res_mat, res_dbdm)
