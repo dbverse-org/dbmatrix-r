@@ -492,25 +492,37 @@ toDbDense <- function(db_sparse){
   if (!is.null(precompute_name)) {
     precomp <- dplyr::tbl(con, precompute_name)
 
-    # get the max i value in precomp tbl
-    n_rows_pre <- precomp |>
-      dplyr::summarize(n_rows = max(i)) |>
-      dplyr::pull(n_rows)
+    # Assuming fixed output e.g. 'precomp_1000x1000' from precompute
+    precomp_dim <- regmatches(precompute_name,
+                              regexpr("\\d+x\\d+", precompute_name))
+    precomp_dim <- bit64::as.integer64(strsplit(precomp_dim, "x")[[1]])
+    n_rows_pre <- precomp_dim[1]
+    n_cols_pre <- precomp_dim[2]
 
-    n_cols_pre <- precomp |>
-      dplyr::summarize(n_cols = max(j)) |>
-      dplyr::pull(n_cols)
+    if (n_rows < n_rows_pre & n_cols < n_cols_pre) {
+      precomp <- precomp
+    } else if (n_rows < n_cols_pre & n_cols < n_rows_pre) {
+      # tranpose precomp
+      new_precompute_name <- glue::glue("precomp_{n_cols_pre}x{n_rows_pre}")
+      # sql <- glue::glue("
+      # ALTER TABLE {precompute_name} RENAME TO {new_precompute_name};
+      # ALTER TABLE {new_precompute_name} RENAME COLUMN i to j2;
+      # ALTER TABLE {new_precompute_name} RENAME COLUMN j to i;
+      # ALTER TABLE {new_precompute_name} RENAME COLUMN j2 to j;
+      # ")
 
-    # to prevent 1e4 errors and allow >int32
-    n_rows_pre <- bit64::as.integer64(n_rows_pre)
-    n_cols_pre <- bit64::as.integer64(n_cols_pre)
-
-    if(n_rows_pre < n_rows || n_cols_pre < n_cols){
+      sql <- glue::glue("
+      CREATE OR REPLACE TEMPORARY VIEW {new_precompute_name} AS
+      SELECT j AS i, i AS j FROM {precompute_name}
+      ")
+      invisible(DBI::dbExecute(con, sql))
+      precomp <- dplyr::tbl(con, new_precompute_name)
+    } else if (n_rows_pre < n_rows || n_cols_pre < n_cols) {
       cli::cli_alert_warning(
-        "Generating a larger precomputed dbMatrix with {n_rows} rows and {n_cols} columns,
+        "Precomputing dbMatrix table with {n_rows} rows and {n_cols} columns,
         see ?precompute for more details. \n
         ")
-      uni_name <- unique_table_name(prefix = "precomp")
+      uni_name <- paste0("precomp_",n_rows,"x", n_cols)
       precomp <- precompute(
         conn = con,
         m = n_rows,
@@ -518,9 +530,7 @@ toDbDense <- function(db_sparse){
         name = uni_name
       )
     }
-
-  } else{ # generate dbDenseMatrix from scratch
-
+  } else {
     cli::cli_alert_info(paste(
       "Densifying 'dbSparseMatrix' on the fly...",
       sep = "\n",
@@ -532,7 +542,7 @@ toDbDense <- function(db_sparse){
     n_cols <- bit64::as.integer64(n_cols)
 
     # precompute the matrix
-    uni_name <- unique_table_name(prefix = "precomp")
+    uni_name <- paste0("precomp_",n_rows,"x", n_cols)
     precomp <- precompute(
       conn = con,
       m = n_rows,
