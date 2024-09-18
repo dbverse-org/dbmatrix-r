@@ -824,32 +824,31 @@ setMethod('sum', signature(x = 'dbMatrix'), function(x, na.rm = TRUE) {
 ### t ####
 
 #' Matrix Transpose
-#' @description
-#' See ?\link{\code{base::t}} for more details.
+#' @description Given a dbMatrix x, t returns the transpose of x.
+#' @param x dbMatrix object
+#' @return dbMatrix object
 #' @concept transform
 #' @export
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
-  x[] = x[] |> dplyr::select(i = j, j = i, x)
-  x@dims = c(x@dims[[2L]], x@dims[[1L]])
-  x@dim_names = list(x@dim_names[[2L]], x@dim_names[[1L]])
-  x
+  x[] <- x[] |> dplyr::select(i = j, j = i, x)
+  x@dims <- c(x@dims[[2L]], x@dims[[1L]])
+  x@dim_names <- list(x@dim_names[[2L]], x@dim_names[[1L]])
+  return(x)
 })
 
 ### nrow ####
 
-#' The Number of Rows/Columns of an Array
-#' @description
-#' See ?\link{\code{base::nrow}} for more details.
+#' The Number of Rows/Columns of a dbMatrix Object
+#' @description nrow and ncol return the number of rows or columns present in x.
+#' @param x dbMatrix object
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
 setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
-  # x = reconnect(x)
-
   if (is.na(x@dims[1L])) {
-    conn = get_con(x)
-    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT i from %s',
-                                               remoteName(x)))
+    conn <- get_con(x)
+    res <- DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT i from %s',
+                                               dbplyr::remote_name(x[])))
   } else {
     return(x@dims[1L])
   }
@@ -859,68 +858,58 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 
 ### ncol ####
 
-#' The Number of Rows/Columns of an Array
-#' @description
-#' See ?\link{\code{base::ncol}} for more details.
+#' The Number of Rows/Columns of an Array 2
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
 setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
-  # x = reconnect(x)
-
   if (is.na(x@dims[2L])) {
-    conn = get_con(x)
-    res = DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT j from %s',
-                                               remoteName(x)))
+    conn <- get_con(x)
+    res <- DBI::dbGetQuery(conn = conn, sprintf('SELECT DISTINCT j from %s',
+                                               dbplyr::remote_name(x[])))
   } else {
     return(x@dims[2L])
   }
-
   return(base::nrow(res))
 })
 
 ### dim ####
 
 #' Dimensions of an Object
-#' @description
-#' See ?\link{\code{base::dim}} for more details.
+#' @description Retrieve the dimension of an object.
+#' @param x dbMatrix object
 #' @concept matrix_props
 #' @export
-setMethod('dim',
-          signature(x = 'dbMatrix'),
-          function(x) {
+setMethod('dim', signature(x = 'dbMatrix'), function(x) {
             if (any(is.na(x@dims))) {
               return(c(nrow(x), ncol(x)))
             } else {
-              res = x@dims
+    res <- x@dims
             }
           })
 
 ### head ####
 #' Return the First or Last Parts of an Object
-#' @description
-#' See ?\link{\code{utils::head}} for more details.
+#' @inherit utils::head description
+#' @inheritParams utils::head
 #' @concept matrix_props
 #' @rdname head_tail
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset = 1:n
-  x[] = x[] |> dplyr::filter(i %in% n_subset)
-  x@dims[1L] = min(x@dims[1L], as.integer(n))
+  n_subset <- 1:n
+  x[] <- x[] |> dplyr::filter(i %in% n_subset)
+  x@dims[1L] <- min(x@dims[1L], as.integer(n))
   return(x)
 })
 
 ### tail ####
-#' Return the First or Last Parts of an Object
-#' @description
-#' See ?\link{\code{utils::tail}} for more details.
 #' @concept matrix_props
 #' @rdname head_tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset = (x@dims[1L] - n):x@dims[1L]
-  x[] = x[] |> dplyr::filter(i %in% n_subset)
-  x@dims[1L] = min(x@dims[1L], as.integer(n))
+  n_subset <- (x@dims[1L] - n):x@dims[1L]
+  x[] <- x[] |> dplyr::filter(i %in% n_subset)
+  x@dims[1L] <- min(x@dims[1L], as.integer(n))
   return(x)
 })
 
