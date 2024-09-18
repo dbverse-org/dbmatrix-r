@@ -785,15 +785,15 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 ## log ####
 
 #' Logarithms and Exponentials
-#' @description
-#' See ?\link{\code{base::log}} for more details.
+#' @inheritParams base::log
+#' @inherit base::log description
 #' @concept transform
 #' @export
-setMethod('log', signature(x = 'dbMatrix'), function(x, ...) {
-  x = castNumeric(x)
+setMethod('log', signature(x = 'dbMatrix'), function(x, base = exp(1)) {
+  x <- castNumeric(x)
 
-  x[] = x[] |>
-    dplyr::mutate(x = log(x))
+  x[] <- x[] |>
+    dplyr::mutate(x := log(x, base))
 
   return(x)
 
