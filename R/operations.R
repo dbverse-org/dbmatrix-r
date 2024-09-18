@@ -308,60 +308,78 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
 
 # Math Summary Ops ####
 ## rowSums dbdm ####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::rowSums}} for more details.
+#' Row (column) sums for dbMatrix objects
+#' @inherit MatrixGenerics::rowSums description
+#' @inheritParams MatrixGenerics::rowSums
+#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param dims Always 1 for dbMatrix queries. Included for compatibility with
+#' the generic.
+#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
+#' for large computations. Set to TRUE to return the results as a vector.
 #' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_sums
 #' @export
 setMethod('rowSums', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
-
-            val_names = rownames(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
             # calculate rowSums
-            vals = x[] |>
+            rowSum <- x[] |>
               dplyr::group_by(i) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-              dplyr::arrange(i) |>
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+
+            if (memory) {
+              res <- rowSum |>
               dplyr::collapse() |>
+                dplyr::arrange(i) |>
               dplyr::pull(sum_x)
 
-            # set dimname
-            names(vals) = val_names
+              names(res) <- rownames(x)
+            } else {
+              res <- new("dbDenseMatrix")
+              rowSum <- rowSum |>
+                dplyr::mutate(j = 1) |>
+                dplyr::rename(x = sum_x) |>
+                dplyr::arrange(i) |>
+                dplyr::select(i, j, x)
+              res@value <- rowSum
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(nrow(x), 1L)
+              res@dim_names <- list(rownames(x), c('col1'))
+            }
 
-            # show
-            vals
+            return(res)
           }
         )
 
 ## rowSums dbsm ####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::rowSums}} for more details.
 #' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_sums
 #' @export
 setMethod('rowSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
             # calc rowsum for nonzero values in ijx
-            rowSum = x[] |>
+            rowSum <- x[] |>
               dplyr::group_by(i) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+
+            if (memory) {
+              rowSum <- rowSum |>
               dplyr::arrange(i) |>
               dplyr::pull(sum_x)
 
             # get row_idx for non-zero values in ijx
-            nonzero_row_indices = x[] |>
+              nonzero_row_indices <- x[] |>
               dplyr::distinct(i) |>
               dplyr::arrange(i) |>
               dplyr::pull(i)
 
             # format data for join operation
-            nonzero_rownames = rownames(x)[nonzero_row_indices]
+              nonzero_rownames <- rownames(x)[nonzero_row_indices]
             rownames_df <- data.frame(rowname = rownames(x),
                                       stringsAsFactors = FALSE)
             rowSum_df <- data.frame(rowname = nonzero_rownames,
@@ -376,59 +394,78 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
             # return rowSums as a named vector
             res <- merged_df$value
             names(res) <- as.factor(merged_df$rowname)
+            } else {
+              res <- new("dbDenseMatrix")
+              rowSum <- rowSum |>
+                dplyr::mutate(j = 1) |>
+                dplyr::rename(x = sum_x) |>
+                dplyr::select(i, j, x) |>
+                dplyr::collapse() |>
+                dplyr::arrange(i)
+              res@value <- rowSum
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(nrow(x), 1L)
+              res@dim_names <- list(rownames(x), c('col1'))
+            }
 
             # show
-            res
-
+            return(res)
           })
 
 ## colSums dbdm####
-
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::colSums}} for more details.
-#' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_sums
 #' @export
 setMethod('colSums', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
-
-            val_names = colnames(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
             # calculate colSums
-            vals = x[] |>
+            colSum <- x[] |>
               dplyr::group_by(j) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-              dplyr::arrange(j) |>
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+
+            if (memory) {
+              res <- colSum |>
               dplyr::collapse() |>
+                dplyr::arrange(j) |>
               dplyr::pull(sum_x)
 
-            # set dimnames
-            names(vals) = val_names
+              names(res) <- colnames(x)
+            } else {
+              res <- new("dbDenseMatrix")
+              colSum <- colSum |>
+                dplyr::mutate(i = 1) |>
+                dplyr::rename(x = sum_x) |>
+                dplyr::arrange(j) |>
+                dplyr::select(i, j, x)
+              res@value <- colSum
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(1L, ncol(x))
+              res@dim_names <- list(c('row1'), colnames(x))
+            }
 
-            # show
-            vals
+            return(res)
           })
 
 ## colSums dbsm ####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::colSums}} for more details.
 #' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_sums
 #' @export
 setMethod('colSums', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
+          function(x, ..., memory = FALSE){
             x = castNumeric(x)
 
             # calc colsum for nonzero values in ijx
             colSum = x[] |>
               dplyr::group_by(j) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-              dplyr::arrange(j) |>
-              dplyr::pull(sum_x)
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
 
+            if (memory) {
+            colSum = colSum |>
+              dplyr::arrange(j) |>
+              dplyr::pull(j)
             # get col_idx for non-zero values in ijx
             nonzero_col_indices = x[] |>
               dplyr::distinct(j) |>
@@ -451,160 +488,201 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
             # return rowSums as a named vector
             res <- merged_df$value
             names(res) <- as.factor(merged_df$colname)
+            } else {
+              res <- new("dbDenseMatrix")
+              colSum <- colSum |>
+                dplyr::mutate(i = 1) |>
+                dplyr::rename(x = sum_x) |>
+                dplyr::select(i, j, x) |>
+                dplyr::collapse() |>
+                dplyr::arrange(j)
+              res@value <- colSum
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(1L, ncol(x))
+              res@dim_names <- list(c('row1'), colnames(x))
+            }
 
             # show
-            res
+            return(res)
           })
 
 ## rowMeans dbdm ####
-
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::rowMeans}} for more details.
+#' Row (column) means for dbMatrix objects
+#' @inheritParams MatrixGenerics::rowMeans
+#' @inherit MatrixGenerics::rowMeans description
+#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param dims Always 1 for dbMatrix queries. Included for compatibility with
+#' the generic.
+#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
+#' for large computations. Set to TRUE to return the results as a vector.
 #' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_means
 #' @export
 setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
-            val_names = rownames(x)
-
-            # calculate rowMeans
-            vals = x[] |>
+            # Calculate row means
+            rowMean <- x[] |>
               dplyr::group_by(i) |>
-              dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
-              dplyr::arrange(i) |>
+              dplyr::summarise(mean_x = mean(x, na.rm = TRUE))
+
+            if (memory) {
+              res <- rowMean |>
               dplyr::collapse() |>
+                dplyr::arrange(i) |>
               dplyr::pull(mean_x)
-
-            # set dimnames
-            names(vals) = val_names
-
-            # show
-            vals
+              names(res) <- rownames(x)
+            } else {
+              res <- new("dbDenseMatrix")
+              rowMean <- rowMean |>
+                dplyr::mutate(j = 1) |>
+                dplyr::rename(x = mean_x) |>
+                dplyr::select(i, j, x) |>
+                dplyr::collapse() |>
+                dplyr::arrange(i)
+              res@value <- rowMean
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(nrow(x), 1L)
+              res@dim_names <- list(rownames(x), c('col1'))
+            }
+            return(res)
           })
 
 ## rowMeans dbsm ####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::rowMeans}} for more details.
-#' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_means
 #' @export
 setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
-            # get non-zero row idx (factors) and convert to integers
-            row_indices = x[] |>
+            if (memory) {
+              row_indices <- x[] |>
               dplyr::distinct(i) |>
               dplyr::arrange(i) |>
               dplyr::pull(i) |>
               as.integer()
 
-            # get non-zero row names by row idx
-            val_names = factor(rownames(x)[row_indices])
+              # calculate rowMeans
+              row_sums <- rowSums(x)
+              n_cols <- ncol(x)
+              res <- row_sums / n_cols
+            } else {
+              # calculate rowMeans
+              res <- rowSums(x, memory = FALSE) # dbDenseMatrix
+              n_cols <- ncol(x)
+              res[] <- res[] |>
+                dplyr::mutate(x := x / n_cols)
+            }
 
-            # calculate rowSums
-            row_sums = rowSums(x)
-            n_cols <- dim(x)[2]
-            vals = row_sums / n_cols
-
-            # show
-            vals
+            return(res)
           })
 
 ## colMeans dbdm####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::colMeans}} for more details.
-#' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_means
 #' @export
 setMethod('colMeans', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
-            val_names = colnames(x)
-
-            vals = x[] |>
+            # Calculate column means
+            colMean <- x[] |>
               dplyr::group_by(j) |>
-              dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
-              dplyr::arrange(j) |>
+              dplyr::summarise(mean_x = mean(x, na.rm = TRUE))
+
+            if (memory) {
+              res <- colMean |>
               dplyr::collapse() |>
+                dplyr::arrange(j) |>
               dplyr::pull(mean_x)
-
-            names(vals) = val_names
-
-            vals
+              names(res) = colnames(x)
+            } else {
+              res <- new("dbDenseMatrix")
+              colMean <- colMean |>
+                dplyr::mutate(i = 1) |>
+                dplyr::rename(x = mean_x) |>
+                dplyr::select(i, j, x) |>
+                dplyr::collapse() |>
+                dplyr::arrange(j)
+              res@value <- colMean
+              res@name <- NA_character_ # for lazy queries
+              res@init <- TRUE
+              res@dims <- c(1L, ncol(x))
+              res@dim_names <- list(c('row1'), colnames(x))
+            }
+            return(res)
           })
 
 ## colMeans dbsm ####
-#' Form Row and Column Sums and Means
-#' @description
-#' See ?\link{\code{base::colMeans}} for more details.
-#' @concept summary
-#' @rdname row_col_sums_means
+#' @rdname row_col_means
 #' @export
 setMethod('colMeans', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
-            x = castNumeric(x)
+          function(x, ..., memory = FALSE){
+            x <- castNumeric(x)
 
-            # get non-zero column idx (factors) and convert to integers
-            col_indices = x[] |>
+            if (memory) {
+              col_indices <- x[] |>
               dplyr::distinct(j) |>
               dplyr::arrange(j) |>
               dplyr::pull(j) |>
               as.integer()
 
-            # get non-zero column names by column idx
-            val_names = factor(colnames(x)[col_indices])
+              # calculate colMeans
+              col_sums <- colSums(x)
+              n_rows <- nrow(x)
+              res <- col_sums / n_rows
+            } else {
+              res <- colSums(x, memory = FALSE) # dbDenseMatrix
+              n_rows <- nrow(x)
+              res[] <- res[] |>
+                dplyr::mutate(x := x / n_rows)
+            }
 
-            # calculate
-            col_sums = colSums(x)
-            n_rows <- dim(x)[1]
-            vals = col_sums / n_rows
-
-            # show
-            vals
+            return(res)
           })
 
 ## colSds dbdm ####
-
-#' Calculates the standard deviation for each row (column) of a matrix-like object
-#' @description
-#' See ?\link{\code{MatrixGenerics::colSds}} for more details.
+#' Row (column) standard deviations for dbMatrix objects
+#' @inheritParams MatrixGenerics::colSds
+#' @inherit MatrixGenerics::colSds description
+#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param rows,cols Always NULL for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param center Always NULL for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param useNames Always TRUE for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @param dim Always NULL for dbMatrix queries. Included for compatibility with
+#' the generic.
 #' @concept summary
 #' @rdname sds
 #' @export
 setMethod('colSds', signature(x = 'dbDenseMatrix'),
           function(x, ...){
-            # x = reconnect(x)
-            x = castNumeric(x)
+            x <- castNumeric(x)
 
-            val_names = colnames(x)
-            vals = x[] |>
+            val_names <- colnames(x)
+            vals <- x[] |>
               dplyr::group_by(j) |>
               dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
               dplyr::arrange(j) |>
               dplyr::collapse() |>
               dplyr::pull(sd_x)
-            names(vals) = val_names
+            names(vals) <- val_names
             vals
           })
 
 ## colSds dbsm ####
-#' Calculates the standard deviation for each row (column) of a matrix-like object
-#' @description
-#' See ?\link{\code{MatrixGenerics::colSds}} for more details.
 #' @concept summary
 #' @rdname sds
 #' @export
 setMethod('colSds', signature(x = 'dbSparseMatrix'),
           function(x, ...){
-            # x = reconnect(x)
-            x = castNumeric(x)
+            x <- castNumeric(x)
 
             stop("to be implemented")
 
@@ -625,39 +703,31 @@ setMethod('colSds', signature(x = 'dbSparseMatrix'),
           })
 
 ## rowSds dbdm####
-#' Calculates the standard deviation for each row (column) of a matrix-like object
-#' @description
-#' See ?\link{\code{MatrixGenerics::rowSds}} for more details.
 #' @concept summary
 #' @rdname sds
 #' @export
 setMethod('rowSds', signature(x = 'dbDenseMatrix'),
           function(x, ...){
-            # x = reconnect(x)
-            x = castNumeric(x)
+            x <- castNumeric(x)
 
-            val_names = rownames(x)
-            vals = x[] |>
+            val_names <- rownames(x)
+            vals <- x[] |>
               dplyr::group_by(i) |>
               dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
               dplyr::arrange(i) |>
               dplyr::collapse() |>
               dplyr::pull(sd_x)
-            names(vals) = val_names
+            names(vals) <- val_names
             vals
           })
 
 ## rowSds dbsm ####
-#' Calculates the standard deviation for each row (column) of a matrix-like object
-#' @description
-#' See ?\link{\code{MatrixGenerics::rowSds}} for more details.
 #' @concept summary
 #' @rdname sds
 #' @export
 setMethod('rowSds', signature(x = 'dbSparseMatrix'),
           function(x, ...){
-            # x = reconnect(x)
-            x = castNumeric(x)
+            x <- castNumeric(x)
 
             stop("to be implemented")
 
