@@ -552,20 +552,28 @@ toDbDense <- function(db_sparse){
     )
   }
 
-  key <- precomp |>
-    dplyr::filter(i <= n_rows, j <= n_cols) |> # filter out rows and cols that are not in db_sparse
-    dplyr::mutate(x = 0)
-
-  data <- key |>
-    dplyr::left_join(db_sparse[], by = c("i", "j"), suffix = c("", ".dgc")) |>
-    dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
-    dplyr::select(-x.dgc)
+  db_sparse_sql <- dbplyr::sql_render(db_sparse[])
+  precomp_name <- dbplyr::remote_name(precomp)
+  db_dense_name <- unique_table_name(prefix = "dbDenseMatrix")
+  sql <- glue::glue("
+            CREATE TEMPORARY VIEW '{db_dense_name}' AS
+            WITH {remote_name} AS ({db_sparse_sql})
+            SELECT
+              p.i,
+              p.j,
+              COALESCE(main.{remote_name}.x, 0.0) AS x
+            FROM '{precomp_name}' p
+            LEFT JOIN main.{remote_name} ON p.i = main.{remote_name}.i AND p.j = main.{remote_name}.j
+            WHERE p.i <= {n_rows} AND p.j <= {n_cols}
+        ")
+  DBI::dbExecute(con, sql)
+  data <- dplyr::tbl(con, db_dense_name)
 
   # Create new dbMatrix object
   db_dense <- new(
     Class = "dbDenseMatrix",
     value = data,
-    name = remote_name,
+    name = NA_character_,
     dims = dims,
     dim_names = dim_names,
     init = TRUE
@@ -640,21 +648,24 @@ to_ijx_disk <- function(con, name){
   # return(res)
 }
 
-#' as_matrix
+## as.matrix ####
+#' Convert dbMatrix to in-memory matrix
 #'
-#' @param x dbSparseMatrix
-#' @param output "matrix"
+#' @param x A dbMatrix object (dbSparseMatrix or dbDenseMatrix)
+#' @param ... Additional arguments (not used)
+#'
 #' @description
-#' Set output to matrix to cast dbSparseMatrix into matrix
+#' Converts a dbMatrix object into an in-memory matrix or sparse matrix.
 #'
 #' @details
-#' this is a helper function to convert dbMatrix to dgCMatrix or matrix
-#' Warning: can cause memory issues if the input matrix is large
+#' This method converts a dbMatrix object (dbSparseMatrix or dbDenseMatrix) to an in-memory
+#' Matrix::dgCMatrix (for sparse) or base R matrix (for dense).
+#' Warning: This can cause memory issues if the input matrix is large.
 #'
-#'
-#' @return dgCMatrix or matrix
-#' @noRd
-as_matrix <- function(x, output){
+#' @return A Matrix::dgCMatrix or base R matrix
+#' @export
+#' @concept transform
+setMethod("as.matrix", "dbMatrix", function(x, ...) {
   con <- dbplyr::remote_con(x[])
   .check_con(con)
   dims <- dim(x)
@@ -668,7 +679,7 @@ as_matrix <- function(x, output){
       "Warning: Converting large dbMatrix to in-memory Matrix.")
   }
 
-  if(class(x) == "dbSparseMatrix"){
+  if(is(x, "dbSparseMatrix")){
     max_i <- x[] |> dplyr::summarise(max_i = max(i)) |> dplyr::pull(max_i)
     max_j <- x[] |> dplyr::summarise(max_j = max(j)) |> dplyr::pull(max_j)
 
@@ -706,11 +717,8 @@ as_matrix <- function(x, output){
     dimnames(mat) = dim_names
     dim(mat) = dims
     unlink(temp_file, recursive = TRUE, force = TRUE)
-    if(!missing(output) && output == "matrix"){
-      mat <- as.matrix(mat)
-    }
   }
-  else if(class(x) == "dbDenseMatrix"){
+  else if(is(x, "dbDenseMatrix")){
     # Create a temporary file to store the matrix
     temp_file <- tempfile(tmpdir = getwd(), fileext = ".parquet")
 
@@ -721,25 +729,17 @@ as_matrix <- function(x, output){
 
     dt <- arrow::read_parquet(temp_file)
 
-    # Create a sparse matrix
-    mat <- Matrix::sparseMatrix(
-      i = dt$i,
-      j = dt$j,
-      x = dt$x,
-      index1 = TRUE
-    )
+    # Create a dense matrix
+    mat <- matrix(0, nrow = n_rows, ncol = n_cols)
+    mat[cbind(dt$i, dt$j)] <- dt$x
     dimnames(mat) = dim_names
-    dim(mat) = dims
-
-    # Convert sparse matrix to dense matrix in-memory
-    mat <- as.matrix(mat)
 
     # Clean up temp files
     unlink(temp_file, recursive = TRUE, force = TRUE)
   }
 
   return(mat)
-}
+})
 
 #' @title as_ijx
 #' @param x dgCMatrix or matrix

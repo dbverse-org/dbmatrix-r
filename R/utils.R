@@ -122,6 +122,140 @@ ij_array_map = function(i, j, dims) {
 #'             DBI::dbListTables(conn = con)
 #'           })
 
+# dbMatrix ####
+
+## load ####
+#' Create a dbMatrix object computed in a database
+#' @export
+#' @noRd
+setMethod('load', signature(conn = 'DBIConnection'), function(conn, name, class) {
+  .check_con(conn = conn)
+  if (!name %in% DBI::dbListTables(conn)) {
+    stopf("'name' not found in database")
+  }
+  if (!class %in% c('dbDenseMatrix', 'dbSparseMatrix')) {
+    stopf("Class must be 'dbDenseMatrix' or 'dbSparseMatrix'")
+  }
+
+  dim_names <- c(paste0(name, "_rownames"), paste0(name, "_colnames"))
+
+  # check if rownames and colnames exist
+  if (!all(dim_names %in% DBI::dbListTables(conn))) {
+    stopf("Dimension names not found. Did you save with dbMatrix::compute?")
+  }
+
+  # load values saved from dbMatrix::compute()
+  rownames <- dplyr::tbl(conn, dim_names[1]) |> dplyr::pull('rownames')
+  colnames <- dplyr::tbl(conn, dim_names[2]) |> dplyr::pull('colnames')
+  dim_names <- list(as.factor(rownames), as.factor(colnames))
+  dims <- c(length(rownames), length(colnames))
+  value <- dplyr::tbl(conn, name)
+
+  x <- dbMatrix::dbMatrix(
+    value = value,
+    class = class,
+    con = conn,
+    name = name,
+    dim_names = dim_names,
+    dims = dims,
+    overwrite = 'PASS'
+  )
+
+  return(x)
+})
+
+
+# dbData ####
+## dbReconnect-con ####
+#' @export
+#' @noRd
+#' @description
+#' Refreshes connection to a specific file path to a local database file
+setMethod('dbReconnect', signature(x = 'DBIConnection'), function(x, ...){
+  if(DBI::dbIsValid(x)){
+    cli::cli_alert_info('Connection is already valid')
+    return(invisible(x))
+  }
+  driver <- x@driver
+  path <- x@driver@dbdir
+
+  # input validation
+  if(!is.character(path)) {
+    stopf('Path must be a character string')
+  }
+  if(!file.exists(path)) {
+    stopf('Path does not exist: %s', path)
+  }
+
+  con = DBI::dbConnect(driver, path)
+
+  cli::cli_alert_success(paste0('Reconnected to: \n \'', path, '\' \n'))
+
+  return(invisible(con))
+
+})
+
+## dbReconnect-dbMatrix ####
+#' @export
+#' @noRd
+#' @description
+#' Refreshes connection to a specific file path to a local database file
+setMethod('dbReconnect', signature(x = 'dbMatrix'), function(x, conn){
+  if(!DBI::dbIsValid(conn)){
+    conn <- dbReconnect(conn) |> suppressMessages()
+  }
+
+  if(!x@name %in% DBI::dbListTables(conn)){
+    message = paste0('Table \'', x@name, '\' does not exist in the database.')
+    stopf(message)
+  }
+
+  # TODO: signature(x = DBIConnection) to allow for any DB backend
+  x[]$src$con <- conn
+
+  return(x)
+
+})
+
+## dbList ####
+#' List remote tables, temporary tables, and views
+#' @inheritParams DBI::dbListTables
+#' @export
+#' @description
+#' Pretty prints tables, temporary tables, and views in the database.
+#' @details
+#' Similar to DBI::dbListTables, but categorizes tables into three categories:
+#' * Tables
+#' * Temporary Tables (these will be removed when the connection is closed)
+#' * Views (these may be removed when the connection is closed)
+#'
+#' @concept dbData
+setMethod('dbList', signature(conn = 'DBIConnection'), function(conn){
+  # Query to get table types
+  query <- "SELECT table_name, table_type FROM information_schema.tables"
+  table_types <- DBI::dbGetQuery(conn, query)
+
+  # Categorize tables based on their types
+  tables <- dplyr::filter(table_types, table_type == 'BASE TABLE')
+  views <- dplyr::filter(table_types, grepl("VIEW", table_type,
+                                            ignore.case = TRUE))
+  temp_tables <- dplyr::filter(table_types, grepl("TEMPORARY", table_type,
+                                                  ignore.case = TRUE))
+
+  print_category <- function(category_name, items) {
+    cat(crayon::green(paste0(category_name, ": \n")))
+    if (length(items) == 0) {
+      cat("\n")
+    } else {
+      print(items)
+    }
+  }
+
+  # Print the results
+  print_category("Tables", tables$table_name)
+  print_category("Temporary Tables", temp_tables$table_name)
+  print_category("Views", views$table_name)
+})
 # dbplyr ####
 
 #' Generate table names
@@ -135,3 +269,56 @@ unique_table_name <- function(prefix = ""){
   name <- paste0(sample(vals, 10, replace = TRUE), collapse = "")
   paste0(prefix, "_", name)
 }
+
+## compute #####
+#' @export
+#' @inheritParams dplyr::compute
+#' @param temporary default = TRUE. If FALSE, the table will be persisted
+#' in the database. If TRUE, the table will be removed after the session ends.
+#' @param dimnames default = TRUE. If TRUE, the rownames and colnames will be
+#' saved in the database. This allows full reconstruction of the dbMatrix object
+#' using \link{\code{dbMatrix::load()}}.
+#' @param ... other args passed to \link{\code{dplyr::compute()}}
+#' @noRd
+setMethod('compute', signature(x = 'dbMatrix'),
+          function(x, temporary = TRUE, dimnames = TRUE, ...) {
+  con <- get_con(x)
+  .check_con(conn = con)
+  dots <- list(...)
+
+  # Determine the name to use
+  if (!is.null(dots$name)) {
+    name <- dots$name
+    dots$name <- NULL  # Remove name from dots to avoid duplication
+  } else if (!is.na(x@name)) {
+    name <- x@name
+  } else {
+    stopf("Please provide a 'name' to compute the lazy dbMatrix table")
+  }
+
+  # Let dplyr/dbplyr handle errors
+  # if (name %in% DBI::dbListTables(con)) {
+  #   if (is.null(dots$overwrite) || !dots$overwrite) {
+  #     stopf("Table already exists in database. Set 'overwrite'= TRUE")
+  #   }
+  # } else {
+  #   if (!is.null(dots$overwrite) && dots$overwrite) {
+  #     stopf("Table does not exist in database. Set 'overwrite'= FALSE")
+  #   }
+  # }
+
+  # Use do.call to avoid 'name' conflicts with dots
+  result <- do.call(dplyr::compute,
+                    c(list(x[], name = name, temporary = temporary), dots))
+
+  if(dimnames){
+    .write_dimnames(x = x, name = name)
+  }
+
+  # Update the dbMatrix object
+  x@value <- result
+  x@name <- name
+
+  # Return dbMatrix
+  return(x)
+})

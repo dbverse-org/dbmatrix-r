@@ -29,9 +29,6 @@
 #' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' precompute(con = con , m = 100, n = 100, name = "precomputed_table")
 precompute <- function(conn, m, n, name, verbose = TRUE){
-  # create a random sufix with precomp_ as suffix if name is NULL using
-  # dbplyr internal random name generator
-
   # input validation
   .check_con(conn = conn)
   .check_name(name = name)
