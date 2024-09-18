@@ -331,9 +331,9 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
 
             if (memory) {
               res <- rowSum |>
-              dplyr::collapse() |>
+                dplyr::collapse() |>
                 dplyr::arrange(i) |>
-              dplyr::pull(sum_x)
+                dplyr::pull(sum_x)
 
               names(res) <- rownames(x)
             } else {
@@ -369,31 +369,31 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
 
             if (memory) {
               rowSum <- rowSum |>
-              dplyr::arrange(i) |>
-              dplyr::pull(sum_x)
+                dplyr::arrange(i) |>
+                dplyr::pull(sum_x)
 
-            # get row_idx for non-zero values in ijx
+              # get row_idx for non-zero values in ijx
               nonzero_row_indices <- x[] |>
-              dplyr::distinct(i) |>
-              dplyr::arrange(i) |>
-              dplyr::pull(i)
+                dplyr::distinct(i) |>
+                dplyr::arrange(i) |>
+                dplyr::pull(i)
 
-            # format data for join operation
+              # format data for join operation
               nonzero_rownames <- rownames(x)[nonzero_row_indices]
-            rownames_df <- data.frame(rowname = rownames(x),
+              rownames_df <- data.frame(rowname = rownames(x),
+                                        stringsAsFactors = FALSE)
+              rowSum_df <- data.frame(rowname = nonzero_rownames,
+                                      value = rowSum,
                                       stringsAsFactors = FALSE)
-            rowSum_df <- data.frame(rowname = nonzero_rownames,
-                                    value = rowSum,
-                                    stringsAsFactors = FALSE)
 
-            # left join to retain order of original dimnames
-            merged_df <- dplyr::left_join(rownames_df, rowSum_df,
-                                          by = "rowname") |>
-                         dplyr::mutate(value = ifelse(is.na(value), 0, value))
+              # left join to retain order of original dimnames
+              merged_df <- dplyr::left_join(rownames_df, rowSum_df,
+                                            by = "rowname") |>
+                dplyr::mutate(value = ifelse(is.na(value), 0, value))
 
-            # return rowSums as a named vector
-            res <- merged_df$value
-            names(res) <- as.factor(merged_df$rowname)
+              # return rowSums as a named vector
+              res <- merged_df$value
+              names(res) <- as.factor(merged_df$rowname)
             } else {
               res <- new("dbDenseMatrix")
               rowSum <- rowSum |>
@@ -427,9 +427,9 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
 
             if (memory) {
               res <- colSum |>
-              dplyr::collapse() |>
+                dplyr::collapse() |>
                 dplyr::arrange(j) |>
-              dplyr::pull(sum_x)
+                dplyr::pull(sum_x)
 
               names(res) <- colnames(x)
             } else {
@@ -531,9 +531,9 @@ setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
 
             if (memory) {
               res <- rowMean |>
-              dplyr::collapse() |>
+                dplyr::collapse() |>
                 dplyr::arrange(i) |>
-              dplyr::pull(mean_x)
+                dplyr::pull(mean_x)
               names(res) <- rownames(x)
             } else {
               res <- new("dbDenseMatrix")
@@ -561,10 +561,10 @@ setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
 
             if (memory) {
               row_indices <- x[] |>
-              dplyr::distinct(i) |>
-              dplyr::arrange(i) |>
-              dplyr::pull(i) |>
-              as.integer()
+                dplyr::distinct(i) |>
+                dplyr::arrange(i) |>
+                dplyr::pull(i) |>
+                as.integer()
 
               # calculate rowMeans
               row_sums <- rowSums(x)
@@ -595,9 +595,9 @@ setMethod('colMeans', signature(x = 'dbDenseMatrix'),
 
             if (memory) {
               res <- colMean |>
-              dplyr::collapse() |>
+                dplyr::collapse() |>
                 dplyr::arrange(j) |>
-              dplyr::pull(mean_x)
+                dplyr::pull(mean_x)
               names(res) = colnames(x)
             } else {
               res <- new("dbDenseMatrix")
@@ -625,10 +625,10 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
 
             if (memory) {
               col_indices <- x[] |>
-              dplyr::distinct(j) |>
-              dplyr::arrange(j) |>
-              dplyr::pull(j) |>
-              as.integer()
+                dplyr::distinct(j) |>
+                dplyr::arrange(j) |>
+                dplyr::pull(j) |>
+                as.integer()
 
               # calculate colMeans
               col_sums <- colSums(x)
@@ -881,12 +881,12 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 #' @concept matrix_props
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
-            if (any(is.na(x@dims))) {
-              return(c(nrow(x), ncol(x)))
-            } else {
+  if (any(is.na(x@dims))) {
+    return(c(nrow(x), ncol(x)))
+  } else {
     res <- x@dims
-            }
-          })
+  }
+})
 
 ### head ####
 #' Return the First or Last Parts of an Object
