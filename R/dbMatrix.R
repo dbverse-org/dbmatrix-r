@@ -451,12 +451,10 @@ dbMatrix <- function(value,
 
 #' @title Convert dbSparseMatrix to dbDenseMatrix
 #' @description
-#' Convert a dbSparseMatrix to a dbDenseMatrix.
-#'
-#' @param db_sparse dbSparseMatrix object.
-#'
+#' Convert a dbSparseMatrix to a dbDenseMatrix using precomputed table.
+#' @param db_sparse A \code{dbSparseMatrix} object to convert.
+#' @return A \code{dbDenseMatrix} object representing the dense matrix.
 #' @noRd
-#'
 #' @keywords internal
 toDbDense <- function(db_sparse){
   # check if db_dense is a dbDenseMatrix
