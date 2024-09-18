@@ -799,6 +799,26 @@ setMethod('log', signature(x = 'dbMatrix'), function(x, base = exp(1)) {
 
 })
 
+## sum ####
+
+#' Sum of Vector Elements in dbMatrix objects
+#' @inherit base::sum description
+#' @param x dbMatrix object
+#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' with the generic.
+#' @concept summary
+#' @export
+setMethod('sum', signature(x = 'dbMatrix'), function(x, na.rm = TRUE) {
+  x <- castNumeric(x)
+
+  res <- x[] |>
+    dplyr::summarize(sum = sum(x, na.rm = TRUE)) |>
+    dplyr::pull(sum)
+
+  return(res)
+
+})
+
 # General Ops ####
 
 ### t ####
