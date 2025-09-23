@@ -37,7 +37,7 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
 # Custom stop function
 stopf = function(...) {
-  wrap_txt('dbMatrix:\n', ..., errWidth = TRUE) |>
+  wrap_txt('dbMatrix: ', ..., errWidth = TRUE) |>
     stop(call. = FALSE)
 }
 
