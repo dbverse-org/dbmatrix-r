@@ -665,12 +665,12 @@ setMethod("%in%", signature(x = "dbSparseMatrix", table = "ANY"), function(x, ta
 
 # Math Summary Ops ####
 ## rowSums dbdm ####
-#' Row (column) sums for dbMatrix objects
+#' Row (column) sums for [`dbMatrix`] objects
 #' @inherit MatrixGenerics::rowSums description
 #' @inheritParams MatrixGenerics::rowSums
-#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' @param na.rm Always TRUE for [`dbMatrix`]. Included for compatibility
 #' with the generic.
-#' @param dims Always 1 for dbMatrix queries. Included for compatibility with
+#' @param dims Always 1 for [`dbMatrix`] queries. Included for compatibility with
 #' the generic.
 #' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
 #' for large computations. Set to TRUE to return the results as a vector.
@@ -694,17 +694,18 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
 
               names(res) <- rownames(x)
             } else {
-              res <- new("dbDenseMatrix")
               rowSum <- rowSum |>
                 dplyr::mutate(j = 1) |>
                 dplyr::rename(x = sum_x) |>
                 dplyr::arrange(i) |>
                 dplyr::select(i, j, x)
-              res@value <- rowSum
-              res@name <- NA_character_ # for lazy queries
-              res@init <- TRUE
-              res@dims <- c(nrow(x), 1L)
-              res@dim_names <- list(rownames(x), c('col1'))
+
+              res <- new(Class = "dbDenseMatrix",
+                         value = rowSum,
+                         name = NA_character_, # for lazy queries
+                         init = TRUE,
+                         dims = c(nrow(x), 1L),
+                         dim_names = list(rownames(x), c('col1')))
             }
 
             return(res)
@@ -719,51 +720,41 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
           function(x, ..., memory = FALSE){
             x <- castNumeric(x)
 
+            # add 0 to rowSum
+            view_name <- unique_table_name('tmp_view')
+            num_row <- nrow(x)
+            sql <- glue::glue('
+                CREATE OR REPLACE TEMPORARY TABLE {view_name} AS
+                SELECT generate_series AS i
+                FROM generate_series(1, {num_row});
+            ')
+            con <- dbplyr::remote_con(x[])
+            invisible(DBI::dbExecute(con, sql))
+            dim_tbl <- dplyr::tbl(con, view_name)
+
             # calc rowsum for nonzero values in ijx
             rowSum <- x[] |>
               dplyr::group_by(i) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+              dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |> # fill missing i values
+              dplyr::mutate(x = dplyr::coalesce(sum_x, 0)) |>
+              dplyr::mutate(j = 1) |>
+              dplyr::select(i, j, x) |>
+              dplyr::collapse() |>
+              dplyr::arrange(i)
 
             if (memory) {
-              rowSum <- rowSum |>
-                dplyr::arrange(i) |>
-                dplyr::pull(sum_x)
+              res <- rowSum |>
+                dplyr::pull(x)
 
-              # get row_idx for non-zero values in ijx
-              nonzero_row_indices <- x[] |>
-                dplyr::distinct(i) |>
-                dplyr::arrange(i) |>
-                dplyr::pull(i)
-
-              # format data for join operation
-              nonzero_rownames <- rownames(x)[nonzero_row_indices]
-              rownames_df <- data.frame(rowname = rownames(x),
-                                        stringsAsFactors = FALSE)
-              rowSum_df <- data.frame(rowname = nonzero_rownames,
-                                      value = rowSum,
-                                      stringsAsFactors = FALSE)
-
-              # left join to retain order of original dimnames
-              merged_df <- dplyr::left_join(rownames_df, rowSum_df,
-                                            by = "rowname") |>
-                dplyr::mutate(value = ifelse(is.na(value), 0, value))
-
-              # return rowSums as a named vector
-              res <- merged_df$value
-              names(res) <- as.factor(merged_df$rowname)
+              names(res) <- rownames(x)
             } else {
-              res <- new("dbDenseMatrix")
-              rowSum <- rowSum |>
-                dplyr::mutate(j = 1) |>
-                dplyr::rename(x = sum_x) |>
-                dplyr::select(i, j, x) |>
-                dplyr::collapse() |>
-                dplyr::arrange(i)
-              res@value <- rowSum
-              res@name <- NA_character_ # for lazy queries
-              res@init <- TRUE
-              res@dims <- c(nrow(x), 1L)
-              res@dim_names <- list(rownames(x), c('col1'))
+              res <- new(Class = "dbDenseMatrix",
+                         value = rowSum,
+                         name = NA_character_,
+                         init = TRUE,
+                         dims = c(nrow(x), 1L),
+                         dim_names = list(rownames(x), c('col1')))
             }
 
             # show
@@ -790,17 +781,19 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
 
               names(res) <- colnames(x)
             } else {
-              res <- new("dbDenseMatrix")
               colSum <- colSum |>
-                dplyr::mutate(i = 1) |>
+                dplyr::select(i = j, sum_x) |>
+                dplyr::mutate(j = 1) |>
                 dplyr::rename(x = sum_x) |>
-                dplyr::arrange(j) |>
+                dplyr::arrange(i) |>
                 dplyr::select(i, j, x)
-              res@value <- colSum
-              res@name <- NA_character_ # for lazy queries
-              res@init <- TRUE
-              res@dims <- c(1L, ncol(x))
-              res@dim_names <- list(c('row1'), colnames(x))
+
+              res <- new(Class = "dbDenseMatrix",
+                         value = colSum,
+                         name = NA_character_, # for lazy queries
+                         init = TRUE,
+                         dims = c(ncol(x), 1L),
+                         dim_names = list(colnames(x), c('col1')))
             }
 
             return(res)
@@ -814,50 +807,41 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
           function(x, ..., memory = FALSE){
             x = castNumeric(x)
 
+            view_name <- unique_table_name('tmp_view')
+            num_col <- ncol(x)
+            sql <- glue::glue('
+                CREATE OR REPLACE TEMPORARY TABLE {view_name} AS
+                SELECT generate_series AS j
+                FROM generate_series(1, {num_col});
+            ')
+            con <- dbplyr::remote_con(x[])
+            invisible(DBI::dbExecute(con, sql))
+            dim_tbl <- dplyr::tbl(con, view_name)
+
             # calc colsum for nonzero values in ijx
             colSum = x[] |>
               dplyr::group_by(j) |>
-              dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+              dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+              dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
+              dplyr::mutate(x = dplyr::coalesce(sum_x, 0)) |>
+              dplyr::select(i = j, x) |>
+              dplyr::mutate(j = 1) |>
+              dplyr::select(i, j, x) |>
+              dplyr::collapse() |>
+              dplyr::arrange(i)
 
             if (memory) {
-            colSum = colSum |>
-              dplyr::arrange(j) |>
-              dplyr::pull(j)
-            # get col_idx for non-zero values in ijx
-            nonzero_col_indices = x[] |>
-              dplyr::distinct(j) |>
-              dplyr::arrange(j) |>
-              dplyr::pull(j)
+              res <- colSum |>
+                dplyr::pull(x)
 
-            # format data for join operation
-            nonzero_colnames = colnames(x)[nonzero_col_indices]
-            colnames_df <- data.frame(colname = colnames(x),
-                                      stringsAsFactors = FALSE)
-            colSum_df <- data.frame(colname = nonzero_colnames,
-                                    value = colSum,
-                                    stringsAsFactors = FALSE)
-
-            # left join to retain order of original dimnames
-            merged_df <- dplyr::left_join(colnames_df, colSum_df,
-                                          by = "colname") |>
-                         dplyr::mutate(value = ifelse(is.na(value), 0, value))
-
-            # return rowSums as a named vector
-            res <- merged_df$value
-            names(res) <- as.factor(merged_df$colname)
+              names(res) <- colnames(x)
             } else {
-              res <- new("dbDenseMatrix")
-              colSum <- colSum |>
-                dplyr::mutate(i = 1) |>
-                dplyr::rename(x = sum_x) |>
-                dplyr::select(i, j, x) |>
-                dplyr::collapse() |>
-                dplyr::arrange(j)
-              res@value <- colSum
-              res@name <- NA_character_ # for lazy queries
-              res@init <- TRUE
-              res@dims <- c(1L, ncol(x))
-              res@dim_names <- list(c('row1'), colnames(x))
+              res <- new(Class = "dbDenseMatrix",
+                          value = colSum,
+                          name = NA_character_,
+                          init = TRUE,
+                          dims = c(ncol(x), 1L),
+                          dim_names = list(colnames(x), c('col1')))
             }
 
             # show
