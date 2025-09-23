@@ -673,73 +673,61 @@ setMethod("as.matrix", "dbMatrix", function(x, ...) {
   n_cols <- dims[2]
   dim_names <- dimnames(x)
 
-  # convert db table into in-memory dt
-  if (dims[1] > 1e5 || dims[2] > 1e5){
-    cli::cli_alert_warning(
-      "Warning: Converting large dbMatrix to in-memory Matrix.")
+#' Convert [`Matrix`] to [`dbMatrix`]
+#' @description
+#' Converts in-memory [`matrix`], [`Matrix::dgeMatrix-class`], or
+#' [`Matrix::dgCMatrix-class`] into a [`dbMatrix`] object.
+#'
+#' @details
+#' If no `con` is provided, a temporary in-memory database connection is created.
+#' If no `name` is provided, a unique table name is generated.
+#'
+#' @param x [`matrix`], [`Matrix::dgeMatrix-class`], or [`Matrix::dgCMatrix-class`] \code{required}
+#' @param con [`tbl_duckdb_connection`] \code{default:"memory"} Connection to
+#' DuckDB database connection. If not provided, a temporary in-memory
+#' DuckDB database is created. \code{':temp:'}  will create a DuckDB database
+#' in the temporary directory. \code{':memory:'} will create a DuckDB database
+#' in memory.
+#' @param name \code{default:"memory"} table name in the database. If not
+#' provided, a unique table name is generated.
+#' @param ... Additional arguments passed to [`dbMatrix`]
+#' @export
+#' @concept dbMatrix
+as.dbMatrix <- function(x, con, name, ...) {
+  # checks
+  stopifnot(is(x, "matrix") | is(x, "dgeMatrix") | is(x, "dgCMatrix"))
+  if (missing(con) || (is.character(con) && con == ":memory:")) {
+    con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+    cli::cli_alert_info("Creating in-memory database connection...")
+  } else if (is.character(con) && con == ":temp:") {
+    con <- DBI::dbConnect(duckdb::duckdb(), tempfile(
+      tmpdir = tempdir(),
+      fileext = ".db"
+    ))
+    cli::cli_alert_info("Creating temporary database connection...")
+  } else {
+    stopifnot(inherits(con, "duckdb_connection"))
   }
 
-  if(is(x, "dbSparseMatrix")){
-    max_i <- x[] |> dplyr::summarise(max_i = max(i)) |> dplyr::pull(max_i)
-    max_j <- x[] |> dplyr::summarise(max_j = max(j)) |> dplyr::pull(max_j)
-
-    temp_file <- tempfile(tmpdir = getwd(), fileext = ".parquet")
-
-    if (max_i == n_rows & max_j == n_cols){
-      x[] |>
-        arrow::to_arrow() |>
-        arrow::write_parquet(temp_file)
-    } else {
-      # Generate i and j vectors from scratch
-      sql_i <- glue::glue("SELECT i FROM generate_series(1, {n_rows}) AS t(i)")
-      sequence_i <- dplyr::tbl(con, dplyr::sql(sql_i))
-
-      sql_j <- glue::glue("SELECT j FROM generate_series(1, {n_cols}) AS t(j)")
-      sequence_j <- dplyr::tbl(con, dplyr::sql(sql_j))
-
-      key <- sequence_i |>
-        dplyr::cross_join(sequence_j) |>
-        dplyr::mutate(x = 0)
-
-      # TODO: skip arrow conversion and write straight to parquet?
-      key |>
-        dplyr::left_join(x[], by = c("i", "j"), suffix = c("", ".dgc")) |>
-        dplyr::mutate(x = ifelse(is.na(x.dgc), x, x.dgc)) |>
-        dplyr::select(-x.dgc) |>
-        arrow::to_arrow() |>
-        arrow::write_parquet(temp_file)
-    }
-
-    # Create mat
-    dt <- arrow::read_parquet(temp_file)
-    mat <- Matrix::sparseMatrix(i = dt$i , j = dt$j , x = dt$x, index1 = TRUE)
-    mat <- Matrix::drop0(mat)
-    dimnames(mat) = dim_names
-    dim(mat) = dims
-    unlink(temp_file, recursive = TRUE, force = TRUE)
-  }
-  else if(is(x, "dbDenseMatrix")){
-    # Create a temporary file to store the matrix
-    temp_file <- tempfile(tmpdir = getwd(), fileext = ".parquet")
-
-    # TODO: skip arrow conversion and write straight to parquet?
-    x[] |>
-      arrow::to_arrow() |>
-      arrow::write_parquet(temp_file)
-
-    dt <- arrow::read_parquet(temp_file)
-
-    # Create a dense matrix
-    mat <- matrix(0, nrow = n_rows, ncol = n_cols)
-    mat[cbind(dt$i, dt$j)] <- dt$x
-    dimnames(mat) = dim_names
-
-    # Clean up temp files
-    unlink(temp_file, recursive = TRUE, force = TRUE)
+  if (missing(name)) {
+    name <- unique_table_name("dbMatrix")
+  } else {
+    stopifnot(is.character(name))
   }
 
-  return(mat)
-})
+  # Convert matrix into dbMatrix
+  if (inherits(x, "matrix") | inherits(x, "dgeMatrix")) {
+    class <- "dbDenseMatrix"
+  } else if (inherits(x, "dgCMatrix")) {
+    class <- "dbSparseMatrix"
+  } else {
+    stopf("Matrix type not supported")
+  }
+
+  res <- dbMatrix(value = x, con = con, name = name, class = class, ...)
+
+  return(res)
+}
 
 #' @title as_ijx
 #' @param x dgCMatrix or matrix
