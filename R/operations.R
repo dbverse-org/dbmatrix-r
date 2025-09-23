@@ -905,21 +905,103 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 
 })
 
+# Math ####
+## abs ####
+## sign ####
+## sqrt ####
+## ceiling ####
+## floor ####
+## trunc ####
+## cummax ####
+## cummin ####
+## cumprod ####
+## cumsum ####
 ## log ####
-
-#' Logarithms and Exponentials
-#' @inheritParams base::log
-#' @inherit base::log description
+## log10 ####
+## log2 ####
+## log1p ####
+## acos ####
+## acosh ####
+## asin ####
+## asinh ####
+## atan ####
+## atanh ####
+## exp ####
+## expm1 ####
+## cos ####
+## cosh ####
+## cospi ####
+## sin ####
+## sinh ####
+## sinpi ####
+## tan ####
+## tanh ####
+## tanpi ####
+## gamma ####
+## lgamma ####
+## digamma ####
+## trigamma ####
+#' Math Operations for [`dbMatrix`] Objects
+#'
+#' @description
+#' Implements the `Math` [`S4groupGeneric`] functions
+#' for [`dbMatrix`] objects. This includes various mathematical operations such as
+#' logarithms, exponentials, trigonometric functions, and other transformations.
+#'
+#' @param x A [`dbMatrix`] object.
+#'
+#' @details
+#' This method provides implementations for the following Math functions:
+#'
+#' *Arithmetic and rounding*:
+#' * `abs()`, `sign()`, `sqrt()`, `ceiling()`, `floor()`, `trunc()`
+#'
+#' *Cumulative operations*:
+#' * `cummax()`, `cummin()`, `cumprod()`, `cumsum()`
+#' * **Note: `cumprod()` is not supported**
+#'
+#' *Logarithmic*:
+#' * `log()`, `log10()`, `log2()`, `log1p()`
+#' * **Note: `log1p()` is not supported**
+#'
+#' *Trigonometric*:
+#' * `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`
+#' * `cosh()`, `sinh()`, `tanh()`, `acosh()`, `asinh()`, `atanh()`
+#' * `cospi()`, `sinpi()`, `tanpi()`
+#' * **Note: `acosh()` `asinh()` `atanh()` are not supported**
+#'
+#' *Exponential*:
+#' * `exp()`, `expm1()`
+#' * **Note: `expm1()` is not supported**
+#'
+#' *Special functions*:
+#' * `gamma()`, `lgamma()`, `digamma()`, `trigamma()`
+#' * **Note: `digamma()` `trigamma()` are not supported**
+#'
+#' The function applies the specified mathematical operation to each element
+#' of the [`dbMatrix`] object.
+#'
+#' @return
+#' A [`dbMatrix`] object with the mathematical operation applied to each element.
+#'
+#' @examples
+#' mat <- matrix(1, nrow = 3, ncol = 3)
+#' dbmat <- as.dbMatrix(mat)
+#' log(dbmat)
+#' sqrt(dbmat)
+#' sin(dbmat)
+#'
 #' @concept transform
 #' @export
-setMethod('log', signature(x = 'dbMatrix'), function(x, base = exp(1)) {
-  x <- castNumeric(x)
+setMethod('Math', signature(x = 'dbMatrix'), function(x) {
+  build_call = glue::glue(
+    "x[] |>
+     dplyr::mutate(x = `", as.character(.Generic),"`(x))"
+  )
 
-  x[] <- x[] |>
-    dplyr::mutate(x := log(x, base))
-
+  x[] <- eval(str2lang(build_call))
+  x@name <- NA_character_
   return(x)
-
 })
 
 ## sum ####
