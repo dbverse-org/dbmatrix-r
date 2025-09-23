@@ -923,10 +923,9 @@ read_matrix <- function(con,
   )
 
   # Read in files
-  if(grepl("\\.csv|\\.tsv|\\.txt", value)) {
-
+  if (grepl("\\.csv|\\.tsv|\\.txt", value)) {
     sql <- glue::glue(
-      "CREATE OR REPLACE VIEW {name} AS
+      "CREATE OR REPLACE TEMPORARY VIEW {name} AS
        SELECT * FROM read_csv_auto('{value}', header = TRUE);"
     )
 
