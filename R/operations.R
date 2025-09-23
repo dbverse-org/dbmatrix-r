@@ -1282,6 +1282,25 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   return(x)
 })
 
+### length ####
+# TODO: add value param once setter is created
+#' Length of a [`dbMatrix`] Object
+#' @concept matrix_props
+#' @description Get or set the length of vectors (including lists) and factors,
+#' and of any other R object for which a method has been defined.
+#' @param x [`dbMatrix`] object
+#' @rdname length
+#' @export
+setMethod('length', signature(x = 'dbMatrix'), function(x) {
+  #FIXME modify for dbVector class
+  if(!1 %in% dim(x)){ # dbMatrix
+    res <-  prod(dim(x))
+    return(res)
+  }
+  res <- nrow(x)
+  return(res)
+})
+
 # Column data types ####
 
 ## castNumeric ####
