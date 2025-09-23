@@ -1579,7 +1579,10 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
   n_subset <- 1:n
   x[] <- x[] |> dplyr::filter(i %in% n_subset)
-  x@dims[1L] <- min(x@dims[1L], as.integer(n))
+
+  x@dims[1L] <- min(nrow(x), as.integer(n))
+  rownames(x) <- head(rownames(x))
+
   return(x)
 })
 
