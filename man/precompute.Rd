@@ -2,9 +2,9 @@
 % Please edit documentation in R/precompute.R
 \name{precompute}
 \alias{precompute}
-\title{Precompute a dbMatrix table in a database}
+\title{Compute a dense COO table in a database connection}
 \usage{
-precompute(conn, m, n, name, verbose = TRUE)
+precompute(conn, m, n, verbose = FALSE)
 }
 \arguments{
 \item{conn}{duckdb database connection}
@@ -13,25 +13,24 @@ precompute(conn, m, n, name, verbose = TRUE)
 
 \item{n}{number of columns of precomputed dbMatrix table}
 
-\item{name}{name of the precomputed dbMatrix table to be created}
-
-\item{verbose}{logical, print progress messages. default: TRUE.}
+\item{verbose}{logical, print progress messages. default: FALSE.}
 }
 \value{
 tbl_dbi
 }
 \description{
-Precomputes a dbMatrix table in a specificied database connection.
+Precomputes a COO list table in a specificied database connection in column-
+major order.
 This can speed up operations that involve breaking
 sparsity of a \code{dbSparseMatrix},
 such as in cases when performing + or - arithmetic operations.
-Need only be run once.
 }
 \details{
-The \code{num_rows} and \code{num_cols} parameters must exceed the
+The \code{m} and \code{n} parameters must exceed the
 maximum row and column indices of the \code{dbMatrix} in order to be used for
-densifying any \code{dbMatrix}. Should these params be less than the maximum
-row and column indices the precomputed densification process will fail.
+densifying any \code{dbMatrix}. If these params are less than the maximum
+row and column indices, a new precomputed table will be automatically
+generated with the name 'precomp_mXn'.
 
 In such cases, run this function again with a larger
 \code{n_rows} and \code{num_cols}, or to manually remove the precomputed
@@ -39,7 +38,7 @@ table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 }
 \examples{
 con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
-precompute(con = con , m = 100, n = 100, name = "precomputed_table")
+precompute(con = con , m = 100, n = 100)
 }
 \concept{dbMatrix}
 \keyword{internal}

@@ -7,7 +7,7 @@
 \S4method{dim}{dbMatrix}(x)
 }
 \arguments{
-\item{x}{dbMatrix object}
+\item{x}{\code{\link{dbMatrix}} object}
 }
 \description{
 Retrieve the dimension of an object.

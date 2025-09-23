@@ -5,7 +5,7 @@
 \alias{rowSums,dbSparseMatrix-method}
 \alias{colSums,dbDenseMatrix-method}
 \alias{colSums,dbSparseMatrix-method}
-\title{Row (column) sums for dbMatrix objects}
+\title{Row (column) sums for \code{\link{dbMatrix}} objects}
 \usage{
 \S4method{rowSums}{dbDenseMatrix}(x, ..., memory = FALSE)
 
@@ -24,10 +24,10 @@ object of two or more dimensions.}
 \item{memory}{logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
 for large computations. Set to TRUE to return the results as a vector.}
 
-\item{na.rm}{Always TRUE for dbMatrix queries. Included for compatibility
+\item{na.rm}{Always TRUE for \code{\link{dbMatrix}}. Included for compatibility
 with the generic.}
 
-\item{dims}{Always 1 for dbMatrix queries. Included for compatibility with
+\item{dims}{Always 1 for \code{\link{dbMatrix}} queries. Included for compatibility with
 the generic.}
 }
 \description{

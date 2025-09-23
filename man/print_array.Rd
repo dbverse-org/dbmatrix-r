@@ -10,6 +10,7 @@ print_array(
   x = NULL,
   dims,
   rownames = rep("", dims[1]),
+  class = c("sparse", "dense"),
   fill = ".",
   digits = 5L
 )

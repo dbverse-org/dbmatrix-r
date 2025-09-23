@@ -3,14 +3,14 @@
 \name{mean,dbDenseMatrix-method}
 \alias{mean,dbDenseMatrix-method}
 \alias{mean,dbSparseMatrix-method}
-\title{Arithmetic Mean for dbMatrix objects}
+\title{Arithmetic Mean for \code{\link{dbMatrix}} objects}
 \usage{
 \S4method{mean}{dbDenseMatrix}(x, ...)
 
 \S4method{mean}{dbSparseMatrix}(x, ...)
 }
 \arguments{
-\item{x}{dbMatrix object}
+\item{x}{\code{\link{dbMatrix}} object}
 
 \item{...}{further arguments passed to or from other methods.}
 }

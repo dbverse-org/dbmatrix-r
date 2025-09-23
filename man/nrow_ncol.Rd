@@ -10,9 +10,9 @@
 \S4method{ncol}{dbMatrix}(x)
 }
 \arguments{
-\item{x}{dbMatrix object}
+\item{x}{\code{\link{dbMatrix}} object}
 }
 \description{
-nrow and ncol return the number of rows or columns present in x.
+\code{nrow} and \code{ncol} return the number of rows or columns present in \code{x}.
 }
 \concept{matrix_props}
