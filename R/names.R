@@ -1,4 +1,22 @@
 # names ####
+# TODO: add @value once setter is implemented, update to dbVector
+#' The names of a dbMatrix Object
+#' @param x A dbMatrix object
+#' @concept matrix_props
+#' @return A character vector of the names of the dbVector object
+setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
+  if (!1 %in% x@dims) {
+    stopf('dbVector object must have at least one dimension')
+  }
+  if (1 %in% dim(x)[1]) {
+    return(colnames(x))
+  } else {
+    return(rownames(x))
+  }
+
+})
+
+#TODO implement names <- setter
 
 # rownames ####
 #' Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects
@@ -134,4 +152,17 @@ setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'),
   # remove temporary tables
   DBI::dbRemoveTable(con, paste0(name, "_temp_rownames"))
   DBI::dbRemoveTable(con, paste0(name, "_temp_colnames"))
+}
+
+#' @keywords internal
+#' @noRd
+#' @return character
+.assign_dbm_name <- function(dbm, name = NULL) {
+  if (is.null(name)) {
+    name <- unique_table_name('tmp_dbm')
+  }
+  dbm[] <- to_view(x = dbm, name = name)
+  dbm@name <- name
+
+  return(name)
 }
