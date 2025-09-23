@@ -40,107 +40,109 @@ setMethod(
 # show ####
 
 ## dbDenseMatrix ####
-setMethod('show', signature('dbDenseMatrix'), function(object) {
-  grey_color <- crayon::make_style("grey60")
-  # cat(grey_color("# Connection:", get_dbdir(object), "\n"))
-  #
-  # tbl_name <- dbplyr::remote_name(object[])
-  # if(!is.null(tbl_name)){
-  #   cat(grey_color("# Name: \'", tbl_name, '\'\n', sep = ''))
-  # }
-
-  row_names = rownames(object)
-  col_names = colnames(object)
-  dims = dim(object)
-  dim_row = dims[1]
-  dim_col = dims[2]
+setMethod("show", signature("dbDenseMatrix"), function(object) {
+  row_names <- rownames(object)
+  col_names <- colnames(object)
+  dims <- dim(object)
+  dim_row <- dims[1]
+  dim_col <- dims[2]
 
   # print class and dims #
   # -------------------- #
 
-  if(identical(dims,  c(0L, 0L))) {
+  if (identical(dims, c(0L, 0L))) {
     cat('0 x 0 matrix of class "dbDenseMatrix"\n')
     return()
+  } else if (ncol(object) == 1) {
+    cat(dim_row, 'x 1 dbMatrix of class "dbDenseMatrix"\n')
   } else {
-    cat(dim_row, 'x', dim_col, ' matrix of class "dbDenseMatrix"\n')
+    cat(dim_row, "x", dim_col, ' dbMatrix of class "dbDenseMatrix"\n')
   }
 
   # preview print #
   # ------------- #
 
   # print colnames
-  colname_show_n = dim_col - 6L
-  if(colname_show_n < 0L) {
-    message('[[ Colnames: ', vector_to_string(col_names), ' ]]')
-  } else if(colname_show_n >= 1L) {
+  colname_show_n <- dim_col - 6L
+  if (ncol(object) == 1) {
+    colname_show_n <- 0L
+  } else if (colname_show_n < 0L) {
+    message("[[ Colnames: ", vector_to_string(col_names), " ]]")
+  } else if (colname_show_n >= 1L) {
     message(
-      '[[ Colnames ',
+      "[[ Colnames ",
       vector_to_string(head(col_names, 3L)),
-      ' ... suppressing ', colname_show_n, ' ...',
+      " ... suppressing ", colname_show_n, " ...",
       vector_to_string(tail(col_names, 3L)),
-      ' ]]'
+      " ]]"
     )
   }
 
   # get matrix i and j to print
-  suppress_rows = FALSE # flag for whether rows are being suppressed
-  if(dim_col - 10L > 0L) {
-    p_coln = c(head(col_names, 10L))
+  suppress_rows <- FALSE # flag for whether rows are being suppressed
+  if (dim_col - 10L > 0L) {
+    p_coln <- c(head(col_names, 10L))
   } else {
-    p_coln = col_names
+    p_coln <- col_names
   }
-  p_coln = head(col_names, 10L)
-  if(dim_row - 6L > 0L) {
-    p_rown = c(head(row_names, 3L), tail(row_names, 3L))
-    suppress_rows = TRUE
+  p_coln <- head(col_names, 10L)
+  if (dim_row - 6L > 0L) {
+    p_rown <- c(head(row_names, 3L), tail(row_names, 3L))
+    suppress_rows <- TRUE
   } else {
-    p_rown = row_names
+    p_rown <- row_names
   }
 
-  filter_i = sapply(p_rown, function(f_i) which(f_i == row_names))
-  filter_j = sapply(p_coln, function(f_j) which(f_j == col_names))
+  filter_i <- sapply(p_rown, function(f_i) which(f_i == row_names))
+  filter_j <- sapply(p_coln, function(f_j) which(f_j == col_names))
 
   # prepare subset to print
-  preview_tbl = object@value |>
+  preview_tbl <- object@value |>
     dplyr::filter(i %in% filter_i & j %in% filter_j) |>
     dplyr::collect()
 
   # ij indices for printing
-  a_i = sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
-  a_j = sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
+  a_i <- sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
+  a_j <- sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
 
-  if (length(a_i) == 0L) a_i = NULL
-  if (length(a_j) == 0L) a_j = NULL
+  if (length(a_i) == 0L) a_i <- NULL
+  if (length(a_j) == 0L) a_j <- NULL
   a_x <- NULL
 
   if (length(preview_tbl$x) != 0L) { # catch sparse case where if/else: null
-    a_x <- round(preview_tbl$x, digits = 5)
+    n_digits <- getOption("dbMatrix.digits", default = 7)
+    a_x <- format(round(preview_tbl$x, n_digits), nsmall = n_digits)
   }
 
   # print matrix values
-  if(suppress_rows) {
+  if (suppress_rows) {
     # suppressed lines: capture, split, then print individually
     # when suppressed, currently hardcoded to show 3 from head and 3 from tail
-    a_out = capture.output(print_array(i = a_i,
-                                       j = a_j,
-                                       x = a_x,
-                                       dims = c(length(p_rown), length(p_coln)),
-                                       rownames = p_rown))
+    a_out <- capture.output(print_array(
+      i = a_i,
+      j = a_j,
+      x = a_x,
+      dims = c(length(p_rown), length(p_coln)),
+      class = "dense",
+      rownames = p_rown
+    ))
     writeLines(a_out[1:4])
 
-    dim_col_out = dim_col - 10L
-    dim_row_out = dim_row - 6L
+    dim_col_out <- dim_col - 10L
+    dim_row_out <- dim_row - 6L
 
-    if(dim_col_out < 0){
-      sprintf('\n......suppressing %d rows\n\n', dim_row_out) |>
-        cat()
+    if (ncol(object) == 1) {
+      sprintf("\n...suppressing %d elements\n\n", dim_row_out) |> cat()
+    } else if (dim_col_out < 0) {
+      sprintf("\n......suppressing %d rows\n\n", dim_row_out) |> cat()
     } else if (dim_col_out == 0) {
-      sprintf('\n...... suppressing %d rows ......\n\n', dim_row_out) |>
+      sprintf("\n...... suppressing %d rows ......\n\n", dim_row_out) |>
         cat()
-    }
-    else {
-      sprintf('\n......suppressing %d columns and %d rows\n\n',
-              dim_col_out, dim_row_out) |>
+    } else {
+      sprintf(
+        "\n......suppressing %d columns and %d rows\n\n",
+        dim_col_out, dim_row_out
+      ) |>
         cat()
     }
 
@@ -152,111 +154,121 @@ setMethod('show', signature('dbDenseMatrix'), function(object) {
       j = a_j,
       x = a_x,
       dims = c(length(p_rown), length(p_coln)),
+      class = "dense",
       rownames = p_rown
     )
   }
-
 })
 
-
 ##  dbSparseMatrix ####
-setMethod('show', signature('dbSparseMatrix'), function(object) {
-  grey_color <- crayon::make_style("grey60")
-  # cat(grey_color("# Connection:", get_dbdir(object), "\n"))
-  # cat(grey_color("# Name: \'", get_tblName(object), '\'\n', sep = ''))
+setMethod("show", signature("dbSparseMatrix"), function(object) {
+  row_names <- rownames(object)
+  col_names <- colnames(object)
+  dims <- dim(object)
+  dim_row <- dims[1]
+  dim_col <- dims[2]
 
-  row_names = rownames(object)
-  col_names = colnames(object)
-  dims = dim(object)
-  dim_row = dims[1]
-  dim_col = dims[2]
+  # catch large dbMatrix objects #
+  # ----------------------------- #
+  # if (is.na(object@name) & prod(dims) > 1e6) {
+  #   cat(dim_row, 'x', dim_col, ' Large dbMatrix of class "dbSparseMatrix"\n')
+  #   cli::cli_alert_info('Use dbMatrix::compute() to save and preview dbMatrix')
+  #   # schema <- object[] |> arrow::to_arrow() |> arrow::schema() |> capture.output()
+  #   # cat(schema)
+  #   return()
+  # }
 
   # print class and dims #
   # -------------------- #
 
-  if(identical(dims,  c(0L, 0L))) {
-    cat('0 x 0 matrix of class "dbSparseMatrix"\n')
+  if (identical(dims, c(0L, 0L))) {
+    cat('0 x 0 dbMatrix of class "dbSparseMatrix"\n')
     return()
   } else {
-    cat(dim_row, 'x', dim_col, ' matrix of class "dbSparseMatrix"\n')
+    cat(dim_row, "x", dim_col, ' dbMatrix of class "dbSparseMatrix"\n')
   }
 
   # preview print #
   # ------------- #
 
   # print colnames
-  colname_show_n = dim_col - 6L
-  if(colname_show_n < 0L) {
-    message('[[ Colnames: ', vector_to_string(col_names), ' ]]')
-  } else if(colname_show_n >= 1L) {
+  colname_show_n <- dim_col - 6L
+  if (colname_show_n < 0L) {
+    message("[[ Colnames: ", vector_to_string(col_names), " ]]")
+  } else if (colname_show_n >= 1L) {
     message(
-      '[[ Colnames ',
+      "[[ Colnames ",
       vector_to_string(head(col_names, 3L)),
-      ' ... suppressing ', colname_show_n, ' ...',
+      " ... suppressing ", colname_show_n, " ...",
       vector_to_string(tail(col_names, 3L)),
-      ' ]]'
+      " ]]"
     )
   }
 
   # get matrix i and j to print
-  suppress_rows = FALSE # flag for whether rows are being suppressed
-  if(dim_col - 10L > 0L) {
-    p_coln = c(head(col_names, 10L))
+  suppress_rows <- FALSE # flag for whether rows are being suppressed
+  if (dim_col - 10L > 0L) {
+    p_coln <- c(head(col_names, 10L))
   } else {
-    p_coln = col_names
+    p_coln <- col_names
   }
-  p_coln = head(col_names, 10L)
-  if(dim_row - 6L > 0L) {
-    p_rown = c(head(row_names, 3L), tail(row_names, 3L))
-    suppress_rows = TRUE
+  p_coln <- head(col_names, 10L)
+  if (dim_row - 6L > 0L) {
+    p_rown <- c(head(row_names, 3L), tail(row_names, 3L))
+    suppress_rows <- TRUE
   } else {
-    p_rown = row_names
+    p_rown <- row_names
   }
 
-  filter_i = sapply(p_rown, function(f_i) which(f_i == row_names))
-  filter_j = sapply(p_coln, function(f_j) which(f_j == col_names))
+  filter_i <- sapply(p_rown, function(f_i) which(f_i == row_names))
+  filter_j <- sapply(p_coln, function(f_j) which(f_j == col_names))
 
   # prepare subset to print
-  preview_tbl = object@value |>
+  preview_tbl <- object@value |>
     dplyr::filter(i %in% filter_i & j %in% filter_j) |>
     dplyr::collect()
 
   # ij indices for printing
-  a_i = sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
-  a_j = sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
+  a_i <- sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
+  a_j <- sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
 
-  if (length(a_i) == 0L) a_i = NULL
-  if (length(a_j) == 0L) a_j = NULL
+  if (length(a_i) == 0L) a_i <- NULL
+  if (length(a_j) == 0L) a_j <- NULL
   a_x <- NULL
 
   if (length(preview_tbl$x) != 0L) { # catch sparse case where if/else: null
-    a_x <- round(preview_tbl$x, digits = 5)
+    n_digits <- getOption("dbMatrix.digits", default = 7)
+    a_x <- format(round(preview_tbl$x, n_digits), nsmall = n_digits)
   }
 
   # print matrix values
-  if(suppress_rows) {
+  if (suppress_rows) {
     # suppressed lines: capture, split, then print individually
     # when suppressed, currently hardcoded to show 3 from head and 3 from tail
-    a_out = capture.output(print_array(i = a_i,
-                                       j = a_j,
-                                       x = a_x,
-                                       dims = c(length(p_rown), length(p_coln)),
-                                       rownames = p_rown))
+    a_out <- capture.output(print_array(
+      i = a_i,
+      j = a_j,
+      x = a_x,
+      dims = c(length(p_rown), length(p_coln)),
+      class = "sparse",
+      rownames = p_rown
+    ))
     writeLines(a_out[1:4])
 
-    dim_col_out = dim_col - 10L
-    dim_row_out = dim_row - 6L
+    dim_col_out <- dim_col - 10L
+    dim_row_out <- dim_row - 6L
 
-    if(dim_col_out < 0){
-      sprintf('\n......suppressing %d rows\n\n', dim_row_out) |>
+    if (dim_col_out < 0) {
+      sprintf("\n......suppressing %d rows\n\n", dim_row_out) |>
         cat()
     } else if (dim_col_out == 0) {
-      sprintf('\n.......... suppressing %d rows ..........\n\n', dim_row_out) |>
+      sprintf("\n.......... suppressing %d rows ..........\n\n", dim_row_out) |>
         cat()
-    }
-    else {
-      sprintf('\n......suppressing %d columns and %d rows\n\n',
-              dim_col_out, dim_row_out) |>
+    } else {
+      sprintf(
+        "\n......suppressing %d columns and %d rows\n\n",
+        dim_col_out, dim_row_out
+      ) |>
         cat()
     }
 
@@ -268,10 +280,10 @@ setMethod('show', signature('dbSparseMatrix'), function(object) {
       j = a_j,
       x = a_x,
       dims = c(length(p_rown), length(p_coln)),
+      class = "sparse",
       rownames = p_rown
     )
   }
-
 })
 
 # constructors ####
