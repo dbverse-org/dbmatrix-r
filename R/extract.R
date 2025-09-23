@@ -262,16 +262,9 @@ get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
   return(sub_names[index])
 }
 
-#' @details
-#' Recycles a logical index to the length of a vector. This is to emulate the
-#' strange behavior of what occurs in R when indexing matrices with a logical
-#' vector.
-#' Note:
-#' Recycle indexing behavior is unique to logic indexing, not numerical nor
-#' character indexing for matrices.
 #' @noRd
 #' @keywords internal
-recycle_boolean_index <- function(index, length) {
+recycle_boolean_index <- function(index, length) { #FIXME: dbVector
   if (is.logical(index) && length(index) < length) {
     recycled <- rep_len(index, length)
     return(which(recycled))
