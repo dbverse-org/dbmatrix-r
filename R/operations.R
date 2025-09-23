@@ -1281,10 +1281,10 @@ setMethod("colVars", signature(x = "dbSparseMatrix"),
 
 ## mean dbdm####
 
-#' Arithmetic Mean for dbMatrix objects
+#' Arithmetic Mean for [`dbMatrix`] objects
 #' @inheritParams base::mean
 #' @inherit base::mean description
-#' @param x dbMatrix object
+#' @param x [`dbMatrix`] object
 #' @concept summary
 #' @rdname mean
 #' @export
@@ -1521,8 +1521,8 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 ### nrow ####
 
 #' The Number of Rows/Columns of a dbMatrix Object
-#' @description nrow and ncol return the number of rows or columns present in x.
-#' @param x dbMatrix object
+#' @description `nrow` and `ncol` return the number of rows or columns present in `x`.
+#' @param x [`dbMatrix`] object
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
@@ -1540,7 +1540,6 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
 
 ### ncol ####
 
-#' The Number of Rows/Columns of an Array 2
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
@@ -1559,7 +1558,7 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
 
 #' Dimensions of an Object
 #' @description Retrieve the dimension of an object.
-#' @param x dbMatrix object
+#' @param x [`dbMatrix`] object
 #' @concept matrix_props
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
