@@ -60,12 +60,18 @@ print_array = function(i = NULL,
                        x = NULL,
                        dims,
                        rownames = rep('', dims[1]),
+                       class = c('sparse', 'dense'),
                        fill = '.',
                        digits = 5L) {
   total_len = prod(dims)
 
   # pre-generate filler values
-  a_vals = rep('.', total_len)
+  if(class == "dense") {
+    n_digits = getOption('dbMatrix.digits', default = 7)
+    a_vals = rep(format(round(0, n_digits), nsmall = n_digits), total_len)
+  } else {
+    a_vals = rep('.', total_len)
+  }
 
   ijx_nargs = sum(!is.null(i), !is.null(j), !is.null(x))
   if(ijx_nargs < 3 && ijx_nargs > 1) {
