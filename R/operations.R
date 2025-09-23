@@ -166,9 +166,191 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
                           swap_arith_order = swap_arith_order)
   return(dbm)
 }
+
 #' @keywords internal
 #' @noRd
 .as_dbVector <- function(vector, con) {
+  ijx <- dplyr::tibble(i = 1:length(vector), j = 1, x = vector) |>
+    dplyr::copy_to(
+      dest = con,
+      name = unique_table_name('dbVector'),
+      temporary = TRUE,
+      overwrite = TRUE
+    )
+
+  res <- new(Class = "dbDenseMatrix",
+             value = ijx,
+             name = NA_character_,
+             init = TRUE,
+             dims = c(length(vector), 1L),
+             dim_names = list(paste0('row', 1:length(vector)), c('col1')))
+
+  return(res)
+}
+
+#' @title Evaluate if a dbSparseMatrix should be densified
+#' @param generic_char A character string representing the operation to be performed.
+#' @param dbVector A \code{dbMatrix} object with 1D row or col.
+#' @details
+#' Evaluates if a \code{dbSparseMatrix} should be
+#' densified for `[Arith]` operations and specific scalar values for
+#' operations in the order of dbSparseMatrix, vector
+#'
+#'
+#' @keywords internal
+.eval_op_densify <- function(generic_char, dbVector){
+  if (generic_char == "+" || generic_char == "-"){
+    if(suppressWarnings(all(dbVector == 0))){
+      return(FALSE)
+    } else {
+      return(TRUE)
+    }
+  } else if (generic_char == "*"){
+    if(suppressWarnings(any(dbVector == Inf)) ||
+       suppressWarnings(any(dbVector == NaN))){
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  } else if (generic_char == "/" || generic_char == "%%" ||
+             generic_char == "%/%" || generic_char == "^"){
+    if(suppressWarnings(any(dbVector == 0)) ||
+       suppressWarnings(any(dbVector == NaN))){
+      return(TRUE)
+    } else {
+      return(FALSE)
+    }
+  } else {
+    stopf("Invalid operator: %s", generic_char)
+  }
+}
+
+#' @title Join a \code{dbSparseMatrix} with a \code{dbMatrix} object
+#' @param dbm A \code{dbSparseMatrix} object.
+#' @param dbVector A \code{dbMatrix} object with 1D row or col.
+#' @param generic_char A character string representing the operation to be performed.
+#' @param swap_arith_order order of the arguments for the operation. default: NULL
+#' @keywords internal
+.join_dbm_vector <- function(dbm, dbVector, op, swap_arith_order = FALSE) {
+  # check inputs
+  con <- dbplyr::remote_con(dbVector[])
+  n_rows <- bit64::as.integer64.integer(dim(dbm)[1])
+  n_cols <- bit64::as.integer64.integer(dim(dbm)[2])
+  length <- bit64::as.integer64.integer(length(dbVector))
+  total_dims <- n_rows * n_cols
+
+  # validate dimensions
+  rep <- ceiling(total_dims / length) #FIXME: R cannot do math with int64
+  if (is.na(rep)) {
+    stopf("total_dims must be a positive integer")
+  }
+
+  # check for length mismatch
+  remainder <- total_dims %% length
+  if (remainder > 0) {
+    cli::cli_alert_warning(wrap = FALSE,
+    "Longer object length [{total_dims}] is not a multiple of shorter
+     object length [{length}]"
+    )
+  }
+
+  # helper functions
+  .perform_dense_join <- function(dbm, dbVector, op) {
+    # get precomputed matrix
+    precomp <- .initialize_precompute_matrix(con, n_rows, n_cols)
+    name_precomp <- dbplyr::remote_name(precomp)
+    if(is.na(name_precomp)) stopf("precompute error")
+
+    # add idx to dbm
+    dbm[] <- dbm[] |>
+      dplyr::mutate(idx = (j - 1) * n_rows + (i - 1))
+
+    # assign names to lazy tables in db
+    dbvector_name <- .assign_dbm_name(dbm = dbVector)
+    dbm_name <- .assign_dbm_name(dbm = dbm)
+
+    # set order for arith
+    arith_expr <- if (swap_arith_order) {
+      paste0("v.x ", op, " ", dbm_name, ".x")
+    } else {
+      paste0(dbm_name, ".x ", op, " v.x")
+    }
+
+    sql <- glue::glue("
+    CREATE TEMPORARY VIEW {name_ijx} AS
+    WITH base_data AS (
+      SELECT p.i, p.j, {arith_expr} AS x
+      FROM (
+        SELECT *,
+        (rowid % {length}) + 1 as v_idx
+        FROM {name_precomp}
+      ) p
+      LEFT JOIN {dbvector_name} v
+        ON p.v_idx = v.i
+      INNER JOIN {dbm_name}
+        ON p.idx = {dbm_name}.idx
+    )
+    SELECT i,j, x
+    FROM base_data;
+    ")
+
+    invisible(DBI::dbExecute(con, sql))
+
+    return(dplyr::tbl(con, name_ijx))
+  }
+
+  .perform_sparse_join <- function(dbm, dbVector, op) {
+    # assign names to lazy tables in db
+    dbvector_name <- .assign_dbm_name(dbm = dbVector)
+    dbm_name <- .assign_dbm_name(dbm = dbm)
+
+    # set order for arith
+    arith_expr <- if (swap_arith_order) {
+      paste("v.x", op, dbm_name, ".x")
+    } else {
+      paste(dbm_name, ".x", op, "v.x")
+    }
+
+    # join dbm, dbvector
+    sql <- glue::glue("
+      CREATE OR REPLACE TEMPORARY VIEW {name_ijx} AS
+      SELECT
+          {dbm_name}.i,
+          {dbm_name}.j,
+          {arith_expr} as x  -- perform arith operation
+      FROM {dbm_name}
+      LEFT JOIN {dbvector_name} v
+          ON {dbm_name}.i = v.i
+    ")
+    invisible(DBI::dbExecute(con, sql))
+    return(dplyr::tbl(con, name_ijx))
+  }
+
+  # main function
+  name_ijx <- unique_table_name('tmp_ijx')
+  if (is(dbm, "dbSparseMatrix")) {
+    if (.eval_op_densify(generic_char = op, dbVector = dbVector)) {
+      dense_dbm <- .to_db_dense(dbm)
+      dense_dbm[] <- .perform_dense_join(dense_dbm, dbVector, op)
+      return(dense_dbm)
+    } else {
+      if (nrow(dbm) == length(dbVector)) {
+        dbm[] <- .perform_sparse_join(dbm, dbVector, op)
+        return(dbm)
+      } else {
+        dbm[] <- .perform_dense_join(dbm, dbVector, op)
+        return(dbm)
+      }
+    }
+  } else { # dbDenseMatrix
+    if (nrow(dbm) == length(dbVector)) {
+      dbm[] <- .perform_sparse_join(dbm, dbVector, op)
+      return(dbm)
+    } else {
+      dbm[] <- .perform_dense_join(dbm, dbVector, op)
+      return(dbm)
+    }
+  }
 }
 
 # Math Ops ####
