@@ -358,14 +358,15 @@ unique_table_name <- function(prefix = "dbMatrix"){
 }
 
 ## compute #####
-#' @export
 #' @inheritParams dplyr::compute
 #' @param temporary default = TRUE. If FALSE, the table will be persisted
 #' in the database. If TRUE, the table will be removed after the session ends.
 #' @param dimnames default = TRUE. If TRUE, the rownames and colnames will be
 #' saved in the database. This allows full reconstruction of the dbMatrix object
 #' using \link{\code{dbMatrix::load()}}.
-#' @param ... other args passed to \link{\code{dplyr::compute()}}
+#' @param ... other args passed tokffk \link{\code{dplyr::compute()}}
+#' @return `[dbMatrix]` object
+#' @export
 #' @noRd
 setMethod('compute', signature(x = 'dbMatrix'),
           function(x, temporary = TRUE, dimnames = TRUE, ...) {
