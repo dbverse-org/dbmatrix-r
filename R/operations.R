@@ -475,17 +475,20 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'),
 #' @noRd
 #' @rdname summary
 #' @export
-setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
-{
+setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2){
+  op <- as.character(.Generic)
 
-  build_call = glue::glue(
-    'e1[] |> dplyr::mutate(x = `',
-    as.character(.Generic)
-    ,
-    '`(x, e2))'
-  )
+  if(is.na(e2) && op == "==") {
+    build_call = glue::glue('e1[] |> dplyr::mutate(x = is.na(x))')
+  } else if(is.na(e2) && op == "!=") {
+    build_call = glue::glue('e1[] |> dplyr::mutate(x = !is.na(x))')
+  } else {
+    build_call = glue::glue('e1[] |> dplyr::mutate(x = `', op , '`(x, e2))')
+  }
+
   e1[] = eval(str2lang(build_call))
-  e1
+  e1@name = NA_character_
+  return(e1)
 })
 
 ## Ops: e1_dbm ####
@@ -495,17 +498,16 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2)
 #' @noRd
 #' @rdname summary
 #' @export
-setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
-{
-  # e2 = reconnect(e2)
-
+setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2){
   build_call = glue::glue(
     'e2[] |> dplyr::mutate(x = `',
     as.character(.Generic)
     ,
     '`(e1, x))'
   )
+
   e2[] = eval(str2lang(build_call))
+  e1@name = NA_character_
   e2
 })
 
@@ -517,19 +519,24 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2)
 #' @rdname summary
 #' @export
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
-  if (!identical(e1@dims, e2@dims)){
-    stopf('non-conformable arrays')
+  if (!any(e1@dims %in% e2@dims)){
+    stopf('non-conformable matrix dimensions')
   }
 
-  build_call = glue::glue(
-      "e1[] |>
+  build_call = glue::glue("
+    e1[] |>
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
     dplyr::mutate(x = `",
       as.character(.Generic),
       "`(x, x.y)) |>
-    dplyr::select(c('i', 'j', 'x'))"
-    )
+    dplyr::select(c('i', 'j', 'x'))
+    ")
+
   e1[] = eval(str2lang(build_call))
+  e1@name = NA_character_
+  e1
+})
+
 ## %in% operator ####
 #' @title Value Matching
 #'
