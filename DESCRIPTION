@@ -16,9 +16,9 @@ RoxygenNote: 7.3.2
 Depends:
     R (>= 4.1.0)
 Imports:
+    Matrix (>= 1.6-5),
     MatrixGenerics (>= 1.12.3),
     methods,
-    Matrix,
     DBI,
     dplyr,
     dbplyr,
@@ -29,11 +29,15 @@ Imports:
     crayon,
     cli,
     R.utils,
-    checkmate
+    checkmate,
+    reticulate,
+    RSpectra,
+    arrow
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    irlba
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)
