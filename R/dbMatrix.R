@@ -522,7 +522,7 @@ dbMatrix <- function(value,
 #' @param db_dense dbDenseMatrix object to convert to dbSparseMatrix
 #' @noRd
 #' @keywords internal
-toDbSparse <- function(db_dense){
+.to_db_sparse <- function(db_dense) {
   stopf("Not yet supported")
 }
 
@@ -546,40 +546,8 @@ get_dense_ijx_dt <- function(x) {
 #'
 #' @return remote table in long format unpivoted from wide format matrix
 #' @keywords internal
-to_ijx_disk <- function(con, name){
+to_ijx_disk <- function(con, name) {
   stopf("Not yet supported")
-
-  # # add row idx to ingested matrix
-  # # TODO: do this without creating a new table
-  # query <- glue::glue(
-  #   "CREATE TABLE new_table AS SELECT ROW_NUMBER() OVER () AS row_index, * FROM {name};",
-  #   "DROP TABLE {name};",
-  #   "ALTER TABLE new_table RENAME TO {name};"
-  # )
-  # invisible(DBI::dbExecute(con, query))
-  #
-  # # create ijx from wide format
-  # query <- glue::glue("CREATE TABLE ijx AS UNPIVOT {name} ON COLUMNS(* EXCLUDE (row_index));",
-  #                     "DROP TABLE {name};",
-  #                     "ALTER TABLE ijx RENAME TO {name};")
-  # invisible(DBI::dbExecute(con, query))
-  #
-  # # rename column names
-  # query <- glue::glue(
-  #   "ALTER TABLE {name} RENAME COLUMN row_index TO i;",
-  #   "ALTER TABLE {name} RENAME COLUMN name TO j;",
-  #   "ALTER TABLE {name} RENAME COLUMN value TO x;",
-  # )
-  # invisible(DBI::dbExecute(con, query))
-  #
-  # # remove char from j column
-  # # TODO: fix the j column data type. still stuck on <chr> after below runs
-  # query <- glue::glue("UPDATE {name} SET j = CAST(REPLACE(j, 'V', '') AS DOUBLE);")
-  # invisible(DBI::dbExecute(con, query))
-  #
-  # res <- dplyr::tbl(con, name)
-  #
-  # return(res)
 }
 
 ## as.matrix ####
