@@ -7,12 +7,12 @@
 \S4method{t}{dbMatrix}(x)
 }
 \arguments{
-\item{x}{dbMatrix object}
+\item{x}{\code{\link{dbMatrix}} object}
 }
 \value{
-dbMatrix object
+\code{\link{dbMatrix}} object
 }
 \description{
-Given a dbMatrix x, t returns the transpose of x.
+Given a \code{\link{dbMatrix}} \code{x}, \code{t} returns the transpose of \code{x}.
 }
 \concept{transform}

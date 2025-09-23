@@ -1193,11 +1193,14 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
 ### t ####
 
 #' Matrix Transpose
-#' @description Given a dbMatrix x, t returns the transpose of x.
-#' @param x dbMatrix object
-#' @return dbMatrix object
+#' @description Given a [`dbMatrix`] `x`, `t` returns the transpose of `x`.
+#' @param x [`dbMatrix`] object
+#' @importFrom Matrix t
+#' @return [`dbMatrix`] object
 #' @concept transform
 #' @export
+#' @exportMethod t
+#' @rdname t-dbMatrix
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
   x[] <- x[] |> dplyr::select(i = j, j = i, x)
   x@dims <- c(x@dims[[2L]], x@dims[[1L]])
