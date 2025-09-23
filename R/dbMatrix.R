@@ -739,16 +739,27 @@ as.dbMatrix <- function(x, con, name, ...) {
 #' @title as_ijx
 #' @param x dgCMatrix or matrix
 #' @noRd
-as_ijx <- function(x){
+as_ijx <- function(x) {
   # check that x is a dgCMatrix, matrix, or dgeMatrix
-  stopifnot(inherits(x, "dgCMatrix") || inherits(x, "matrix") || inherits(x, "dgeMatrix"))
+  stopifnot(inherits(x, "dgCMatrix") || inherits(x, "matrix") ||
+inherits(x, "dgeMatrix"))
 
   # Convert dgc into TsparseMatrix class from {Matrix}
+if (is(x, "dgCMatrix")) {
   ijx <- as(x, "TsparseMatrix")
-
-  # Get dbMatrix in triplet vector format (TSparseMatrix)
-  # Convert to 1-based indexing
-  df = data.table::data.table(i = ijx@i + 1, j = ijx@j + 1, x = ijx@x)
+df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
+  } else if (is(x, "matrix") | is(x, "dgeMatrix")) {
+    row_indices <- rep(1:nrow(x), times = ncol(x))
+    col_indices <- rep(1:ncol(x), each = nrow(x))
+    values <- as.vector(x)
+    df <- data.table::data.table(
+      i = row_indices,
+      j = col_indices,
+      x = values
+    )
+  } else {
+    stopf("Matrix type not supported")
+  }
 
   return(df)
 }
