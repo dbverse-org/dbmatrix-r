@@ -462,138 +462,59 @@ dbMatrix <- function(value,
 
 # converters ####
 
-#' @title Convert dbSparseMatrix to dbDenseMatrix
-#' @description
-#' Convert a dbSparseMatrix to a dbDenseMatrix using precomputed table.
-#' @param db_sparse A \code{dbSparseMatrix} object to convert.
-#' @return A \code{dbDenseMatrix} object representing the dense matrix.
-#' @noRd
+#' Convert a dbSparseMatrix to dbDenseMatrix
+#' @description Internal function to convert a [`dbSparseMatrix`] to
+#' [`dbDenseMatrix`].
+#' @param x A [`dbSparseMatrix`] object
+#' @return A [`dbDenseMatrix`] object
 #' @keywords internal
-toDbDense <- function(db_sparse){
-  # check if db_dense is a dbDenseMatrix
-  if (!inherits(db_sparse, "dbSparseMatrix")) {
-    stop("dbSparseMatrix object conversion currently only supported")
+#' @examples
+#' dbsm <- sim_dbSparseMatrix(10, 10)
+#' dbdm <- toDbDense(dbsm)
+.to_db_dense <- function(x) {
+  # input validation
+  if (!inherits(x, "dbSparseMatrix")) {
+    stopf("Input must be a dbSparseMatrix object")
   }
 
-  # get dbm info
-  con <- get_con(db_sparse)
-  dims <- dim(db_sparse)
-  dim_names <- dimnames(db_sparse)
-  remote_name <- db_sparse@name
-  n_rows <- dims[1]
-  n_cols <- dims[2]
+  info <- .get_dbMatrix_info(x)
+  precomp <- .initialize_precompute_matrix(info$con, info$n_rows, info$n_cols)
+  name <- unique_table_name(prefix = "tmp_dbDenseMatrix")
 
-  # see ?dbMatrix::precompute() for more details
-  precompute_name <- getOption("dbMatrix.precomp", default = NULL)
+  # .add_idx <- function(x) {
+  #   x[] <- x[] |>
+  #     dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
+  # }
 
-  # Use existing precomputed table in db if available
-  tables <- DBI::dbListTables(con)
-  precompute_names <- tables[grep("^precomp_", tables)]
-  if (length(precompute_names) > 0) {
-    # determine which precompute table to use based on product of dims
-    # FIXME: use n_rows, n_cols to find the best precomp table to use
-    numbers <- strsplit(gsub("precomp_", "", precompute_names), "x")
-    products <- sapply(numbers, function(x) as.numeric(x[1]) * as.numeric(x[2]))
-    largest_index <- which.max(products)
-    precompute_name  <- precompute_names[largest_index]
-    options(dbMatrix.precomp = precompute_name)
-  } else {
-    precompute_name <- NULL
-    options(dbMatrix.precomp = precompute_name)
-  }
+  # add idx to sparse
+  x[] <- x[] |>
+    dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
 
-  if (!is.null(precompute_name)) {
-    precomp <- dplyr::tbl(con, precompute_name)
+  # join by idx
+  data <- precomp |>
+    dplyr::left_join(x[], by = "idx", suffix = c("", ".dbsm")) |>
+    dplyr::transmute(i, j, x = dplyr::coalesce(x, 0))
 
-    # Assuming fixed output e.g. 'precomp_1000x1000' from precompute
-    precomp_dim <- regmatches(precompute_name,
-                              regexpr("\\d+x\\d+", precompute_name))
-    precomp_dim <- bit64::as.integer64(strsplit(precomp_dim, "x")[[1]])
-    n_rows_pre <- precomp_dim[1]
-    n_cols_pre <- precomp_dim[2]
-
-    if (n_rows < n_rows_pre & n_cols < n_cols_pre) {
-      precomp <- precomp
-    } else if (n_rows < n_cols_pre & n_cols < n_rows_pre) {
-      # tranpose precomp
-      new_precompute_name <- glue::glue("precomp_{n_cols_pre}x{n_rows_pre}")
-      # sql <- glue::glue("
-      # ALTER TABLE {precompute_name} RENAME TO {new_precompute_name};
-      # ALTER TABLE {new_precompute_name} RENAME COLUMN i to j2;
-      # ALTER TABLE {new_precompute_name} RENAME COLUMN j to i;
-      # ALTER TABLE {new_precompute_name} RENAME COLUMN j2 to j;
-      # ")
-
-      sql <- glue::glue("
-      CREATE OR REPLACE TEMPORARY VIEW {new_precompute_name} AS
-      SELECT j AS i, i AS j FROM {precompute_name}
-      ")
-      invisible(DBI::dbExecute(con, sql))
-      precomp <- dplyr::tbl(con, new_precompute_name)
-    } else if (n_rows_pre < n_rows || n_cols_pre < n_cols) {
-      cli::cli_alert_warning(
-        "Precomputing dbMatrix table with {n_rows} rows and {n_cols} columns,
-        see ?precompute for more details. \n
-        ")
-      uni_name <- paste0("precomp_",n_rows,"x", n_cols)
-      precomp <- precompute(
-        conn = con,
-        m = n_rows,
-        n = n_cols,
-        name = uni_name
-      )
-    }
-  } else {
-    cli::cli_alert_info(paste(
-      "Densifying 'dbSparseMatrix' on the fly...",
-      sep = "\n",
-      collapse = ""
+  # compute
+  if (getOption("dbMatrix.dbdm_auto_compute", default = FALSE)) {
+    cli::cli_alert_info(c(
+      "Converting {.cls dbSparseMatrix} to {.cls dbDenseMatrix}...",
+      "\n See {.help dbMatrix.dbdm_auto_compute} for details."
     ))
 
-    # to prevent 1e4 errors and allow >int32
-    n_rows <- bit64::as.integer64(n_rows)
-    n_cols <- bit64::as.integer64(n_cols)
-
-    # precompute the matrix
-    uni_name <- paste0("precomp_",n_rows,"x", n_cols)
-    precomp <- precompute(
-      conn = con,
-      m = n_rows,
-      n = n_cols,
-      name = uni_name,
-      verbose = FALSE
-    )
+    data <- data |>
+      dplyr::compute(temporary = FALSE, name = name)
   }
 
-  db_sparse_sql <- dbplyr::sql_render(db_sparse[])
-  precomp_name <- dbplyr::remote_name(precomp)
-  db_dense_name <- unique_table_name(prefix = "dbDenseMatrix")
-  sql <- glue::glue("
-            CREATE TEMPORARY VIEW '{db_dense_name}' AS
-            WITH {remote_name} AS ({db_sparse_sql})
-            SELECT
-              p.i,
-              p.j,
-              COALESCE(main.{remote_name}.x, 0.0) AS x
-            FROM '{precomp_name}' p
-            LEFT JOIN main.{remote_name} ON p.i = main.{remote_name}.i AND p.j = main.{remote_name}.j
-            WHERE p.i <= {n_rows} AND p.j <= {n_cols}
-        ")
-  DBI::dbExecute(con, sql)
-  data <- dplyr::tbl(con, db_dense_name)
-
-  # Create new dbMatrix object
-  db_dense <- new(
-    Class = "dbDenseMatrix",
+  res <- new("dbDenseMatrix",
     value = data,
-    name = NA_character_,
-    dims = dims,
-    dim_names = dim_names,
+    name = name, # note that this is a temporary table
+    dims = info$dims,
+    dim_names = info$dim_names,
     init = TRUE
   )
 
-  # cat("done \n")
-  return(db_dense)
+  return(res)
 }
 
 #' @description
