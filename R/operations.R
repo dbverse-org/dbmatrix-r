@@ -20,124 +20,155 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
   # order matters
   ordered_args = ops_ordered_args_vect(dbm_narg, 'x', 'num_vect')
 
-  # if not a vector (non-scalar arith)
-  if (length(num_vect) > 1L)
-    return(arith_call_dbm_vect_multi(dbm, num_vect, generic_char, ordered_args))
-
-  build_call = paste0('dbm[] |> dplyr::mutate(x = `',
-                      generic_char, ordered_args)
-
-  dbm[] = eval(str2lang(build_call))
-  dbm
-}
-
-#' @noRd
-arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
-  dim = dim(dbm)
-
-  if(length(num_vect) != dim[1] & length(num_vect) != dim[2]){
-    # FIXME: .recycle_vector_to_matrix is not OOM
-    mat = .recycle_vector_to_matrix(num_vect, dim)
-    vect_tbl = as_ijx(mat)
-
-    # handle order
-    ordered_args <- if (ordered_args == '`(x, num_vect))') {
-      '`(x.x, x.y))'
-    } else {
-      '`(x.y, x.x))'
+  # helper functions
+  .skip_computation <- function(num_vect, generic_char) {
+    if ((generic_char %in% c('*', '/') && all(num_vect == 1))) {
+      return(TRUE)
     }
 
-    build_call <- glue::glue(
-      'dbm[] |> ',
-      'dplyr::full_join(vect_tbl, by = c("i", "j"), copy = TRUE) |> ',
-      'dplyr::mutate(',
-      'x.x = coalesce(x.x, 0), ',
-      'x.y = coalesce(x.y, 0), ',
-      'x = `', generic_char, ordered_args,' |> ',
-      'dplyr::select(i, j, x) |> ',
-      'dplyr::filter(x != 0)'
-    )
-  } else {
-    r_names = rownames(dbm)
-    c_names = colnames(dbm)
-    # check to see if all names(num_vect)[1:10] is in r_names or c_names
-    if(all(names(num_vect) %in% r_names)){
-      vect_tbl = dplyr::tibble(
-        i = match(names(num_vect), r_names),
-        num_vect = unname(num_vect[match(names(num_vect),r_names)])
-      )
+    if ((generic_char %in% c('+', '-') && all(num_vect == 0))) {
+      return(TRUE)
+    }
 
-      vect_tbl <- arrow::to_duckdb(
-        .data = vect_tbl,
-        con = dbplyr::remote_con(dbm[]),
-        auto_disconnect = TRUE
-      )
+    return(FALSE)
+  }
 
-      build_call = paste0(
-        'dbm[] |> ',
-        'dplyr::inner_join(vect_tbl, by = \'i\') |> ',
-        'dplyr::mutate(x = `',
-        generic_char,
-        ordered_args,
-        ' |> ',
-        'dplyr::select(i, j, x)'
-      )
-    } else if(all(names(num_vect) %in% c_names)){
-      vect_tbl = dplyr::tibble(
-        j = match(names(num_vect), c_names),
-        num_vect = unname(num_vect[match(names(num_vect),c_names)])
-      )
+  .do_vect_multi <- function(num_vect, generic_char, dbm){
+    if (length(num_vect) > 1) {
+      return(TRUE)
+    }
 
-      vect_tbl <- arrow::to_duckdb(
-        .data = vect_tbl,
-        con = dbplyr::remote_con(dbm[]),
-        auto_disconnect = TRUE
-      )
+    if (is(dbm, 'dbDenseMatrix')) {
+      return(FALSE)
+    }
 
-      build_call = paste0(
-        'dbm[] |> ',
-        'dplyr::inner_join(vect_tbl, by = \'j\') |> ',
-        'dplyr::mutate(x = `',
-        generic_char,
-        ordered_args,
-        ' |> ',
-        'dplyr::select(i, j, x)'
-      )
-    } else{
-      stop('Names of num_vect must be in either row or column names of dbMatrix')
+    if (is.infinite(num_vect) && generic_char %in% c('*')) {
+      return(TRUE)
+    }
+
+    if (num_vect != 0 && generic_char %in% c('-', '+')) {
+      return(TRUE)
+    }
+
+    if (num_vect == 0 && generic_char %in% c('/')) {
+      return(TRUE)
+    }
+
+    return(FALSE)
+  }
+
+  .is_additive_ops <- function(num_vect){
+    if (num_vect == "+" || num_vect == "-") {
+      return(TRUE)
+    } else {
+      return(FALSE)
     }
   }
 
-  dbm[] = eval(str2lang(build_call))
+  .do_densification <- function(num_vect, generic_char, dbm){
+    if (is(dbm, "dbSparseMatrix") && length(num_vect) == 1 &&
+        .is_additive_ops(generic_char)) {
+      return(TRUE)
+    }
 
-  # show
+    if (is(dbm, "dbSparseMatrix") && length(num_vect) == 1 &&
+        (generic_char == "^" || generic_char == "%%") && num_vect == 0) {
+      return(TRUE)
+    }
+
+    return(FALSE)
+  }
+
+  # Main function
+  if (all(is.nan(num_vect))) {
+    if (is(dbm, 'dbSparseMatrix')) {
+      dbm <- .to_db_dense(x = dbm)
+    }
+
+    dbm[] <- dbm[] |> dplyr::mutate(x = 0.0 / 0.0) # generate NaNs
+
+    return(dbm)
+  }
+
+  if (.skip_computation(num_vect, generic_char)) {
+    return(dbm)
+  }
+
+  if (.do_densification(num_vect, generic_char, dbm)) {
+    dbm <- .to_db_dense(x = dbm)
+  }
+
+  if (.do_vect_multi(num_vect, generic_char, dbm)) {
+    return(arith_call_dbm_vect_multi(dbm, num_vect, generic_char, ordered_args))
+  }
+
+  if (generic_char == "^" && num_vect == Inf) { # edge case 1
+    build_call <- paste0(
+      "dbm[] |> ",
+      "dplyr::mutate(",
+      "x = dplyr::case_when(",
+      "x < 0 ~ 0/0, ", # workaround to generate NaNs (0/0)
+      "TRUE ~ `", generic_char, ordered_args,
+      ") "
+    )
+  } else if (generic_char == "%/%" && num_vect == 0) { # edge case 2
+    dbm <- .to_db_dense(x = dbm)
+    dbm[] <- dbm[] |>
+      dplyr::mutate(
+        x = dplyr::case_when(
+          x < 0 ~ -Inf,
+          x > 0 ~ Inf,
+          x == 0 ~ 0 / 0,
+          TRUE ~ x
+        )
+      )
+    return(dbm)
+  } else if (generic_char == "%/%" && num_vect == Inf) { # edge case 3
+    dbm[] <- dbm[] |>
+      dplyr::mutate(
+        x = dplyr::case_when(
+          x < 0 ~ -1,
+          x > 0 ~ 0,
+          TRUE ~ x
+        )
+      )
+    return(dbm)
+  } else if (generic_char == "%%" && num_vect == Inf) { # edge case 4
+    dbm[] <- dbm[] |>
+      dplyr::mutate(x = dplyr::case_when(x < 0 ~ Inf, TRUE ~ x ))
+
+    return(dbm)
+  } else { # general case
+    build_call <- paste0('dbm[] |> dplyr::mutate(x = `',
+                         generic_char, ordered_args)
+
+  }
+
+  dbm[] <- eval(str2lang(build_call))
   return(dbm)
 }
 
 #' @noRd
-.recycle_vector_to_matrix <- function(vec, dimensions) {
-  if (length(vec) == 0) {
-    return(matrix(0, nrow = dimensions[1], ncol = dimensions[2]))
+arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) {
+  # get inputs
+  con <- dbplyr::remote_con(dbm[])
+
+  # handle order
+  if (ordered_args == '`(x, num_vect))') {
+    swap_arith_order <- FALSE
+  } else {
+    swap_arith_order <- TRUE
   }
 
-  # Recycle the vector to match the total number of elements in the matrix
-  recycled_vec <- rep(vec, length.out = prod(dimensions))
-
-  # Create the matrix column-wise
-  mat <- matrix(
-    recycled_vec,
-    nrow = dimensions[1],
-    ncol = dimensions[2],
-    byrow = FALSE  # This ensures column-wise filling
-  )
-
-  # Throw warning if length of vec is not a multiple of dimensions[2]
-  # if (length(vec) %% dimensions[2] != 0) {
-  #   warning('longer object length is not a multiple of shorter object length',
-  #           call. = FALSE)
-  # }
-
-  return(mat)
+  # Create dbDenseMatrix with dbVector
+  dbv <- .as_dbVector(vector = num_vect, con = con)
+  dbm <- .join_dbm_vector(dbm = dbm, dbVector = dbv, op = generic_char,
+                          swap_arith_order = swap_arith_order)
+  return(dbm)
+}
+#' @keywords internal
+#' @noRd
+.as_dbVector <- function(vector, con) {
 }
 
 # Math Ops ####
