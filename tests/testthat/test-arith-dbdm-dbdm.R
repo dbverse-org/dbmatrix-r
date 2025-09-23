@@ -18,7 +18,7 @@ dbdm = dbMatrix::dbMatrix(value = mat,
 # Test scalar arithmetic
 res_mat = mat + mat
 res_dbdm = dbdm + dbdm
-res_dbdm = as.matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
 test_that("+ matrix equal", {
   expect_equal(res_mat, res_dbdm)
 })
@@ -36,7 +36,7 @@ test_that("+ matrix equal", {
 
 res_mat = mat * mat
 res_dbdm = dbdm * dbdm
-res_dbdm = as.matrix(res_dbdm)
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
 test_that("* matrix equal", {
   expect_equal(res_mat, res_dbdm)
 })

@@ -18,7 +18,7 @@ dbsm = dbMatrix::dbMatrix(value = dgc,
 
 res_dgc = dgc + dgc
 res_dbsm = dbsm + dbsm
-res_dbsm = as.matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm, sparse = TRUE, names = TRUE)
 
 test_that("+ matrix equal", {
   expect_equal(res_dgc, res_dbsm)
@@ -37,7 +37,7 @@ test_that("+ matrix equal", {
 
 res_dgc = dgc * dgc
 res_dbsm = dbsm * dbsm
-res_dbsm = as.matrix(res_dbsm)
+res_dbsm = as.matrix(res_dbsm, sparse = TRUE, names = TRUE)
 test_that("* matrix equal", {
   expect_equal(res_dgc, res_dbsm)
 })
