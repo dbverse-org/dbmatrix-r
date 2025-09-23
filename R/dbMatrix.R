@@ -946,12 +946,12 @@ read_matrix <- function(con,
 #' read_MM
 #' @description Read matrix market file (.mtx or .mtx.gz)  into database
 #' @details
-#' Construct a database VIEW of a .mtx or .mtx.gz file with columns 'i', 'j',
-#' and 'x' representing the row index, column index, and value of the matrix,
-#' respectively.
+#' Construct a database VIEW or TABLE of a .mtx or .mtx.gz file with columns
+#' 'i', 'j', and 'x' representing the row index, column index, and value of
+#' the matrix, respectively.
 #'
 #' By default 'i' and 'j' are of type BIGINT and 'x' is of type DOUBLE.
-#' Note: lack of support in R for BIGINT may cause errors when pulling data
+#' **Note**: lack of support in R for BIGINT may cause errors when pulling data
 #' into memory without proper type conversion.
 #'
 #' By default, .mtx files are expected to contain two lines representing the
@@ -962,19 +962,20 @@ read_matrix <- function(con,
 #' @param con DBI or duckdb connection object \code{(required)}
 #' @param overwrite whether to overwrite if `name` already exists in database.
 #' \code{(required)}. default: FALSE
-#' @param ... additional params to pass
+#' @param temporary whether to create a temporary view (TRUE) or permanent table (FALSE)
+#' \code{(optional)}. default: TRUE
 #'
 #' @return tbl_dbi object
 #' @noRd
 #' @keywords internal
 #'
 #' @examples
-#' print('TODO')
+#' print("TODO")
 readMM <- function(con,
                    value,
                    name = "dbMatrix",
                    overwrite = FALSE,
-                   ...) {
+                   temporary = TRUE) {
   # check inputs
   .check_con(con)
   .check_value(value)
@@ -986,19 +987,31 @@ readMM <- function(con,
     skip_value_check = FALSE
   )
 
-  if(grepl("\\.csv|\\.tsv|\\.txt", value)){
+  if (grepl("\\.csv|\\.tsv|\\.txt", value)) {
     stop("Please use read_matrix() for .csv, .tsv, .txt files.")
   }
 
   # Read in .mtx or .mtx.gz file
-  if((grepl("\\.mtx", value))) {
+  if ((grepl("\\.mtx", value))) {
+    # Determine if creating temporary view or permanent table
+    create_statement <- if (temporary) {
+      "CREATE OR REPLACE TEMPORARY VIEW"
+    } else {
+      "CREATE TABLE"
+    }
+
+    # Add IF NOT EXISTS clause if not overwriting
+    if (!overwrite && !temporary) {
+      create_statement <- paste(create_statement, "IF NOT EXISTS")
+    }
+
     # .mtx reader
     sql <- glue::glue(
-      "CREATE OR REPLACE VIEW {name} AS
+      "{create_statement} {name} AS
        SELECT * FROM read_csv_auto(
           '{value}',
           sep = ' ',
-          skip = 2,
+          skip = 1,
           columns = {{
               'i': 'BIGINT',
               'j': 'BIGINT',
@@ -1008,7 +1021,7 @@ readMM <- function(con,
       );"
     )
 
-    if (!overwrite) {
+    if (!overwrite && temporary) {
       sql <- gsub("OR REPLACE ", "", sql, fixed = TRUE)
     }
 
@@ -1021,6 +1034,7 @@ readMM <- function(con,
 
   return(res)
 }
+
 
 #' get_MM_dim
 #' @description Internal function to read dimensions of a .mtx file
