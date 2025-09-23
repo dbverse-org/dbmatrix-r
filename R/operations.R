@@ -767,102 +767,206 @@ setMethod('colMeans', signature(x = 'dbSparseMatrix'),
             return(res)
           })
 
-## colSds dbdm ####
-#' Row (column) standard deviations for dbMatrix objects
-#' @inheritParams MatrixGenerics::colSds
-#' @inherit MatrixGenerics::colSds description
-#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+# MatrixGenerics ####
+## rowVars dbdm ####
+#' Row (column) variances for [`dbMatrix`] objects
+#' @inherit MatrixGenerics::rowVars description
+#' @param x A [`dbMatrix`] object.
+#' @param rows Always NULL for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param rows,cols Always NULL for dbMatrix queries. Included for compatibility
+#' @param cols Always NULL for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param center Always NULL for dbMatrix queries. Included for compatibility
+#' @param na.rm Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param useNames Always TRUE for dbMatrix queries. Included for compatibility
+#' @param center Always NULL for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param dim Always NULL for dbMatrix queries. Included for compatibility with
-#' the generic.
+#' @param ... Additional arguments (not used, but included for compatibility with the generic).
+#' @param useNames Always TRUE for [`dbMatrix`] queries. Included for compatibility
+#' with the generic.
+#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
+#' for large computations. Set to TRUE to return the results as a vector.
 #' @concept summary
-#' @rdname sds
+#' @rdname row_col_vars
 #' @export
-setMethod('colSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
+setMethod("rowVars", signature(x = "dbDenseMatrix"),
+          function(x,
+                   rows = NULL,
+                   cols = NULL,
+                   na.rm = TRUE,
+                   center = NULL,
+                   ...,
+                   memory = FALSE,
+                   useNames = TRUE) {
+
             x <- castNumeric(x)
+            k <- ncol(x)
 
-            val_names <- colnames(x)
-            vals <- x[] |>
-              dplyr::group_by(j) |>
-              dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
-              dplyr::arrange(j) |>
-              dplyr::collapse() |>
-              dplyr::pull(sd_x)
-            names(vals) <- val_names
-            vals
-          })
-
-## colSds dbsm ####
-#' @concept summary
-#' @rdname sds
-#' @export
-setMethod('colSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
-            x <- castNumeric(x)
-
-            stop("to be implemented")
-
-            # val_names = colnames(x)
-            # vals <- x[] |>
-            #   group_by(j) |>
-            #   summarise(sd_x = sqrt(mean((x - col_means[j])^2, na.rm = TRUE))) |>
-            #   pull(sd_x)
-            #
-            # vals = x[] |>
-            #   dplyr::group_by(j) |>
-            #   dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
-            #   dplyr::arrange(j) |>
-            #   dplyr::collapse() |>
-            #   dplyr::pull(sd_x)
-            # names(vals) = val_names
-            # vals
-          })
-
-## rowSds dbdm####
-#' @concept summary
-#' @rdname sds
-#' @export
-setMethod('rowSds', signature(x = 'dbDenseMatrix'),
-          function(x, ...){
-            x <- castNumeric(x)
-
-            val_names <- rownames(x)
-            vals <- x[] |>
+            row_stats <- x[] |>
               dplyr::group_by(i) |>
-              dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
-              dplyr::arrange(i) |>
-              dplyr::collapse() |>
-              dplyr::pull(sd_x)
-            names(vals) <- val_names
-            vals
+              dplyr::summarise(
+                sum_x  = sum(x, na.rm = na.rm),
+                sum_x2 = sum(x * x, na.rm = na.rm),
+                .groups = "drop"
+              ) |>
+              dplyr::mutate(
+                var_x = (sum_x2 - (sum_x * sum_x) / !!k) / (!!k - 1)
+              ) |>
+              dplyr::arrange(i)
+
+            if (memory) {
+              v <- dplyr::pull(row_stats, var_x)
+              if (useNames) names(v) <- rownames(x)
+              return(v)
+            }
+
+            rowVar <- row_stats |>
+              dplyr::transmute(i, j = 1L, x = var_x)
+
+            res <- new(
+              Class = "dbDenseMatrix",
+              value = rowVar,
+              name = NA_character_,
+              init = TRUE,
+              dims = c(nrow(x), 1L),
+              dim_names = list(rownames(x), "col1")
+            )
+
+            return(res)
           })
 
-## rowSds dbsm ####
+## rowVars dbsm ####
 #' @concept summary
-#' @rdname sds
+#' @rdname row_col_vars
 #' @export
-setMethod('rowSds', signature(x = 'dbSparseMatrix'),
-          function(x, ...){
+setMethod('rowVars', signature(x = 'dbSparseMatrix'),
+          function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL,
+                   ..., memory = FALSE, useNames = TRUE) {
             x <- castNumeric(x)
+            k <- ncol(x)
 
-            stop("to be implemented")
+            row_stats <- x[] |>
+              dplyr::group_by(i) |>
+              dplyr::summarise(
+                sum_x  = sum(x, na.rm = na.rm),
+                sum_x2 = sum(x * x , na.rm = na.rm),
+                .groups = "drop"
+              ) |>
+              dplyr::mutate(
+                var_x = dplyr::case_when(
+                  k <= 1 ~ NA_real_,
+                  TRUE ~ (sum_x2 - (sum_x * sum_x) / k) / (k - 1)
+                )
+              ) |>
+              dplyr::arrange(i)
 
-            # val_names = rownames(x)
-            # vals = x[] |>
-            #   dplyr::group_by(i) |>
-            #   dplyr::summarise(sd_x = sd(x, na.rm = TRUE)) |>
-            #   dplyr::arrange(i) |>
-            #   dplyr::collapse() |>
-            #   dplyr::pull(sd_x)
-            # names(vals) = val_names
-            # vals
+            if (memory) {
+              # Return as named vector
+              res <- row_stats |>
+                dplyr::pull(var_x)
+
+              if (useNames) names(res) <- rownames(x)
+              return(res)
+            } else {
+              # Return as dbDenseMatrix
+              rowVar <- row_stats |>
+                dplyr::mutate(j = 1, x = var_x) |>
+                dplyr::select(i, j, x)
+
+              res <- new(
+                Class = "dbDenseMatrix",
+                value = rowVar,
+                name = NA_character_,
+                init = TRUE,
+                dims = c(nrow(x), 1L),
+                dim_names = list(rownames(x), c('col1'))
+              )
+
+              return(res)
+            }
+          })
+
+## colVars dbdm ####
+#' @rdname row_col_vars
+#' @export
+setMethod("colVars", signature(x = "dbDenseMatrix"),
+          function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL,
+                   ..., memory = FALSE, useNames = TRUE) {
+
+            x <- castNumeric(x)
+            m <- nrow(x)                       # total rows
+
+            col_stats <- x[] |>
+              dplyr::group_by(j) |>
+              dplyr::summarise(
+                sum_x  = sum(x,        na.rm = na.rm),
+                sum_x2 = sum(x * x,    na.rm = na.rm),
+                .groups = "drop"
+              ) |>
+              dplyr::mutate(
+                var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
+              ) |>
+              dplyr::arrange(j)
+
+            if (memory) {
+              v <- dplyr::pull(col_stats, var_x)
+              if (useNames) names(v) <- colnames(x)
+              return(v)
+            }
+
+            colVars <- col_stats |>
+              dplyr::transmute(i = j, j = 1L, x = var_x)
+
+            res <-  new(
+              "dbDenseMatrix",
+              value = colVars,
+              name = NA_character_,
+              init = TRUE,
+              dims = c(ncol(x), 1L),
+              dim_names = list(colnames(x), "col1")
+            )
+
+            return(res)
+          })
+
+## colVars dbsm ####
+#' @concept summary
+#' @rdname row_col_vars
+#' @export
+setMethod("colVars", signature(x = "dbSparseMatrix"),
+          function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL,
+                   ..., memory = FALSE, useNames = TRUE) {
+            x <- castNumeric(x)
+            m <- nrow(x)
+
+            col_stats <- x[] |>
+              dplyr::group_by(j) |>
+              dplyr::summarise(
+                sum_x  = sum(x, na.rm = na.rm),
+                sum_x2 = sum(x * x, na.rm = na.rm),
+                .groups = "drop"
+              ) |>
+              dplyr::mutate(
+                var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
+              ) |>
+              dplyr::arrange(j)
+
+            if (memory) {
+              v <- dplyr::pull(col_stats, var_x)
+              if (useNames) names(v) <- colnames(x)
+              return(v)
+            }
+
+            colVars <- col_stats |>
+              dplyr::transmute(i = j, j = 1L, x = var_x)
+
+            res <-  new("dbDenseMatrix",
+                        value = colVars,
+                        name = NA_character_,
+                        init = TRUE,
+                        dims = c(ncol(x), 1L),
+                        dim_names = list(colnames(x), "col1"))
+
+            return(res)
           })
 
 ## mean dbdm####
