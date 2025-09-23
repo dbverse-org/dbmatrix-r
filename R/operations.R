@@ -1591,9 +1591,13 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 #' @rdname head_tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset <- (x@dims[1L] - n):x@dims[1L]
+  tail_rownames <- tail(rownames(x))
+  n_subset <- (nrow(x) - n):nrow(x)
   x[] <- x[] |> dplyr::filter(i %in% n_subset)
-  x@dims[1L] <- min(x@dims[1L], as.integer(n))
+
+  x@dims[1L] <- min(nrow(x), as.integer(n))
+  rownames(x) <- tail_rownames
+
   return(x)
 })
 
