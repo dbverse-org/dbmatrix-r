@@ -747,9 +747,9 @@ as_ijx <- function(x){
 }
 
 #' dbMatrix_from_tbl
-#' @description Construcst a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.
+#' @description Constructs a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.
 #' @details
-#' The \code{tbl_duckdb_connection} object must contain dimension names.
+#' The \code{tbl_duckdb_connection} object must contain dimension names as columns in long format.
 #' @param tbl \code{tbl_duckdb_connection} table in DuckDB database in long format
 #' @param con DBI or duckdb connection object \code{(required)}
 #' @param rownames_colName \code{character} column name of rownames in tbl \code{(required)}
@@ -758,14 +758,15 @@ as_ijx <- function(x){
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
 #'
 #' @return `dbMatrix` object
-#' @keywords internal
+#' @concept dbMatrix
+#' @export
 dbMatrix_from_tbl <- function(tbl,
                               rownames_colName,
                               colnames_colName,
                               name = "dbMatrix",
-                              overwrite = FALSE){
+                              overwrite = FALSE) {
   # Check args
-  con = dbplyr::remote_con(tbl)
+  con <- dbplyr::remote_con(tbl)
   .check_con(con)
   .check_tbl(tbl)
   .check_name(name = name)
@@ -776,30 +777,34 @@ dbMatrix_from_tbl <- function(tbl,
     overwrite = overwrite
   )
 
-  if(is.null(rownames_colName) | is.null(colnames_colName)){
+  if (is.null(rownames_colName) | is.null(colnames_colName)) {
     stop("rownames_colName and colnames_colName must be provided")
   }
 
-  if(!all(c(rownames_colName, colnames_colName) %in% colnames(tbl))){
+  if (!all(c(rownames_colName, colnames_colName) %in% colnames(tbl))) {
     stop("rownames_colName and colnames_colName must be present in tbl colnames")
   }
 
-  if(name %in% DBI::dbListTables(con) & !overwrite){
+  if (name %in% DBI::dbListTables(con) & !overwrite) {
     stop("name already exists in the database.
           Please choose a unique name or set overwrite to 'TRUE'.")
   }
 
   # check if i and j are column names
-  check_names = intersect(c(colnames(tbl), as.character(rownames_colName),
-                            as.character(colnames_colName)),
-                          c("i", "j"))
-  if(length(check_names)>0) {
+  check_names <- intersect(
+    c(
+      colnames(tbl), as.character(rownames_colName),
+      as.character(colnames_colName)
+    ),
+    c("i", "j")
+  )
+  if (length(check_names) > 0) {
     stop("i and j are reserved names for matrix dimensions. please choose
          new column names")
   }
 
-  rownames_colName = rlang::sym(rownames_colName)
-  colnames_colName = rlang::sym(colnames_colName)
+  rownames_colName <- rlang::sym(rownames_colName)
+  colnames_colName <- rlang::sym(colnames_colName)
 
   # check for NA values in row/col names
   n_na <- tbl |>
@@ -807,7 +812,7 @@ dbMatrix_from_tbl <- function(tbl,
     dplyr::tally() |>
     dplyr::pull(n)
 
-  if(n_na > 0){
+  if (n_na > 0) {
     stop("NA values found in rownames or colnames. Please remove NA values.")
   }
 
@@ -817,8 +822,8 @@ dbMatrix_from_tbl <- function(tbl,
     dplyr::summarise(x = dplyr::n(), .groups = "drop")
 
   # add label encodings and get dimensions, dim names
-  i_encoded = rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
-  j_encoded = rlang::sym(paste0(as.character(colnames_colName), "_encoded"))
+  i_encoded <- rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
+  j_encoded <- rlang::sym(paste0(as.character(colnames_colName), "_encoded"))
 
   count_table <- count_table |>
     dplyr::mutate(i_encoded := dplyr::dense_rank(rownames_colName)) |>
@@ -848,15 +853,17 @@ dbMatrix_from_tbl <- function(tbl,
     dplyr::compute(name = name, overwrite = overwrite, temporary = FALSE)
 
   # set metadata
-  dims = c(dim_i, dim_j)
-  dim_names = list(row_names, col_names)
+  dims <- c(dim_i, dim_j)
+  dim_names <- list(row_names, col_names)
 
-  res <- new(Class = "dbSparseMatrix",
-             value = ijx,
-             name = name,
-             init = TRUE,
-             dim_names = dim_names,
-             dims = dims)
+  res <- new(
+    Class = "dbSparseMatrix",
+    value = ijx,
+    name = name,
+    init = TRUE,
+    dim_names = dim_names,
+    dims = dims
+  )
 
   return(res)
 }

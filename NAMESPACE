@@ -3,6 +3,7 @@
 export(as.dbMatrix)
 export(dbDenseMatrix)
 export(dbMatrix)
+export(dbMatrix_from_tbl)
 export(dbSparseMatrix)
 export(sim_dbDenseMatrix)
 export(sim_dbSparseMatrix)

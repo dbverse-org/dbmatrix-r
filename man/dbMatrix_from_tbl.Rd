@@ -29,9 +29,9 @@ dbMatrix_from_tbl(
 \code{dbMatrix} object
 }
 \description{
-Construcst a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.
+Constructs a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.
 }
 \details{
-The \code{tbl_duckdb_connection} object must contain dimension names.
+The \code{tbl_duckdb_connection} object must contain dimension names as columns in long format.
 }
-\keyword{internal}
+\concept{dbMatrix}
