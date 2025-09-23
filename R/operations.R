@@ -848,77 +848,61 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
             return(res)
           })
 
-## rowMeans dbdm ####
-#' Row (column) means for dbMatrix objects
+## rowMeans dbm ####
+#' Row (column) means for [`dbMatrix`] objects
 #' @inheritParams MatrixGenerics::rowMeans
 #' @inherit MatrixGenerics::rowMeans description
-#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
+#' @param na.rm Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param dims Always 1 for dbMatrix queries. Included for compatibility with
+#' @param dims Always 1 for [`dbMatrix`] queries. Included for compatibility with
 #' the generic.
-#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
-#' for large computations. Set to TRUE to return the results as a vector.
+#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix.
+#' This is recommended for large computations. Set to TRUE to return the results
+#' as a vector.
 #' @concept summary
 #' @rdname row_col_means
 #' @export
-setMethod('rowMeans', signature(x = 'dbDenseMatrix'),
+setMethod('rowMeans', signature(x = 'dbMatrix'),
           function(x, ..., memory = FALSE){
             x <- castNumeric(x)
 
-            # Calculate row means
-            rowMean <- x[] |>
-              dplyr::group_by(i) |>
-              dplyr::summarise(mean_x = mean(x, na.rm = TRUE))
-
+            # calculate rowMeans
+            rowSums <- rowSums(x, memory = FALSE) # dbDenseMatrix
+            n_cols <- ncol(x)
+            rowMeans <- rowSums
+            rowMeans[] <- rowMeans[] |> dplyr::mutate(x := x / n_cols)
             if (memory) {
-              res <- rowMean |>
-                dplyr::collapse() |>
+              rowMeans <- rowMeans[] |>
                 dplyr::arrange(i) |>
-                dplyr::pull(mean_x)
-              names(res) <- rownames(x)
-            } else {
-              res <- new("dbDenseMatrix")
-              rowMean <- rowMean |>
-                dplyr::mutate(j = 1) |>
-                dplyr::rename(x = mean_x) |>
-                dplyr::select(i, j, x) |>
-                dplyr::collapse() |>
-                dplyr::arrange(i)
-              res@value <- rowMean
-              res@name <- NA_character_ # for lazy queries
-              res@init <- TRUE
-              res@dims <- c(nrow(x), 1L)
-              res@dim_names <- list(rownames(x), c('col1'))
+                dplyr::pull(x)
+              names(rowMeans) <- rownames(x)
             }
-            return(res)
+
+            return(rowMeans)
           })
 
-## rowMeans dbsm ####
+## colMeans dbm ####
 #' @rdname row_col_means
 #' @export
-setMethod('rowMeans', signature(x = 'dbSparseMatrix'),
+setMethod('colMeans', signature(x = 'dbMatrix'),
           function(x, ..., memory = FALSE){
             x <- castNumeric(x)
 
+            colSums <- colSums(x, memory = FALSE) # dbDenseMatrix
+            n_rows <- nrow(x)
+            colMeans <- colSums
+            colMeans[] <- colMeans[] |> dplyr::mutate(x := x / n_rows)
             if (memory) {
-              row_indices <- x[] |>
-                dplyr::distinct(i) |>
+              colMeans <- colMeans[] |>
                 dplyr::arrange(i) |>
-                dplyr::pull(i) |>
-                as.integer()
-
-              # calculate rowMeans
-              row_sums <- rowSums(x)
-              n_cols <- ncol(x)
-              res <- row_sums / n_cols
-            } else {
-              # calculate rowMeans
-              res <- rowSums(x, memory = FALSE) # dbDenseMatrix
-              n_cols <- ncol(x)
-              res[] <- res[] |>
-                dplyr::mutate(x := x / n_cols)
+                dplyr::pull(x)
+              names(colMeans) <- colnames(x)
             }
 
+            return(colMeans)
+          })
+
+## colSds dbdm ####
             return(res)
           })
 
