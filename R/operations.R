@@ -303,7 +303,130 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
     dplyr::select(c('i', 'j', 'x'))"
     )
   e1[] = eval(str2lang(build_call))
-  e1
+## %in% operator ####
+#' @title Value Matching
+#'
+#' @description
+#' Implements the `%in%` operator for dbMatrix objects. This operator checks if
+#' elements from the left operand are contained in the right operand, returning
+#' a logical vector.
+#'
+#' @param x A dbMatrix object or any other object
+#' @param table Any object or a dbMatrix object
+#'
+#' @details
+#' This is a method for the standard `%in%` operator for dbMatrix objects.
+#' It follows R's standard behavior for the `%in%` operator:
+#'
+#' - When `x` is a dbDenseMatrix, it returns a logical vector with the same length as the
+#'   total number of elements in the matrix.
+#' - When `table` is a dbDenseMatrix, it allows checking if elements in `x` are in the matrix.
+#' - For dbSparseMatrix objects, it throws an error to match the behavior of dgCMatrix.
+#'
+#' @return
+#' A logical vector of the same length as `x`, indicating which elements of `x` are in `table`.
+#'
+#' @examples
+#' \dontrun{
+#' # Create a dbMatrix
+#' mat <- matrix(1:9, nrow = 3, ncol = 3)
+#' dbmat <- as.dbMatrix(mat)
+#'
+#' # Check if elements in dbMatrix are in a vector
+#' result <- dbmat %in% c(1, 3, 5, 7, 9)
+#'
+#' # Check if elements in a vector are in dbMatrix
+#' result <- c(1, 3, 5, 7, 9) %in% dbmat
+#' }
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "dbDenseMatrix", table = "ANY"), function(x, table) {
+  if (length(table) == 0) {
+    return(rep(FALSE, length(x)))
+  }
+
+  db_vector <- x[] |>
+    dplyr::arrange(j, i) |>
+    dplyr::pull(x)
+
+  return(db_vector %in% table)
+})
+
+
+
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "ANY", table = "dbDenseMatrix"), function(x, table) {
+  if (length(x) == 0) {
+    return(logical(0))
+  }
+
+  table_data <- table[] |>
+    dplyr::arrange(j, i) |>
+    dplyr::pull(x)
+
+  result <- x %in% table_data
+  return(result)
+})
+
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "numeric", table = "dbSparseMatrix"), function(x, table) {
+  if (length(x) == 0) {
+    return(logical(0))
+  }
+
+  # Convert dbSparseMatrix to vector and check membership
+  table_data <- table[] |>
+    dplyr::arrange(j, i) |>
+    dplyr::pull(x)
+
+  result <- x %in% table_data
+  return(result)
+})
+
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "numeric", table = "dbDenseMatrix"), function(x, table) {
+  if (length(x) == 0) {
+    return(logical(0))
+  }
+
+  # Convert dbDenseMatrix to vector and check membership
+  table_data <- table[] |>
+    dplyr::arrange(j, i) |>
+    dplyr::pull(x)
+
+  result <- x %in% table_data
+  return(result)
+})
+
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "ANY", table = "dbSparseMatrix"), function(x, table) {
+  if (length(x) == 0) {
+    return(logical(0))
+  }
+
+  # Convert dbSparseMatrix to vector and check membership
+  table_data <- table[] |>
+    dplyr::arrange(j, i) |>
+    dplyr::pull(x)
+
+  result <- x %in% table_data
+  return(result)
+})
+
+#' @rdname percent-in
+#' @concept transform
+#' @export
+setMethod("%in%", signature(x = "dbSparseMatrix", table = "ANY"), function(x, table) {
+  stop("'match' requires vector arguments")
 })
 
 # Math Summary Ops ####
