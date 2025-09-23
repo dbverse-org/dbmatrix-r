@@ -1622,6 +1622,38 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
 
 # Column data types ####
 
+#' @name colTypes
+#' @title Column data types of dbData objects
+#' @description
+#' Get the column data types of objects that inherit from \code{'dbData'}
+#' @param x dbData data object
+#' @param ... additional params to pass
+#' @noRd
+#' @keywords internal
+.colTypes <- function(x, ...) {
+  con <- dbplyr::remote_con(x[])
+  name <- dbplyr::remote_name(x[])
+
+  # Handle lazy tables
+  is_lazy_table <- is.null(name)
+  if (is_lazy_table) {
+    name <- unique_table_name(prefix = "tmp")
+    to_view(x, name = name)
+  }
+
+  # Get schema
+  sql <- glue::glue("SELECT column_name, column_type FROM (DESCRIBE {name})")
+  dat <- DBI::dbGetQuery(con, sql)
+  res <- setNames(tolower(dat$column_type), dat$column_name)
+
+  ## Clean up
+  if (is_lazy_table) {
+    DBI::dbExecute(con, glue::glue("DROP VIEW IF EXISTS {name}"))
+  }
+
+  return(res)
+}
+
 ## castNumeric ####
 
 #' @title Set a column to numeric
@@ -1633,10 +1665,13 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
 #' @param ... additional params to pass
 #' @noRd
 #' @keywords internal
-setMethod('castNumeric', signature(x = 'dbMatrix', col = 'character'),
+setMethod('castNumeric',
+          signature(x = 'dbData', col = 'character'),
           function(x, col, ...) {
-            sym_col <- dplyr::sym(col)
-            x[] <- x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
+            if (.colTypes(x)[col] != 'double') {
+              sym_col = dplyr::sym(col)
+              x[] = x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
+            }
             return(x)
           })
 
@@ -1645,6 +1680,8 @@ setMethod('castNumeric', signature(x = 'dbMatrix', col = 'character'),
 setMethod('castNumeric',
           signature(x = 'dbMatrix', col = 'missing'),
           function(x, ...) {
-            x[] <- x[] |> dplyr::mutate(x := as.numeric(x))
+            if (.colTypes(x)['x'] != 'double') {
+              x[] = x[] |> dplyr::mutate(x := as.double(x))
+            }
             return(x)
           })
