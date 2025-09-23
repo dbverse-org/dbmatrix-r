@@ -304,23 +304,23 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 #' @param mtx_colname_file_path path to .mtx colname file to be read into
 #' database. by default, no header is assumed. \code{(optional)}
 #' @param mtx_colname_col_idx column index of column name file \code{(optional)}
-#' @param ... additional params to pass
+#' @param ... additional params to pass to \code{dplyr::copy_to}
 #' @details This function reads in data into a pre-existing DuckDB database.
 #' Supported \code{value} data types:
 #' \itemize{
-#'  \item \code{dgCMatrix} In-memory sparse matrix from the \code{Matrix} package
-#'  \item \code{dgTMatrix} In-memory triplet vector or COO matrix
-#'  \item \code{matrix} In-memory dense matrix from base R
-#'  \item \code{.mtx} Path to .mtx file
+#'  \item [`Matrix::dgCMatrix-class`] In-memory sparse matrix from the [`Matrix`] package
+#'  \item [`Matrix::dgTMatrix-class`] In-memory triplet vector or COO matrix
+#'  \item [`matrix`] In-memory dense matrix from base R
+#'  \item \code{.mtx} Path to [.mtx](https://math.nist.gov/MatrixMarket/formats.html) file
 #'  \item \code{.csv} Path to .csv file
-#'  \item \code{tbl_duckdb_connection} Table in DuckDB database in ijx format from
-#'  existing \code{dbMatrix} object. \code{dims} and \code{dim_names} must be
+#'  \item [`tbl_duckdb_connection`] Table in [`duckdb`] database in ijx format from
+#'  existing [`dbMatrix`] object. \code{dims} and \code{dim_names} must be
 #'  specified if \code{value} is \code{tbl_duckdb_connection}.
 #' }
 #' @concept dbMatrix
 #' @export
 #' @examples
-#' dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+#' dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 #' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' dbSparse <- dbMatrix(
 #'   value = dgc,
@@ -362,10 +362,10 @@ dbMatrix <- function(value,
   }
 
   # check value and class mismatch
-  if((inherits(value, "matrix") | inherits(value, "denseMatrix"))  & class == "dbSparseMatrix"){
+  if ((inherits(value, "matrix") | inherits(value, "denseMatrix")) & class == "dbSparseMatrix") {
     stopf("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
   }
-  if((inherits(value, "dgCMatrix") | inherits(value, "sparseMatrix")) & class == "dbDenseMatrix"){
+  if ((inherits(value, "dgCMatrix") | inherits(value, "sparseMatrix")) & class == "dbDenseMatrix") {
     stopf("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
   }
 
@@ -385,11 +385,11 @@ dbMatrix <- function(value,
     dim_names <- dim_names
   } else { # data must be read in
     if (is.character(value)) { # read in from file
-      if(grepl("\\.csv|\\.tsv|\\.txt", value)){
+      if (grepl("\\.csv|\\.tsv|\\.txt", value)) {
         stop("File type not yet supported. Please use .mtx file format.")
         # TODO: implement dense to sparse conversion. Long to wide pivot not yet
         #       supported for out of memory in duckdb.
-      } else if(grepl("\\.mtx", value)){
+      } else if (grepl("\\.mtx", value)) {
         data <- readMM(
           con = con,
           value = value,
@@ -406,26 +406,25 @@ dbMatrix <- function(value,
           mtx_colname_file_path = mtx_colname_file_path,
           mtx_colname_col_idx = mtx_colname_col_idx
         )
-
       } else {
         stop("Invalid file type. Please provide a .mtx, .csv, .txt, or .tsv file.")
       }
-    } else if(inherits(value, "matrix") | inherits(value, "Matrix")) {
+    } else if (inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplet vector ijx format
-      if(inherits(value, "dgTMatrix")){
+      if (inherits(value, "dgTMatrix")) {
         # Convert to 1-based index
-        ijx = data.frame(i = value@i + 1, j = value@j + 1, x = value@x)
-      } else{
+        ijx <- data.frame(i = value@i + 1L, j = value@j + 1L, x = value@x)
+      } else {
         ijx <- as_ijx(value)
       }
 
       # write ijx to db
-      # use duckdb::register instead of dplyr::copy_to ???
-      data <- dplyr::copy_to(dest = con,
-                             name = name,
-                             df = ijx,
-                             overwrite = overwrite,
-                             temporary = TRUE)
+      data <- dplyr::copy_to(
+        dest = con,
+        name = name,
+        df = ijx,
+        overwrite = overwrite, ...
+      )
 
       dims <- dim(value)
       dim_names <- list(rownames(value), colnames(value))
@@ -435,26 +434,28 @@ dbMatrix <- function(value,
   }
 
   # Set dimnames if not provided
-  if(is.null(unlist(dim_names))) {
-    row_names = as.factor(paste0("row", 1:dims[1]))
-    col_names = as.factor(paste0("col", 1:dims[2]))
-    dim_names = list(row_names, col_names)
+  if (is.null(unlist(dim_names))) {
+    row_names <- as.factor(paste0("row", 1:dims[1]))
+    col_names <- as.factor(paste0("col", 1:dims[2]))
+    dim_names <- list(row_names, col_names)
   }
 
-  if(class == "dbSparseMatrix"){
-    set_class = "dbSparseMatrix"
-  } else if(class == "dbDenseMatrix"){
-    set_class = "dbDenseMatrix"
+  if (class == "dbSparseMatrix") {
+    set_class <- "dbSparseMatrix"
+  } else if (class == "dbDenseMatrix") {
+    set_class <- "dbDenseMatrix"
   } else { ## redundant check from above
     stopf("Please specify dbMatrix class: 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
-  res <- new(Class = set_class,
-             value = data,
-             name = name,
-             init = TRUE,
-             dim_names = dim_names,
-             dims = dims)
+  res <- new(
+    Class = set_class,
+    value = data,
+    name = name,
+    init = TRUE,
+    dim_names = dim_names,
+    dims = dims
+  )
 
   return(res)
 }
