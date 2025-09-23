@@ -1,7 +1,7 @@
 # dbData object interactions ####
 setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
 
-#' @importFrom MatrixGenerics colMeans colSums rowMeans rowSums colSds rowSds
+#' @importFrom MatrixGenerics colMeans colSums rowMeans rowSums colSds rowSds rowVars colVars
 #' @importFrom dplyr compute
 NULL
 
@@ -12,6 +12,7 @@ NULL
   if (!isGeneric("colnames<-")) methods::setGeneric("colnames<-")
   if (!isGeneric("nrow")) methods::setGeneric("nrow")
   if (!isGeneric("ncol")) methods::setGeneric("ncol")
+  if (!isGeneric("%in%")) methods::setGeneric("%in%")
 }
 
 # dbMatrix ####
