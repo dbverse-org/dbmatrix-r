@@ -4,8 +4,8 @@
 #' @noRd
 #' @concept dbMatrix
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing', drop = 'missing'),
-          function(x, i, j) {
+setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing'),
+          function(x, i, j, ..., drop = FALSE) {
             x@value
           })
 
@@ -21,18 +21,15 @@ setMethod('[<-', signature(x = 'dbMatrix', i = 'missing', j = 'missing', value =
           })
 
 # dbMatrix ####
-## rows only ####
+## vector indexing ####
+### rows only ####
 #' @noRd
 #' @concept dbMatrix
 #' @export
-setMethod('[',
-          signature(
-            x = 'dbMatrix',
-            i = 'dbIndex',
-            j = 'missing',
-            drop = 'missing'
-          ),
-          function(x, i, ...) {
+setMethod(
+  '[',
+  signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing'),
+  function(x, i, ..., drop = FALSE) {
             # get dbMatrix info
             con = get_con(x)
             dim = dim(x)
@@ -49,7 +46,7 @@ setMethod('[',
               dplyr::mutate(new_i = seq_along(filter_i)) # reset index
 
             # send map to db for subsetting
-            name = unique_table_name('temp_i')
+    name = unique_table_name('tmp_i')
 
             # FIXME: workaround for lack of support for writing
             # tables to a custom schema that is invisible to the user
@@ -76,20 +73,17 @@ setMethod('[',
             x@name <- NA_character_
 
             return(x)
-          })
+  }
+)
 
-## cols only ####
+### cols only ####
 #' @noRd
 #' @concept dbMatrix
 #' @export
-setMethod('[',
-          signature(
-            x = 'dbMatrix',
-            i = 'missing',
-            j = 'dbIndex',
-            drop = 'missing'
-          ),
-          function(x, j, ...) {
+setMethod(
+  '[',
+  signature(x = 'dbMatrix', i = 'missing',j = 'dbIndex'),
+  function(x, j, ..., drop = FALSE) {
             # get dbMatrix info
             con <- get_con(x)
             dim = dim(x)
@@ -101,12 +95,13 @@ setMethod('[',
             map <- data.frame(j = seq_along(colnames(x)), colname = colnames(x))
             filter_j <- get_dbM_sub_idx(index = j,
                                        dbM_dimnames = x@dim_names, dims = 2)
+
             map <- map |>
               dplyr::filter(colname %in% filter_j) |>
               dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
             # send map to db for subsetting
-            name <- unique_table_name('temp_j')
+    name <- unique_table_name('tmp_j')
 
             # FIXME:
             map_temp <- arrow::to_duckdb(
@@ -128,14 +123,16 @@ setMethod('[',
             x@name <- NA_character_
 
             return(x)
-          })
+  }
+)
 
-## rows and cols ####
+### rows and cols ####
 #' @noRd
 #' @concept dbMatrix
 #' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'missing'),
-          function(x, i, j, ...) {
+setMethod('[',
+          signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex'),
+          function(x, i, j, ..., drop = FALSE) {
             # get dbMatrix info
             con = get_con(x)
             dim = dim(x)
@@ -164,7 +161,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
               dplyr::filter(colname %in% filter_j) |>
               dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
-            name = unique_table_name('temp_map_ij_i')
+            name = unique_table_name('tmp_map_ij_i')
             map_temp_j <- arrow::to_duckdb(
               .data = map_j, # converts to arrow-compliant object
               con = con,
@@ -172,7 +169,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
               auto_disconnect = TRUE # remove tbl when gc
             )
 
-            name = unique_table_name('temp_map_ij_j')
+            name = unique_table_name('tmp_map_ij_j')
             map_temp_i <- arrow::to_duckdb(
               .data = map_i, # converts to arrow-compliant object
               con = con,
@@ -195,6 +192,7 @@ setMethod('[', signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex', drop = 'm
 
             return(x)
           })
+            
 #' @description
 #' Internal function to index `dbMatrix` objects by `dbIndex` superclass.
 #' Can apply to both rows (dims = 1) and columns (dims = 2)
