@@ -115,13 +115,13 @@ dim(dgc)
   <summary>Click to expand </summary>
   
   ```{r}
-  all.equal(dbMatrix::colMeans(sparse), Matrix::colMeans(dgc))
+  all.equal(dbMatrix::colMeans(sparse, memory = TRUE, names = TRUE), Matrix::colMeans(dgc))
   
-  all.equal(dbMatrix::colSums(sparse), Matrix::colSums(dgc))
+  all.equal(dbMatrix::colSums(sparse, memory = TRUE, names = TRUE), Matrix::colSums(dgc))
   
-  all.equal(dbMatrix::rowMeans(sparse), Matrix::rowMeans(dgc))
+  all.equal(dbMatrix::rowMeans(sparse, memory = TRUE, names = TRUE), Matrix::rowMeans(dgc))
   
-  all.equal(dbMatrix::rowSums(sparse), Matrix::rowSums(dgc))
+  all.equal(dbMatrix::rowSums(sparse, memory = TRUE, names = TRUE), Matrix::rowSums(dgc))
 
   ```
 </details>
