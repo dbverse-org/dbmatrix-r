@@ -650,6 +650,36 @@ as.matrix.dbDenseMatrix <- function(x, ...) {
   as.matrix.dbMatrix(x, ...)
 }
 
+#' @noRd
+#' @keywords internal
+#' @param x dbDenseMatrix containing 1 in dim
+# TODO: add support for dbVector
+setMethod(
+  "as.vector", signature(x = "dbDenseMatrix"),
+  function(x, mode = "any") {
+    if (1 %in% dim(x)) {
+      if (dim(x)[1] == 1) {
+        out <- x[] |>
+          dplyr::select(j, x) |>
+          dplyr::arrange(j) |>
+          dplyr::collect() |>
+          dplyr::pull(x)
+        names(out) <- colnames(x)
+      } else {
+        out <- x[] |>
+          dplyr::select(i, x) |>
+          dplyr::arrange(i) |>
+          dplyr::collect() |>
+          dplyr::pull(x)
+        names(out) <- rownames(x)
+      }
+      return(out)
+    }
+
+    stopf("Use `as.matrix()` for dbMatrix objects")
+  }
+)
+
 #' Convert [`Matrix`] to [`dbMatrix`]
 #' @description
 #' Converts in-memory [`matrix`], [`Matrix::dgeMatrix-class`], or
