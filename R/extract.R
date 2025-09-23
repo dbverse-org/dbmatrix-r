@@ -213,6 +213,51 @@ get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
     index <- recycle_boolean_index(index, length(dbM_dimnames[[dims]]))
   }
 
+  if(is(index, 'dbDenseMatrix')){
+    dimensions <- dim(index)
+
+    # check that dimensions has 1 in the [1] or [2] position
+    if (sum(dimensions == 1) != 1){
+      stop("dbDenseMatrix is not a dbVector")
+    }
+
+    # FIXME: If dbmatrix@x is logical support recycle_boolean_index
+    # below only supports character indexing, no recycling
+    is_logical <- index@value |> head(1) |> dplyr::pull(x) |> is.logical()
+    sub_names = dbM_dimnames[[dims]]
+    if(is_logical){
+      filtered_index <- index[] |>
+        dplyr::filter(x == TRUE)
+      if(dims == 1L || is(index, "dbDenseMatrix")){ #FIXME dbVector
+        # a_rownames |>
+        #    dplyr::semi_join(filtered_index, by = "i")
+        index <- filtered_index |>
+          dplyr::arrange(i) |>
+          dplyr::distinct(i) |>
+          dplyr::pull(i)
+        return(sub_names[index])
+      } else {
+        index <- filtered_index |>
+          dplyr::arrange(j) |>
+          dplyr::distinct(j) |>
+          dplyr::pull(j)
+        return(sub_names[index])
+      }
+    }
+
+    if(dimensions[1] <= length(dbM_dimnames[[dims]])){
+      index <- rownames(index)
+    } else if (dimensions[2] <= length(dbM_dimnames[[dims]])){
+      index <- colnames(index)
+    }
+
+    if (all(index %in% dbM_dimnames[[dims]])){
+      return(index)
+    } else {
+      stop("dbVector dimensions do not match dbMatrix dimensions")
+    }
+  }
+
   sub_names = dbM_dimnames[[dims]]
   return(sub_names[index])
 }
@@ -255,3 +300,137 @@ recycle_boolean_index <- function(index, length) {
     }
   }
 }
+
+## matrix index ####
+#' @noRd
+#' @concept dbMatrix
+#' @export
+setMethod('[',
+          signature(x = 'dbMatrix', i = 'dbMatrix', j = 'missing'),
+          function(x, i, ..., drop = FALSE) {
+            # Check dimensions match
+            if (!identical(dim(x), dim(i))) {
+              stop("Matrix index 'i' must have the same dimensions as 'x'")
+            }
+
+            # Perform join and filter
+            res_tbl <- dplyr::inner_join(
+              x[], i[], by = c("i", "j"), suffix = c(".x", ".i")
+            ) |>
+              dplyr::filter(x.i == TRUE) |>
+              dplyr::arrange(j, i)
+
+            # Pull the result into memory as a vector
+            result_vector <- res_tbl |>
+              dplyr::pull(x.x)
+
+            # Note: Base R doesn't preserve names in this type of subsetting
+            return(result_vector)
+          })
+            
+            
+# *** matrix index assignment ####
+#' @noRd
+#' @concept dbMatrix
+#' @export
+setMethod('[<-',
+          signature(x = 'dbMatrix', i = 'dbMatrix', j = 'missing', value = 'ANY'),
+          function(x, i, j, value) {
+            if (!identical(dim(x), dim(i))) {
+              stop("Logical index matrix 'i' must have the same dimensions as 'x'")
+            }
+
+            # Ensure value is scalar for this implementation
+            if (length(value) != 1) {
+              stop("Replacement value must be a single scalar for matrix indexing assignment")
+            }
+
+            con <- get_con(x)
+            tbl_x <- x[]
+            tbl_i <- i[]
+
+            # Identify rows in tbl_x to update based on tbl_i
+            rows_to_update <- dplyr::inner_join(
+              tbl_x |> dplyr::select(i, j),
+              tbl_i,
+              by = c("i", "j")
+            ) |>
+              dplyr::filter(x == TRUE) |>
+              dplyr::select(i, j)
+
+            update_data <- rows_to_update |>
+              dplyr::mutate(new_value = value)
+
+            # Use rows_update for efficient update based on keys (i, j)
+            update_data <- update_data |> dplyr::rename(x = new_value)
+
+            # Perform the update
+            updated_tbl <- dplyr::rows_update(
+              tbl_x,
+              update_data,
+              by = c("i", "j"),
+              unmatched = "ignore" # Keep rows from x that weren't updated
+            )
+
+            # Update the dbMatrix object's value slot
+            x@value <- updated_tbl
+            x@name <- NA_character_
+
+            return(x)
+          })
+
+# dbDenseMatrix indexing methods ####
+# These methods enable dbVector logical indexing for dbMatrix objects
+# Critical for filterGiotto functionality in giottodb
+
+#' @noRd
+#' @concept dbMatrix
+#' @export
+setMethod(
+  '[',
+  signature(x = 'dbMatrix', i = 'dbDenseMatrix', j = 'missing'),
+  function(x, i, ..., drop = FALSE) {
+    # Check if i is a valid dbVector (1D matrix)
+    if (!1 %in% dim(i)) {
+      stopf("dbDenseMatrix index must be a dbVector (have 1 in dimensions)")
+    }
+    
+    # Check dimensional compatibility - only row indexing supported
+    if (dim(i)[1] != nrow(x)) {
+      stopf("Row indexing: dbDenseMatrix must have same number of rows as matrix")
+    }
+    
+    # Convert dbDenseMatrix to logical vector for indexing
+    logical_index <- i[] |>
+      dplyr::arrange(i) |>
+      dplyr::pull(x) |>
+      as.logical()
+    
+    # Use the existing dbIndex row indexing method
+    return(x[logical_index, , drop = drop])
+  }
+)
+
+#' @noRd
+#' @concept dbMatrix  
+#' @export
+setMethod(
+  '[',
+  signature(x = 'dbMatrix', i = 'missing', j = 'dbDenseMatrix'),
+  function(x, i, j, ..., drop = FALSE) {
+    # Column indexing with dbDenseMatrix not supported due to dimensional constraints
+    stopf("Column indexing with dbDenseMatrix not supported. Use as.vector(j) to convert to logical vector.")
+  }
+)
+
+#' @noRd
+#' @concept dbMatrix
+#' @export  
+setMethod(
+  '[',
+  signature(x = 'dbMatrix', i = 'dbDenseMatrix', j = 'dbDenseMatrix'),
+  function(x, i, j, ..., drop = FALSE) {
+    # Dual indexing with dbDenseMatrix not supported due to dimensional constraints
+    stopf("Dual indexing with dbDenseMatrix not supported. Convert indices using as.vector() first.")
+  }
+)
