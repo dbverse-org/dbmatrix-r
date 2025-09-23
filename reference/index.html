@@ -56,10 +56,28 @@
 
       <dl><dt>
 
+          <code><a href="as.dbMatrix.html">as.dbMatrix()</a></code>
+
+        </dt>
+        <dd>Convert <code>Matrix</code> to <code>dbMatrix</code></dd>
+      </dl><dl><dt>
+
+          <code><a href="as.matrix-dbMatrix-method.html">as.matrix(<i>&lt;dbMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert <code>dbMatrix</code> to in-memory matrix</dd>
+      </dl><dl><dt>
+
           <code><a href="dbMatrix.html">dbMatrix()</a></code>
 
         </dt>
         <dd>Create a <code>dbSparseMatrix</code> or <code>dbDenseMatrix</code> object</dd>
+      </dl><dl><dt>
+
+          <code><a href="dbMatrix_from_tbl.html">dbMatrix_from_tbl()</a></code>
+
+        </dt>
+        <dd>dbMatrix_from_tbl</dd>
       </dl></div><div class="section level2">
       <h2 id="matrix-summary-operations">Matrix Summary Operations<a class="anchor" aria-label="anchor" href="#matrix-summary-operations"></a></h2>
 
@@ -73,34 +91,40 @@
 
       <dl><dt>
 
+          <code><a href="Summary-dbMatrix-method.html">Summary(<i>&lt;dbMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary Methods for <code>dbMatrix</code> Objects</dd>
+      </dl><dl><dt>
+
           <code><a href="mean.html">mean(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="mean.html">mean(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
 
         </dt>
-        <dd>Arithmetic Mean for dbMatrix objects</dd>
+        <dd>Arithmetic Mean for <code>dbMatrix</code> objects</dd>
       </dl><dl><dt>
 
-          <code><a href="row_col_means.html">rowMeans(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_means.html">rowMeans(<i>&lt;dbSparseMatrix&gt;</i>)</a></code> <code><a href="row_col_means.html">colMeans(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_means.html">colMeans(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
+          <code><a href="row_col_means.html">rowMeans(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="row_col_means.html">colMeans(<i>&lt;dbMatrix&gt;</i>)</a></code>
 
         </dt>
-        <dd>Row (column) means for dbMatrix objects</dd>
+        <dd>Row (column) means for <code>dbMatrix</code> objects</dd>
+      </dl><dl><dt>
+
+          <code><a href="row_col_sds.html">colSds(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_sds.html">colSds(<i>&lt;dbSparseMatrix&gt;</i>)</a></code> <code><a href="row_col_sds.html">rowSds(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_sds.html">rowSds(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Row (column) standard deviations for <code>dbMatrix</code> objects</dd>
       </dl><dl><dt>
 
           <code><a href="row_col_sums.html">rowSums(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_sums.html">rowSums(<i>&lt;dbSparseMatrix&gt;</i>)</a></code> <code><a href="row_col_sums.html">colSums(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_sums.html">colSums(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
 
         </dt>
-        <dd>Row (column) sums for dbMatrix objects</dd>
+        <dd>Row (column) sums for <code>dbMatrix</code> objects</dd>
       </dl><dl><dt>
 
-          <code><a href="sds.html">colSds(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="sds.html">colSds(<i>&lt;dbSparseMatrix&gt;</i>)</a></code> <code><a href="sds.html">rowSds(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="sds.html">rowSds(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
+          <code><a href="row_col_vars.html">rowVars(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_vars.html">rowVars(<i>&lt;dbSparseMatrix&gt;</i>)</a></code> <code><a href="row_col_vars.html">colVars(<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="row_col_vars.html">colVars(<i>&lt;dbSparseMatrix&gt;</i>)</a></code>
 
         </dt>
-        <dd>Row (column) standard deviations for dbMatrix objects</dd>
-      </dl><dl><dt>
-
-          <code><a href="sum-dbMatrix-method.html">sum(<i>&lt;dbMatrix&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Sum of Vector Elements in dbMatrix objects</dd>
+        <dd>Row (column) variances for <code>dbMatrix</code> objects</dd>
       </dl></div><div class="section level2">
       <h2 id="matrix-transformations">Matrix Transformations<a class="anchor" aria-label="anchor" href="#matrix-transformations"></a></h2>
 
@@ -114,19 +138,19 @@
 
       <dl><dt>
 
-          <code><a href="as.matrix-dbMatrix-method.html">as.matrix(<i>&lt;dbMatrix&gt;</i>)</a></code>
+          <code><a href="Math-dbMatrix-method.html">Math(<i>&lt;dbMatrix&gt;</i>)</a></code>
 
         </dt>
-        <dd>Convert dbMatrix to in-memory matrix</dd>
+        <dd>Math Operations for <code>dbMatrix</code> Objects</dd>
       </dl><dl><dt>
 
-          <code><a href="log-dbMatrix-method.html">log(<i>&lt;dbMatrix&gt;</i>)</a></code>
+          <code><a href="percent-in.html">`%in%`(<i>&lt;dbDenseMatrix&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="percent-in.html">`%in%`(<i>&lt;ANY&gt;</i>,<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="percent-in.html">`%in%`(<i>&lt;dbSparseMatrix&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code>
 
         </dt>
-        <dd>Logarithms and Exponentials</dd>
+        <dd>Value Matching</dd>
       </dl><dl><dt>
 
-          <code><a href="t-dbMatrix-method.html">t(<i>&lt;dbMatrix&gt;</i>)</a></code>
+          <code><a href="t-dbMatrix.html">t(<i>&lt;dbMatrix&gt;</i>)</a></code>
 
         </dt>
         <dd>Matrix Transpose</dd>
@@ -155,10 +179,22 @@
         <dd>Return the First or Last Parts of an Object</dd>
       </dl><dl><dt>
 
+          <code><a href="length.html">length(<i>&lt;dbMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Length of a <code>dbMatrix</code> Object</dd>
+      </dl><dl><dt>
+
           <code><a href="matrix_props.html">rownames(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">`rownames&lt;-`(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">colnames(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">`colnames&lt;-`(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">dimnames(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">`dimnames&lt;-`(<i>&lt;dbMatrix&gt;</i>,<i>&lt;list&gt;</i>)</a></code>
 
         </dt>
         <dd>Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects</dd>
+      </dl><dl><dt>
+
+          <code><a href="names-dbDenseMatrix-method.html">names(<i>&lt;dbDenseMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>The names of a dbMatrix Object</dd>
       </dl><dl><dt>
 
           <code><a href="nrow_ncol.html">nrow(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="nrow_ncol.html">ncol(<i>&lt;dbMatrix&gt;</i>)</a></code>
@@ -182,6 +218,24 @@
 
         </dt>
         <dd>List remote tables, temporary tables, and views</dd>
+      </dl><dl><dt>
+
+          <code><a href="to_view-dbData-method.html">to_view(<i>&lt;dbData&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert lazy table to named view</dd>
+      </dl><dl><dt>
+
+          <code><a href="to_view-missing-method.html">to_view(<i>&lt;missing&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert lazy table to named view</dd>
+      </dl><dl><dt>
+
+          <code><a href="to_view-tbl_duckdb_connection-method.html">to_view(<i>&lt;tbl_duckdb_connection&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert lazy table to named view</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
@@ -192,7 +246,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>

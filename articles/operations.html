@@ -68,7 +68,7 @@
 
       <h1>Operations</h1>
             
-            <h4 data-toc-skip class="date">2025-05-11</h4>
+            <h4 data-toc-skip class="date">2025-09-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/drieslab/dbMatrix/blob/dev/vignettes/operations.Rmd" class="external-link"><code>vignettes/operations.Rmd</code></a></small>
       <div class="d-none name"><code>operations.Rmd</code></div>
@@ -211,27 +211,29 @@ the <code>data</code> directory of the package.</p>
 <span><span class="co"># preview </span></span>
 <span><span class="co"># show function aims to emulate the show method for dgCMatrix</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 6 x 624  matrix of class "dbSparseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## 6 x 624  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                  </span></span>
-<span><span class="co">## Gna12         1 2 1 1 9 1 3 5 3 .</span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 633 rows ]</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                               </span></span>
+<span><span class="co">## Gna12    1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000 3.0000000</span></span>
+<span><span class="co">##                                       </span></span>
+<span><span class="co">## Gna12    5.0000000 3.0000000         .</span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="transpose">transpose<a class="anchor" aria-label="anchor" href="#transpose"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 624 x 634  matrix of class "dbSparseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## 624 x 634  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'Gna12', 'Ccnd2', 'Btbd17' ... suppressing 628 ...'Gm19935', '9630013A20Rik', '2900040C04Rik' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                       </span></span>
-<span><span class="co">## AAAGGGATGTAGCAAG-1 1 . . . . . 1 . . .</span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span>
-<span><span class="co">## NA</span></span>
+<pre><code><span><span class="co">##                                                                       </span></span>
+<span><span class="co">## AAAGGGATGTAGCAAG-1 1.0000000         .         .         .         . .</span></span>
+<span><span class="co">##                                                   </span></span>
+<span><span class="co">## AAAGGGATGTAGCAAG-1 1.0000000 .         .         .</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 624 columns and 618 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## NA</span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span>
 <span><span class="co">## NA</span></span>
 <span><span class="co">## NA</span></span></code></pre>
 </div>
@@ -240,66 +242,76 @@ the <code>data</code> directory of the package.</p>
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 1 x 624  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                            </span></span>
-<span><span class="co">## row1 0.74132 1.32965 1.14353 0.83438 1.61356 2.21293 1.7224 1.90221 0.73975</span></span>
-<span><span class="co">##             </span></span>
-<span><span class="co">## row1 0.92587</span></span></code></pre>
+<pre><code><span><span class="co">## 624 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
+<span><span class="co">##                             </span></span>
+<span><span class="co">## AAAGGGATGTAGCAAG-1 0.7413249</span></span>
+<span><span class="co">## AAATGGCATGTCTTGT-1 1.3296530</span></span>
+<span><span class="co">## AAATGGTCAATGTGCC-1 1.1435331</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ...suppressing 618 elements</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## TTGTCGTTCAGTTACC-1 0.6624606</span></span>
+<span><span class="co">## TTGTGGCCCTGACAGT-1 0.6908517</span></span>
+<span><span class="co">## TTGTTCAGTGTGCTAC-1 0.7965300</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colsums">colSums<a class="anchor" aria-label="anchor" href="#colsums"></a>
 </h3>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 1 x 624  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                 </span></span>
-<span><span class="co">## row1 470 843 725 529 1023 1403 1092 1206 469 587</span></span></code></pre>
+<pre><code><span><span class="co">## 624 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
+<span><span class="co">##                               </span></span>
+<span><span class="co">## AAAGGGATGTAGCAAG-1 470.0000000</span></span>
+<span><span class="co">## AAATGGCATGTCTTGT-1 843.0000000</span></span>
+<span><span class="co">## AAATGGTCAATGTGCC-1 725.0000000</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ...suppressing 618 elements</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## TTGTCGTTCAGTTACC-1 420.0000000</span></span>
+<span><span class="co">## TTGTGGCCCTGACAGT-1 438.0000000</span></span>
+<span><span class="co">## TTGTTCAGTGTGCTAC-1 505.0000000</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowmeans">rowMeans<a class="anchor" aria-label="anchor" href="#rowmeans"></a>
 </h3>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 634 x 1  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames: 'col1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                      </span></span>
-<span><span class="co">## Gna12         2.71795</span></span>
-<span><span class="co">## Ccnd2         1.73237</span></span>
-<span><span class="co">## Btbd17        0.55288</span></span>
+<pre><code><span><span class="co">## 634 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
+<span><span class="co">##                        </span></span>
+<span><span class="co">## Gna12         2.7179487</span></span>
+<span><span class="co">## Ccnd2         1.7323718</span></span>
+<span><span class="co">## Btbd17        0.5528846</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 628 rows</span></span>
+<span><span class="co">## ...suppressing 628 elements</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Gm19935       0.20833</span></span>
-<span><span class="co">## 9630013A20Rik 0.17147</span></span>
-<span><span class="co">## 2900040C04Rik 0.15545</span></span></code></pre>
+<span><span class="co">## Gm19935       0.2083333</span></span>
+<span><span class="co">## 9630013A20Rik 0.1714744</span></span>
+<span><span class="co">## 2900040C04Rik 0.1554487</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowsums">rowSums<a class="anchor" aria-label="anchor" href="#rowsums"></a>
 </h3>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 634 x 1  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames: 'col1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                   </span></span>
-<span><span class="co">## Gna12         1696</span></span>
-<span><span class="co">## Ccnd2         1081</span></span>
-<span><span class="co">## Btbd17         345</span></span>
+<pre><code><span><span class="co">## 634 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
+<span><span class="co">##                           </span></span>
+<span><span class="co">## Gna12         1696.0000000</span></span>
+<span><span class="co">## Ccnd2         1081.0000000</span></span>
+<span><span class="co">## Btbd17         345.0000000</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 628 rows</span></span>
+<span><span class="co">## ...suppressing 628 elements</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Gm19935        130</span></span>
-<span><span class="co">## 9630013A20Rik  107</span></span>
-<span><span class="co">## 2900040C04Rik   97</span></span></code></pre>
+<span><span class="co">## Gm19935        130.0000000</span></span>
+<span><span class="co">## 9630013A20Rik  107.0000000</span></span>
+<span><span class="co">## 2900040C04Rik   97.0000000</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="dim">dim<a class="anchor" aria-label="anchor" href="#dim"></a>
 </h3>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 634 624</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 634 624</span></span></code></pre>
 </div>
@@ -308,51 +320,35 @@ the <code>data</code> directory of the package.</p>
 </h3>
 <details><summary>
 Click to expand
-</summary><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span>  <span class="co">## [1] "Modes: S4, numeric"                                               </span></span>
-<span>  <span class="co">## [2] "Lengths: 1, 624"                                                  </span></span>
-<span>  <span class="co">## [3] "names for current but not for target"                             </span></span>
-<span>  <span class="co">## [4] "Attributes: &lt; names for target but not for current &gt;"             </span></span>
-<span>  <span class="co">## [5] "Attributes: &lt; Length mismatch: comparison on first 0 components &gt;"</span></span></code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span>  <span class="co">## [1] "Modes: S4, numeric"                                               </span></span>
-<span>  <span class="co">## [2] "Lengths: 1, 624"                                                  </span></span>
-<span>  <span class="co">## [3] "names for current but not for target"                             </span></span>
-<span>  <span class="co">## [4] "Attributes: &lt; names for target but not for current &gt;"             </span></span>
-<span>  <span class="co">## [5] "Attributes: &lt; Length mismatch: comparison on first 0 components &gt;"</span></span></code></pre>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span>  <span class="co">## [1] "Modes: S4, numeric"                                               </span></span>
-<span>  <span class="co">## [2] "Lengths: 1, 634"                                                  </span></span>
-<span>  <span class="co">## [3] "names for current but not for target"                             </span></span>
-<span>  <span class="co">## [4] "Attributes: &lt; names for target but not for current &gt;"             </span></span>
-<span>  <span class="co">## [5] "Attributes: &lt; Length mismatch: comparison on first 0 components &gt;"</span></span></code></pre>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span>  <span class="co">## [1] "Modes: S4, numeric"                                               </span></span>
-<span>  <span class="co">## [2] "Lengths: 1, 634"                                                  </span></span>
-<span>  <span class="co">## [3] "names for current but not for target"                             </span></span>
-<span>  <span class="co">## [4] "Attributes: &lt; names for target but not for current &gt;"             </span></span>
-<span>  <span class="co">## [5] "Attributes: &lt; Length mismatch: comparison on first 0 components &gt;"</span></span></code></pre>
+</summary><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span>, memory <span class="op">=</span> <span class="cn">TRUE</span>, names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span>  <span class="co">## [1] TRUE</span></span></code></pre>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span>, memory <span class="op">=</span> <span class="cn">TRUE</span>, names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span>  <span class="co">## [1] TRUE</span></span></code></pre>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span>, memory <span class="op">=</span> <span class="cn">TRUE</span>, names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span>  <span class="co">## [1] TRUE</span></span></code></pre>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span>  <span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span>, memory <span class="op">=</span> <span class="cn">TRUE</span>, names <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span>  <span class="co">## [1] TRUE</span></span></code></pre>
 </details>
 </div>
 </div>
 <div class="section level2">
 <h2 id="dbdensematrix-operations">dbDenseMatrix Operations<a class="anchor" aria-label="anchor" href="#dbdensematrix-operations"></a>
 </h2>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># below is a convenience function to simulate a dbDenseMatrix</span></span>
 <span><span class="va">dense</span> <span class="op">=</span> <span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_objects.html">sim_dbDenseMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># preview</span></span>
 <span><span class="va">dense</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                              </span></span>
-<span><span class="co">## row1   1.37096  0.32193  1.20097  -0.0407 -2.00093 -1.09616 -0.00462  0.72417</span></span>
-<span><span class="co">##                        </span></span>
-<span><span class="co">## row1   1.33491 -1.30382</span></span>
+<pre><code><span><span class="co">## 50 x 50  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                        </span></span>
+<span><span class="co">## row1   1.3709584  0.3219253  1.2009654 -0.0406985 -2.0009292 -1.0961562</span></span>
+<span><span class="co">##                                                  </span></span>
+<span><span class="co">## row1  -0.0046208  0.7241738  1.3349126 -1.3038212</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
@@ -362,14 +358,14 @@ Click to expand
 <div class="section level3">
 <h3 id="transpose-1">transpose<a class="anchor" aria-label="anchor" href="#transpose-1"></a>
 </h3>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## 50 x 50  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                              </span></span>
-<span><span class="co">## col1   1.37096  -0.5647  0.36313  0.63286  0.40427 -0.10612  1.51152 -0.09466</span></span>
-<span><span class="co">##                        </span></span>
-<span><span class="co">## col1   2.01842 -0.06271</span></span>
+<pre><code><span><span class="co">##                                                                        </span></span>
+<span><span class="co">## col1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245</span></span>
+<span><span class="co">##                                                  </span></span>
+<span><span class="co">## col1   1.5115220 -0.0946590  2.0184237 -0.0627141</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
@@ -380,76 +376,90 @@ Click to expand
 <div class="section level3">
 <h3 id="colmeans-1">colMeans<a class="anchor" aria-label="anchor" href="#colmeans-1"></a>
 </h3>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 1 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'col1', 'col2', 'col3' ... suppressing 44 ...'col48', 'col49', 'col50' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                          </span></span>
-<span><span class="co">## row1 -0.03562 0.10074 -0.15122 -0.02372 0.00794 -0.02862 -0.06156 0.12742</span></span>
-<span><span class="co">##                       </span></span>
-<span><span class="co">## row1 -0.11944 -0.11622</span></span></code></pre>
+<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: ORDER BY is ignored in subqueries without LIMIT</span></span>
+<span><span class="co">## <span style="color: #0000BB;">ℹ</span> Do you need to move arrange() later in the pipeline or use window_order() instead?</span></span></code></pre>
+<pre><code><span><span class="co">##                 </span></span>
+<span><span class="co">## col1  -0.0356718</span></span>
+<span><span class="co">## col2   0.1007014</span></span>
+<span><span class="co">## col3  -0.1512511</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ...suppressing 44 elements</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## col48  0.0178273</span></span>
+<span><span class="co">## col49  0.2073369</span></span>
+<span><span class="co">## col50 -0.1635492</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colsums-1">colSums<a class="anchor" aria-label="anchor" href="#colsums-1"></a>
 </h3>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 1 x 50  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'col1', 'col2', 'col3' ... suppressing 44 ...'col48', 'col49', 'col50' ]]</span></span></code></pre>
+<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## Warning: ORDER BY is ignored in subqueries without LIMIT</span></span>
 <span><span class="co">## <span style="color: #0000BB;">ℹ</span> Do you need to move arrange() later in the pipeline or use window_order() instead?</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                        </span></span>
-<span><span class="co">## row1 -1.781 5.037 -7.561 -1.186 0.397 -1.431 -3.078 6.371 -5.972 -5.811</span></span></code></pre>
+<pre><code><span><span class="co">##                 </span></span>
+<span><span class="co">## col1  -1.7835891</span></span>
+<span><span class="co">## col2   5.0350707</span></span>
+<span><span class="co">## col3  -7.5625544</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## ...suppressing 44 elements</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## col48  0.8913639</span></span>
+<span><span class="co">## col49 10.3668441</span></span>
+<span><span class="co">## col50 -8.1774605</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowmeans-1">rowMeans<a class="anchor" aria-label="anchor" href="#rowmeans-1"></a>
 </h3>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames: 'col1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##               </span></span>
-<span><span class="co">## row1   0.05362</span></span>
-<span><span class="co">## row2   0.00246</span></span>
-<span><span class="co">## row3   0.03132</span></span>
+<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: ORDER BY is ignored in subqueries without LIMIT</span></span>
+<span><span class="co">## <span style="color: #0000BB;">ℹ</span> Do you need to move arrange() later in the pipeline or use window_order() instead?</span></span></code></pre>
+<pre><code><span><span class="co">##                 </span></span>
+<span><span class="co">## row1   0.0536436</span></span>
+<span><span class="co">## row2   0.0024946</span></span>
+<span><span class="co">## row3   0.0313340</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 44 rows</span></span>
+<span><span class="co">## ...suppressing 44 elements</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## row48 -0.10104</span></span>
-<span><span class="co">## row49  0.05928</span></span>
-<span><span class="co">## row50  0.02156</span></span></code></pre>
+<span><span class="co">## row48 -0.1010421</span></span>
+<span><span class="co">## row49  0.0592996</span></span>
+<span><span class="co">## row50  0.0215431</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowsums-1">rowSums<a class="anchor" aria-label="anchor" href="#rowsums-1"></a>
 </h3>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1  matrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames: 'col1' ]]</span></span></code></pre>
+<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">## Warning: ORDER BY is ignored in subqueries without LIMIT</span></span>
 <span><span class="co">## <span style="color: #0000BB;">ℹ</span> Do you need to move arrange() later in the pipeline or use window_order() instead?</span></span></code></pre>
-<pre><code><span><span class="co">##             </span></span>
-<span><span class="co">## row1   2.681</span></span>
-<span><span class="co">## row2   0.123</span></span>
-<span><span class="co">## row3   1.566</span></span>
+<pre><code><span><span class="co">##                 </span></span>
+<span><span class="co">## row1   2.6821819</span></span>
+<span><span class="co">## row2   0.1247321</span></span>
+<span><span class="co">## row3   1.5667017</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 44 rows</span></span>
+<span><span class="co">## ...suppressing 44 elements</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## row48 -5.052</span></span>
-<span><span class="co">## row49  2.964</span></span>
-<span><span class="co">## row50  1.078</span></span></code></pre>
+<span><span class="co">## row48 -5.0521070</span></span>
+<span><span class="co">## row49  2.9649814</span></span>
+<span><span class="co">## row50  1.0771549</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="mean">mean<a class="anchor" aria-label="anchor" href="#mean"></a>
 </h3>
-<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] -0.0096724</span></span></code></pre>
+<pre><code><span><span class="co">## [1] -0.009673541</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="dim-1">dim<a class="anchor" aria-label="anchor" href="#dim-1"></a>
 </h3>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 50 50</span></span></code></pre>
 </div>
@@ -457,11 +467,11 @@ Click to expand
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb69"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## R version 4.5.0 (2025-04-11)</span></span>
+<pre><code><span><span class="co">## R version 4.5.1 (2025-06-13)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
-<span><span class="co">## Running under: Ubuntu 24.04.2 LTS</span></span>
+<span><span class="co">## Running under: Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Matrix products: default</span></span>
 <span><span class="co">## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
@@ -484,10 +494,10 @@ Click to expand
 <span><span class="co">## [1] Matrix_1.7-3        dbMatrix_0.0.0.9023</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] jsonlite_2.0.0    crayon_1.5.3      dplyr_1.1.4       compiler_4.5.0   </span></span>
-<span><span class="co">##  [5] tidyselect_1.2.1  blob_1.2.4        jquerylib_0.1.4   systemfonts_1.2.3</span></span>
-<span><span class="co">##  [9] textshaping_1.0.1 yaml_2.3.10      </span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 36 entries ]</span></span></code></pre>
+<span><span class="co">##  [1] jsonlite_2.0.0    dplyr_1.1.4       compiler_4.5.1    tidyselect_1.2.1 </span></span>
+<span><span class="co">##  [5] blob_1.2.4        jquerylib_0.1.4   systemfonts_1.2.3 textshaping_1.0.3</span></span>
+<span><span class="co">##  [9] yaml_2.3.10       fastmap_1.2.0    </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 35 entries ]</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -500,7 +510,7 @@ Click to expand
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

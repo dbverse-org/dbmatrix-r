@@ -118,18 +118,18 @@ database. by default, no header is assumed. <code>(optional)</code></p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>additional params to pass</p></dd>
+<dd><p>additional params to pass to <code><a href="https://dplyr.tidyverse.org/reference/copy_to.html" class="external-link">dplyr::copy_to</a></code></p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function reads in data into a pre-existing DuckDB database.
-Supported <code>value</code> data types:</p><ul><li><p><code>dgCMatrix</code> In-memory sparse matrix from the <code>Matrix</code> package</p></li>
-<li><p><code>dgTMatrix</code> In-memory triplet vector or COO matrix</p></li>
+Supported <code>value</code> data types:</p><ul><li><p><code><a href="https://rdrr.io/pkg/Matrix/man/dgCMatrix-class.html" class="external-link">Matrix::dgCMatrix</a></code> In-memory sparse matrix from the <code>Matrix</code> package</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/Matrix/man/dgTMatrix-class.html" class="external-link">Matrix::dgTMatrix</a></code> In-memory triplet vector or COO matrix</p></li>
 <li><p><code>matrix</code> In-memory dense matrix from base R</p></li>
-<li><p><code>.mtx</code> Path to .mtx file</p></li>
+<li><p><code>.mtx</code> Path to <a href="https://math.nist.gov/MatrixMarket/formats.html" class="external-link">.mtx</a> file</p></li>
 <li><p><code>.csv</code> Path to .csv file</p></li>
-<li><p><code>tbl_duckdb_connection</code> Table in DuckDB database in ijx format from
+<li><p><code>tbl_duckdb_connection</code> Table in <code>duckdb</code> database in ijx format from
 existing <code>dbMatrix</code> object. <code>dims</code> and <code>dim_names</code> must be
 specified if <code>value</code> is <code>tbl_duckdb_connection</code>.</p></li>
 </ul></div>
@@ -137,7 +137,6 @@ specified if <code>value</code> is <code>tbl_duckdb_connection</code>.</p></li>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dgc</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"data"</span>, <span class="st">"dgc.rds"</span>, package <span class="op">=</span> <span class="st">"dbMatrix"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required namespace: Matrix</span>
 <span class="r-in"><span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dbSparse</span> <span class="op">&lt;-</span> <span class="fu">dbMatrix</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  value <span class="op">=</span> <span class="va">dgc</span>,</span></span>
@@ -147,18 +146,18 @@ specified if <code>value</code> is <code>tbl_duckdb_connection</code>.</p></li>
 <span class="r-in"><span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dbSparse</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 634 x 624  matrix of class "dbSparseMatrix"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 634 x 624  dbMatrix of class "dbSparseMatrix"</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Gna12         1 2 1 1 9 1 3 5 3 .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Ccnd2         . 1 1 . . 1 . 1 1 .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Btbd17        . 1 1 1 . . 2 . . .</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Gna12         1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Ccnd2                 . 1.0000000 1.0000000         .         . 1.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Btbd17                . 1.0000000 1.0000000 1.0000000         .         .</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ......suppressing 614 columns and 628 rows</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Gm19935       . 1 . . . . . . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 9630013A20Rik . . . . . . . . . .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2900040C04Rik 1 . . . . . . . . 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Gm19935               . 1.0000000         .         .         .         .</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9630013A20Rik         .         .         .         .         .         .</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2900040C04Rik 1.0000000         .         .         .         .         .</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
@@ -170,7 +169,7 @@ specified if <code>value</code> is <code>tbl_duckdb_connection</code>.</p></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
