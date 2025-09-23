@@ -2,24 +2,32 @@
 % Please edit documentation in R/dbMatrix.R
 \name{as.matrix,dbMatrix-method}
 \alias{as.matrix,dbMatrix-method}
-\title{Convert dbMatrix to in-memory matrix}
+\title{Convert \code{\link{dbMatrix}} to in-memory matrix}
 \usage{
-\S4method{as.matrix}{dbMatrix}(x, ...)
+\S4method{as.matrix}{dbMatrix}(x, ..., sparse = FALSE, names = FALSE)
 }
 \arguments{
-\item{x}{A dbMatrix object (dbSparseMatrix or dbDenseMatrix)}
+\item{x}{A \code{\link{dbMatrix}} object (dbSparseMatrix or dbDenseMatrix)}
 
 \item{...}{Additional arguments (not used)}
+
+\item{sparse}{Logical indicating if the output should be a sparse matrix \code{default:FALSE}}
+
+\item{names}{Logical indicating if the output should have dimnames. \code{default:FALSE}}
 }
 \value{
-A Matrix::dgCMatrix or base R matrix
+A \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} or \code{\link{matrix}}
 }
 \description{
-Converts a dbMatrix object into an in-memory matrix or sparse matrix.
+Converts a \code{\link{dbMatrix}} object into an in-memory matrix or sparse matrix.
 }
 \details{
-This method converts a dbMatrix object (dbSparseMatrix or dbDenseMatrix) to an in-memory
-Matrix::dgCMatrix (for sparse) or base R matrix (for dense).
-Warning: This can cause memory issues if the input matrix is large.
+This method converts a \code{\link{dbMatrix}} object into an in-memory
+\code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} (sparse = TRUE) or \code{matrix()} (default, sparse = FALSE).
+
+\strong{Warning: This function can cause memory issues for large \code{\link{dbMatrix}} objects.}
+
+Set \code{sparse = TRUE} to convert to a sparse matrix.
+Set \code{names = TRUE} to keep dimnames.
 }
-\concept{transform}
+\concept{dbMatrix}

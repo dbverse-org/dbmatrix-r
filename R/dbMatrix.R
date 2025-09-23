@@ -551,29 +551,104 @@ to_ijx_disk <- function(con, name) {
 }
 
 ## as.matrix ####
-#' Convert dbMatrix to in-memory matrix
+#' Convert [`dbMatrix`] to in-memory matrix
 #'
-#' @param x A dbMatrix object (dbSparseMatrix or dbDenseMatrix)
+#' @param x A [`dbMatrix`] object (dbSparseMatrix or dbDenseMatrix)
 #' @param ... Additional arguments (not used)
-#'
+#' @param sparse Logical indicating if the output should be a sparse matrix \code{default:FALSE}
+#' @param names Logical indicating if the output should have dimnames. \code{default:FALSE}
 #' @description
-#' Converts a dbMatrix object into an in-memory matrix or sparse matrix.
+#' Converts a [`dbMatrix`] object into an in-memory matrix or sparse matrix.
 #'
 #' @details
-#' This method converts a dbMatrix object (dbSparseMatrix or dbDenseMatrix) to an in-memory
-#' Matrix::dgCMatrix (for sparse) or base R matrix (for dense).
-#' Warning: This can cause memory issues if the input matrix is large.
+#' This method converts a [`dbMatrix`] object into an in-memory
+#' [`Matrix::dgCMatrix-class`] (sparse = TRUE) or `matrix()` (default, sparse = FALSE).
 #'
-#' @return A Matrix::dgCMatrix or base R matrix
+#' **Warning: This function can cause memory issues for large [`dbMatrix`] objects.**
+#'
+#' Set `sparse = TRUE` to convert to a sparse matrix.
+#' Set `names = TRUE` to keep dimnames.
+#'
+#' @return A [`Matrix::dgCMatrix-class`] or [`matrix`]
 #' @export
-#' @concept transform
-setMethod("as.matrix", "dbMatrix", function(x, ...) {
-  con <- dbplyr::remote_con(x[])
-  .check_con(con)
-  dims <- dim(x)
-  n_rows <- dims[1]
-  n_cols <- dims[2]
-  dim_names <- dimnames(x)
+#' @concept dbMatrix
+#' @method as.matrix dbMatrix
+#' @export
+as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
+    dims <- dim(x)
+    n_rows <- dims[1]
+    n_cols <- dims[2]
+    dim_names <- dimnames(x)
+
+    # checks
+    if (1 %in% dims) {
+      stopf("Use `as.vector()` for dbVector objects")
+    }
+
+    if (dims[1] > 1e5 || dims[2] > 1e5) {
+      cli::cli_alert_warning(
+        "Warning: Converting large dbMatrix to in-memory Matrix."
+      )
+    }
+
+    if (is(x, "dbDenseMatrix") & sparse == TRUE) {
+      stopf("Cannot convert dbDensematrix into sparse matrix. Set sparse=FALSE")
+    }
+
+    if (is(x, "dbSparseMatrix") & sparse == FALSE) {
+      cli::cli_alert_info(
+        "Converting dbSparseMatrix into dense matrix. Set 'sparse=TRUE' to construct 'dgCMatrix'."
+      )
+    }
+
+    # Create temp file to write out ijx in db to disk
+    sql <- dbplyr::sql_render(x[])
+    con <- dbplyr::remote_con(x[])
+    dat <- DBI::dbGetQuery(con, sql)
+    # temp_file <- tempfile(tmpdir = tempdir(), fileext = ".parquet")
+    # x[] |>
+    #   arrow::to_arrow() |>
+    #   arrow::write_parquet(temp_file)
+
+    # Create matrix from ijx
+    # dat <- arrow::read_parquet(temp_file)
+    mat <- Matrix::sparseMatrix(
+      i = dat$i,
+      j = dat$j,
+      x = dat$x,
+      index1 = TRUE,
+      dims = c(n_rows, n_cols),
+      dimnames = dim_names
+    )
+    # mat <- Matrix::drop0(mat)
+
+    if (!names) {
+      dimnames(mat) <- NULL
+    }
+
+    if (is(x, "dbSparseMatrix") & sparse == TRUE) {
+      return(mat)
+    } else {
+      mat <- as.matrix(mat)
+    }
+
+    # Clean up temp files
+    # unlink(temp_file, recursive = TRUE, force = TRUE)
+
+    return(mat)
+}
+
+#' @method as.matrix dbSparseMatrix  
+#' @export
+as.matrix.dbSparseMatrix <- function(x, ...) {
+  as.matrix.dbMatrix(x, ...)
+}
+
+#' @method as.matrix dbDenseMatrix
+#' @export  
+as.matrix.dbDenseMatrix <- function(x, ...) {
+  as.matrix.dbMatrix(x, ...)
+}
 
 #' Convert [`Matrix`] to [`dbMatrix`]
 #' @description
