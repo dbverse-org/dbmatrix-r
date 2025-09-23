@@ -1004,24 +1004,84 @@ setMethod('Math', signature(x = 'dbMatrix'), function(x) {
   return(x)
 })
 
+# Summary ####
+## max ####
+## min ####
+## range ####
+## prod ####
 ## sum ####
-
-#' Sum of Vector Elements in dbMatrix objects
-#' @inherit base::sum description
-#' @param x dbMatrix object
-#' @param na.rm Always TRUE for dbMatrix queries. Included for compatibility
-#' with the generic.
+## any ####
+## all ####
+#' Summary Methods for [`dbMatrix`] Objects
+#'
+#' @description
+#' Implements the [`S4groupGeneric`] group generic functions for dbMatrix objects.
+#'
+#' @param x A dbMatrix object.
+#' @param ... Additional arguments (not used, but included for compatibility with the generic).
+#' @param na.rm Logical. If TRUE, remove NA values before computation. Always set to TRUE for this implementation.
 #' @concept summary
+#' @details
+#' This method provides implementations for the following [`S4groupGeneric`] functions:
+#' * `max()`: Maximum value
+#' * `min()`: Minimum value
+#' * `range()`: *Not supported*
+#' * `prod()`: Product of all values
+#' * `sum()`: Sum of all values
+#' * `any()`: Returns TRUE if any value is TRUE
+#' * `all()`: Returns TRUE if all values are TRUE
+#'
+#'
+#' @return
+#' The result of applying the respective summary function to the dbMatrix object.
+#' The type of the return value depends on the specific function called.
+#'
+#' @examples
+#' mat <- matrix(1, nrow = 3, ncol = 3)
+#' dbmat <- as.dbMatrix(mat)
+#' max(dbmat)
+#' min(dbmat)
+#' prod(dbmat)
+#' sum(dbmat)
+#' any(dbmat > 0)
+#' all(dbmat > 0)
+#'
 #' @export
-setMethod('sum', signature(x = 'dbMatrix'), function(x, na.rm = TRUE) {
-  x <- castNumeric(x)
+setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
+  # Check to see if 'range' or 'all' is equal to as.character(.Generic)
+  if (as.character(.Generic) == 'range' ) {
+    stopf(paste0("range() is not yet supported for dbMatrix objects."))
+  }
 
-  res <- x[] |>
-    dplyr::summarize(sum = sum(x, na.rm = TRUE)) |>
-    dplyr::pull(sum)
+  if (as.character(.Generic) == 'any' | as.character(.Generic) == 'all' ) {
+    x_class <- x[] |> head(n=1) |> dplyr::pull(x) |> class()
+    if(x_class != 'logical') {
+      x[] <- x[] |> dplyr::mutate(x = as.logical(x))
+    }
+    warning("coercing argument of type 'double' to logical")
+  }
+
+  build_call = glue::glue(
+    "x[] |>
+     dplyr::summarise(res := `", as.character(.Generic),"`(x, na.rm = TRUE)) |>
+     dplyr::pull(res)"
+  )
+  res <- suppressWarnings(eval(str2lang(build_call)))
+
+  # avoid using dplyr::pull()
+  # build_call = glue::glue(
+  #   "x[] |>
+  #    dplyr::summarise(res := `", as.character(.Generic),"`(x, na.rm = TRUE)) |>
+  #    dbplyr::sql_render()"
+  # )
+  # sql <- suppressWarnings(eval(str2lang(build_call)))
+  # res <- DBI::dbGetQuery(dbplyr::remote_con(x[]), sql)[[1]] # get value
+
+  if(is.na(res)){ #FIXME
+    res <- TRUE
+  }
 
   return(res)
-
 })
 
 # General Ops ####
