@@ -363,22 +363,12 @@ arith_call_dbm_vect_multi = function(dbm, num_vect, generic_char, ordered_args) 
 #' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
-  if (any(e2 == 0) && as.character(.Generic) %in% c('/', '^', '%%', '%/%')) {
-    stopf("Arith operations with '/', '^', '%%', '%/%' containing zero values are not yet supported for dbMatrix objects.")
-  }
-
   dbm = castNumeric(e1)
 
   num_vect = if(typeof(e2) != 'double'){
     as.numeric(e2)
   } else{
     e2
-  }
-
-  # density
-  if (class(e1) == 'dbSparseMatrix' && !all(e2 == 0) &&
-      as.character(.Generic) %in% c('-', '+')) {
-      dbm = toDbDense(dbm)
   }
 
   arith_call_dbm(
@@ -398,20 +388,12 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @export
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'),
           function(e1, e2) {
-  if (any(e1 == 0) && as.character(.Generic) %in% c('/', '^', '%%', '%/%')) {
-    stopf("Arith operations with '/', '^', '%%', '%/%' containing zero values are not yet supported for dbMatrix objects.")
-  }
   dbm = castNumeric(e2)
 
   num_vect = if (typeof(e1) != 'double'){
     as.numeric(e1)
   } else{
     e1
-  }
-
-  # Only densify if not 0 and if op is + or -
-  if (class(dbm) == 'dbSparseMatrix' && any(e1 != 0) && as.character(.Generic) %in% c('-', '+')) {
-    dbm = toDbDense(dbm)
   }
 
   arith_call_dbm(
@@ -431,28 +413,60 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'),
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'),
           function(e1, e2){
-  if (!identical(e1@dims, e2@dims)) {
-    stopf('non-conformable arrays')
-  }
   generic_char = as.character(.Generic)
+  dim1 <- dim(e1)
+  dim2 <- dim(e2)
 
-  if(generic_char %in% c('-','/', '^', '%%', '%/%')){
-    stopf("Arith operations with '-', '/', '^', '%%', '%/%' are not yet supported between dbMatrix objects.")
+  # Check for arith operations if neither is a dbVector
+  if (!1 %in% c(dim1, dim2)) {
+    if (generic_char %in% c('/', '^', '%%', '%/%')) {
+      stopf("Arith operations with '/', '^', '%%', '%/%' are not yet supported
+            between dbMatrix objects.")
+    }
   }
 
-  e1 = castNumeric(e1)
-  e2 = castNumeric(e2)
+  # Case 1: dbVector, dbVector
+  if (1 %in% dim2 & 1 %in% dim1) {
+    if (!all(dim1 == dim2)) {
+      stopf("dbVector-dbVector recycling not yet supported.")
+    }
+  }
 
-  build_call = glue::glue(
-    "e1[] |>
-     dplyr::left_join(e2[], by = c('i', 'j')) |>
-     dplyr::mutate(x = `{generic_char}`(x.x, x.y)) |>
-     dplyr::select(i, j, x)"
-  )
-  e1[] = eval(str2lang(build_call))
-  e1
+  # Case 2: dbMatrix, dbVector
+  else if (1 %in% dim2) {
+    res <- .join_dbm_vector(dbm = e1, dbVector = e2, op = generic_char)
+    return(res)
+  }
+  # Case 3: dbVector, dbMatrix
+  else if (1 %in% dim1) {
+    res <- .join_dbm_vector(dbm = e2, dbVector = e1, op = generic_char,
+                            swap_arith_order = TRUE)
+    return(res)
+  }
+  # Case 4: Both inputs are dbMatrix
+  else {
+    if (!all(dim1 == dim2)) {
+      stopf('non-conformable matrix dimensions')
+    }
+
+    # Perform full join operation on dbMatrix
+    # TODO: avoid full join
+    build_call = glue::glue(
+      "e1[] |>
+         dplyr::full_join(e2[], by = c('i', 'j')) |>
+         dplyr::mutate(x = `{generic_char}`(dplyr::coalesce(x.x, 0),
+                       dplyr::coalesce(x.y, 0))) |>
+         dplyr::select(i, j, x) |>
+         dplyr::arrange(i)"
+    )
+    e1[] = eval(str2lang(build_call))
+    e1@name = NA_character_
+    return(e1)
+  }
+
+
+
 })
-
 
 ## Ops: dbm_e2 ####
 #' Ops dbMatrix, e2
