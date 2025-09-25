@@ -605,56 +605,6 @@ setMethod("%in%", signature(x = "ANY", table = "dbDenseMatrix"), function(x, tab
   return(result)
 })
 
-#' @rdname percent-in
-#' @concept transform
-#' @export
-setMethod("%in%", signature(x = "numeric", table = "dbSparseMatrix"), function(x, table) {
-  if (length(x) == 0) {
-    return(logical(0))
-  }
-
-  # Convert dbSparseMatrix to vector and check membership
-  table_data <- table[] |>
-    dplyr::arrange(j, i) |>
-    dplyr::pull(x)
-
-  result <- x %in% table_data
-  return(result)
-})
-
-#' @rdname percent-in
-#' @concept transform
-#' @export
-setMethod("%in%", signature(x = "numeric", table = "dbDenseMatrix"), function(x, table) {
-  if (length(x) == 0) {
-    return(logical(0))
-  }
-
-  # Convert dbDenseMatrix to vector and check membership
-  table_data <- table[] |>
-    dplyr::arrange(j, i) |>
-    dplyr::pull(x)
-
-  result <- x %in% table_data
-  return(result)
-})
-
-#' @rdname percent-in
-#' @concept transform
-#' @export
-setMethod("%in%", signature(x = "ANY", table = "dbSparseMatrix"), function(x, table) {
-  if (length(x) == 0) {
-    return(logical(0))
-  }
-
-  # Convert dbSparseMatrix to vector and check membership
-  table_data <- table[] |>
-    dplyr::arrange(j, i) |>
-    dplyr::pull(x)
-
-  result <- x %in% table_data
-  return(result)
-})
 
 #' @rdname percent-in
 #' @concept transform
