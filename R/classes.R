@@ -1,25 +1,6 @@
 # dbData ####
-
-#' @title dbData
-#' @description Base class for all db objects
-#' @slot value dplyr tbl that represents the database data
-#' @slot name name of table within database that contains the data
-#' @slot init logical. Whether the object is fully initialized
-#' @noRd
-setClass(
-  Class = 'dbData',
-  contains = c('VIRTUAL'),
-  slots = list(
-    value = 'ANY',
-    name = 'character',
-    init = 'logical'
-  ),
-  prototype = list(
-    value = NULL,
-    name = NA_character_,
-    init = FALSE
-  )
-)
+# Import dbData class from dbProject package instead of redefining it
+#' @importClassesFrom dbProject dbData
 
 ### dbMatrix ####
 

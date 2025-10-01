@@ -32,7 +32,8 @@ Imports:
     checkmate,
     reticulate,
     RSpectra,
-    arrow
+    arrow,
+    dbProject
 Suggests: 
     knitr,
     rmarkdown,
