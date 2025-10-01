@@ -1,24 +1,10 @@
 # dbData ####
 ## Empty ####
 ### Extract [] ####
-#' @noRd
-#' @concept dbMatrix
-#' @export
-setMethod('[', signature(x = 'dbMatrix', i = 'missing', j = 'missing'),
-          function(x, i, j, ..., drop = FALSE) {
-            x@value
-          })
+# Inherit from dbData class in {dbProject}
 
 ### Set [] ####
-# no initialize to prevent slowdown
-#' @noRd
-#' @concept dbMatrix
-#' @export
-setMethod('[<-', signature(x = 'dbMatrix', i = 'missing', j = 'missing', value = 'ANY'),
-          function(x, i, j, value) {
-            x@value = value
-            x
-          })
+# Inherit from dbData class in {dbProject}
 
 # dbMatrix ####
 ## vector indexing ####
