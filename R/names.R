@@ -3,10 +3,12 @@
 #' The names of a dbMatrix Object
 #' @param x A dbMatrix object
 #' @concept matrix_props
-#' @return A character vector of the names of the dbVector object
+#' @return A character vector of the names of the dbVector object (1D matrices only)
 setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
+  # Only dbVector objects (1-dimensional matrices) should have names
+  # Regular matrices should return NULL for names()
   if (!1 %in% x@dims) {
-    stopf('dbVector object must have at least one dimension')
+    return(NULL)  # Regular matrices don't have names, return NULL instead of error
   }
   if (1 %in% dim(x)[1]) {
     return(colnames(x))
