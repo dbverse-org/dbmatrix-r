@@ -172,57 +172,6 @@ setMethod('load', signature(conn = 'DBIConnection'), function(conn, name, class)
 
 
 # dbData ####
-## dbReconnect-con ####
-#' @export
-#' @noRd
-#' @description
-#' Refreshes connection to a specific file path to a local database file
-setMethod('dbReconnect', signature(x = 'DBIConnection'), function(x, ...){
-  if(DBI::dbIsValid(x)){
-    cli::cli_alert_info('Connection is already valid')
-    return(invisible(x))
-  }
-  driver <- x@driver
-  path <- x@driver@dbdir
-
-  # input validation
-  if(!is.character(path)) {
-    stopf('Path must be a character string')
-  }
-  if(!file.exists(path)) {
-    stopf('Path does not exist: %s', path)
-  }
-
-  con = DBI::dbConnect(driver, path)
-
-  cli::cli_alert_success(paste0('Reconnected to: \n \'', path, '\' \n'))
-
-  return(invisible(con))
-
-})
-
-## dbReconnect-dbMatrix ####
-#' @export
-#' @noRd
-#' @description
-#' Refreshes connection to a specific file path to a local database file
-setMethod('dbReconnect', signature(x = 'dbMatrix'), function(x, conn){
-  if(!DBI::dbIsValid(conn)){
-    conn <- dbReconnect(conn) |> suppressMessages()
-  }
-
-  if(!x@name %in% DBI::dbListTables(conn)){
-    message = paste0('Table \'', x@name, '\' does not exist in the database.')
-    stopf(message)
-  }
-
-  # TODO: signature(x = DBIConnection) to allow for any DB backend
-  x[]$src$con <- conn
-
-  return(x)
-
-})
-
 ## dbList ####
 #' List remote tables, temporary tables, and views
 #' @inheritParams DBI::dbListTables

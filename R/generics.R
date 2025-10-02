@@ -19,7 +19,6 @@ NULL
 setGeneric('load', function(conn, name, class, ...) standardGeneric('load'))
 
 # dbData ####
-setGeneric("dbReconnect", function(x, ...) standardGeneric("dbReconnect"))
 setGeneric("dbList", function(conn, ...) standardGeneric("dbList"))
 setGeneric("to_view", function(x, name, temporary = TRUE, ...) standardGeneric("to_view"))
 
