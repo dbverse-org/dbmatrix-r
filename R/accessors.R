@@ -45,7 +45,13 @@ get_con <- function(dbMatrix){
     stopf("dbMatrix must be a dbData object")
   }
 
-  con = dbMatrix@value[[1]]$con
+  # Use dbProject's connection accessor for consistency and auto-reconnection
+  con <- dbProject::conn(dbMatrix)
+  
+  # Fallback to direct access if dbProject method doesn't work
+  if (is.null(con)) {
+    con <- dbMatrix@value[[1]]$con
+  }
 
   return(con)
 }
