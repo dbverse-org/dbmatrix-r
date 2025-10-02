@@ -104,3 +104,17 @@
     }
   }
 }
+
+#' Input validation for tbl arg
+#' @param tbl A table object (should be tbl_duckdb_connection)
+#' @keywords internal
+.check_tbl <- function(tbl) {
+  if (missing(tbl)) {
+    stop("Please provide a table name.")
+  }
+  
+  # check that tbl is from a duckdb connection
+  if (!inherits(tbl, "tbl_duckdb_connection")) {
+    stop("Please provide a table in a DuckDB database.")
+  }
+}
