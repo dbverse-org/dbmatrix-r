@@ -507,7 +507,7 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2){
   )
 
   e2[] = eval(str2lang(build_call))
-  e1@name = NA_character_
+  e2@name = NA_character_
   e2
 })
 
