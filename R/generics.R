@@ -20,9 +20,6 @@ setGeneric('load', function(conn, name, class, ...) standardGeneric('load'))
 
 # dbData ####
 setGeneric("dbList", function(conn, ...) standardGeneric("dbList"))
-setGeneric("to_view", function(x, name, temporary = TRUE, ...) standardGeneric("to_view"))
 
-# DBI ####
-# setGeneric('dbDisconnect', function(x, ...) standardGeneric('dbDisconnect'))
-# setGeneric('dbListTables', function(x, ...) standardGeneric('dbListTables'))
-
+#' @importFrom dbProject to_view conn conn<- dbReconnect
+NULL
