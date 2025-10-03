@@ -1459,7 +1459,6 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
 #' @return [`dbMatrix`] object
 #' @concept transform
 #' @export
-#' @exportMethod t
 #' @rdname t-dbMatrix
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
   x[] <- x[] |> dplyr::select(i = j, j = i, x)
