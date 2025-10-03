@@ -22,7 +22,7 @@ Imports:
     DBI,
     dplyr,
     dbplyr,
-    duckdb, 
+    duckdb (>= 1.4.0),
     data.table (>= 1.12.2),
     glue,
     bit64,
