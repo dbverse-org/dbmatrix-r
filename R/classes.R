@@ -11,6 +11,7 @@
 #' Inherits from `dbData`.
 #' @slot dim_names row [1] and col [2] names
 #' @slot dims dimensions of the matrix
+#' @slot init logical. Whether the object is fully initialized
 #' @noRd
 #' @export
 dbMatrix = setClass(
@@ -18,11 +19,13 @@ dbMatrix = setClass(
   contains = c('dbData', 'VIRTUAL'),
   slots = list(
     dim_names = 'list',
-    dims = 'integer'
+    dims = 'integer',
+    init = 'logical'
   ),
   prototype = list(
     dim_names = list(NULL, NULL),
-    dims = c(NA_integer_, NA_integer_)
+    dims = c(NA_integer_, NA_integer_),
+    init = FALSE
   )
 )
 
