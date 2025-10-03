@@ -10,7 +10,7 @@ Description: dbMatrix is a package in the dbverse for working with matrices in d
 License: GPL-3 | MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-URL: https://dbverse-org.github.io/dbmatrix-r/
+URL: https://github.com/dbverse-org/dbmatrix-r, https://dbverse-org.github.io/dbmatrix-r/
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.3.2
 Depends:
