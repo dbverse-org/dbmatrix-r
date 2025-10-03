@@ -13,14 +13,14 @@ status](https://www.r-pkg.org/badges/version/dbMatrix)](https://CRAN.R-project.o
 <!-- badges: end -->
 
 `{dbMatrix}` is a core package in the
-[`dbverse`](https://drieslab.github.io/dbverse/) library.
+[`dbverse`](https://dbverse-org.github.io/dbverse/) library.
 
 The goal of `{dbMatrix}` is to support larger-than-memory matrix
 computations.
 
 **Note: Work in progress! Bugs or unexpected behavior are likely to
 occur. We welcome user feedback and reporting issues on the [Github
-page](https://github.com/drieslab/dbMatrix/).**
+page](https://github.com/dbverse-org/dbmatrix-r/).**
 
 ## Installation
 
@@ -28,5 +28,5 @@ You can install the development version of dbMatrix from Github like so:
 
 ``` r
 # install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
-pak::pak("drieslab/dbMatrix")
+pak::pak("dbverse-org/dbmatrix-r")
 ```

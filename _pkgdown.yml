@@ -1,4 +1,4 @@
-url: https://drieslab.github.io/dbMatrix/
+url: https://dbverse-org.github.io/dbmatrix-r/
 template:
   bootstrap: 5
   light-switch: true
@@ -11,7 +11,7 @@ navbar:
   components:
     github:
       icon: fab fa-github
-      href: https://github.com/drieslab/dbMatrix
+      href: https://github.com/dbverse-org/dbmatrix-r
       aria-label: GitHub
 
 reference:
