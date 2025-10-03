@@ -10,7 +10,7 @@
 \item{x}{A dbMatrix object}
 }
 \value{
-A character vector of the names of the dbVector object
+A character vector of the names of the dbVector object (1D matrices only)
 }
 \description{
 The names of a dbMatrix Object

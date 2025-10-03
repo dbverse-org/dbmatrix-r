@@ -12,7 +12,8 @@
 #' @slot dim_names row [1] and col [2] names
 #' @slot dims dimensions of the matrix
 #' @slot init logical. Whether the object is fully initialized
-#' @exportClass
+#' @name dbMatrix-class
+#' @exportClass dbMatrix
 #' @export
 dbMatrix = setClass(
   Class = 'dbMatrix',
@@ -35,7 +36,7 @@ dbMatrix = setClass(
 #' @description Representation of dense matrices using an on-disk database.
 #' Inherits from \link{dbMatrix}.
 #'
-#' @noRd
+#' @name dbDenseMatrix-class
 #' @export
 dbDenseMatrix = setClass(
   Class = "dbDenseMatrix",
@@ -46,8 +47,8 @@ dbDenseMatrix = setClass(
 #' @title S4 Class for dbSparseMatrix
 #'
 #' @description Representation of sparse matrices using an on-disk database.
-#' Inherits from \link{dbMatrix.}
-#' @noRd
+#' Inherits from \link{dbMatrix}.
+#' @name dbSparseMatrix-class
 #' @export
 dbSparseMatrix = setClass(
   Class = "dbSparseMatrix",

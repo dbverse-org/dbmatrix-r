@@ -26,8 +26,9 @@
 \item{...}{arguments to be passed to or from other methods.}
 }
 \description{
-Returns the first or last parts of a vector, matrix, table, data frame
+Returns the first or last parts of a vector, matrix, array, table, data frame
   or function.  Since \code{head()} and \code{tail()} are generic
-  functions, they may also have been extended to other classes.
+  functions, they have been extended to other classes, including
+  \code{"\link[stats]{ts}"} from \pkg{stats}.
 }
 \concept{matrix_props}

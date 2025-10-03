@@ -17,7 +17,7 @@ Internal function to convert a \code{\link{dbSparseMatrix}} to
 \code{\link{dbDenseMatrix}}.
 }
 \examples{
-dbsm <- sim_dbSparseMatrix(10,10)
+dbsm <- sim_dbSparseMatrix(10, 10)
 dbdm <- toDbDense(dbsm)
 }
 \keyword{internal}

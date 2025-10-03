@@ -64,7 +64,7 @@ specified if \code{value} is \code{tbl_duckdb_connection}.
 }
 }
 \examples{
-dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 dbSparse <- dbMatrix(
   value = dgc,
