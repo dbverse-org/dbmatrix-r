@@ -43,7 +43,7 @@ sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
 
   # Set n random values to non-zero
   non_zero_indices <- sample(1:(num_rows*num_cols), n_vals)
-  data[non_zero_indices] <- rnorm(num_cols)
+  data[non_zero_indices] <- rnorm(n_vals)
 
   # Create dumby sparse dgc matrix (column-major)
   mat = as(data, "dgCMatrix")
