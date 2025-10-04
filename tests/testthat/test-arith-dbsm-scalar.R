@@ -61,10 +61,29 @@ test_that("/10 equal", {
   expect_equal(res_dgc, res_dbsm)
 })
 
-# res_dgc = dgc / 0
-# res_dbsm = dbsm / 0
-# res_dbsm = as.matrix(res_dbsm)
-#
-# test_that("/ 0 equal", {
-#   expect_equal(res_dgc, res_dbsm)
-# })
+res_dgc = dgc / 0
+res_dgc = as.matrix(res_dgc)
+res_dbsm = dbsm / 0
+res_dbsm = as.matrix(res_dbsm, names = TRUE)
+
+test_that("/ 0 equal", {
+  expect_equal(res_dgc, res_dbsm)
+})
+
+res_dgc = dgc ^ 0
+res_dgc = as.matrix(res_dgc)
+res_dbsm = dbsm ^ 0
+res_dbsm = as.matrix(res_dbsm, names = TRUE)
+
+test_that("^ 0 equal", {
+  expect_equal(res_dgc, res_dbsm)
+})
+
+res_dgc = 0 / dgc
+res_dgc = as.matrix(res_dgc)
+res_dbsm = 0 / dbsm
+res_dbsm = as.matrix(res_dbsm, names = TRUE)
+
+test_that("0 / equal", {
+  expect_equal(res_dgc, res_dbsm)
+})

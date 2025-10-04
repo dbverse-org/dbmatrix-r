@@ -23,21 +23,31 @@ test_that("+ matrix equal", {
   expect_equal(res_mat, res_dbdm)
 })
 
-
-# FIXME:
-# Interesting edge case where the result is a zero matrix
-# How to handle this?
-# res_mat = mat - mat
-# res_dbdm = dbdm - dbdm
-# res_dbdm = as.matrix(res_dbdm)
-# test_that("- matrix equal", {
-#   expect_equal(res_mat, res_dbdm)
-# })
+res_mat = mat - mat
+res_dbdm = dbdm - dbdm
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
+test_that("- matrix equal", {
+  expect_equal(res_mat, res_dbdm)
+})
 
 res_mat = mat * mat
 res_dbdm = dbdm * dbdm
 res_dbdm = as.matrix(res_dbdm, names = TRUE)
 test_that("* matrix equal", {
+  expect_equal(res_mat, res_dbdm)
+})
+
+mat2 = mat * 2
+dbdm2 = dbMatrix::dbMatrix(value = mat2,
+                           con = con1,
+                           name = 'mat2',
+                           class = "dbDenseMatrix",
+                           overwrite = TRUE)
+
+res_mat = mat - mat2
+res_dbdm = dbdm - dbdm2
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
+test_that("- different matrix equal", {
   expect_equal(res_mat, res_dbdm)
 })
 

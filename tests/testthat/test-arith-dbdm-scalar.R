@@ -62,10 +62,26 @@ test_that("/10 equal", {
   expect_equal(res_mat, res_dbdm)
 })
 
-# res_mat = mat / 0
-# res_dbdm = dbdm / 0
-# res_dbdm = as.matrix(res_dbdm)
-#
-# test_that("/ 0 equal", {
-#   expect_equal(res_mat, res_dbdm)
-# })
+res_mat = mat / 0
+res_dbdm = dbdm / 0
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
+
+test_that("/ 0 equal", {
+  expect_equal(res_mat, res_dbdm)
+})
+
+res_mat = mat ^ 0
+res_dbdm = dbdm ^ 0
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
+
+test_that("^ 0 equal", {
+  expect_equal(res_mat, res_dbdm)
+})
+
+res_mat = 0 / mat
+res_dbdm = 0 / dbdm
+res_dbdm = as.matrix(res_dbdm, names = TRUE)
+
+test_that("0 / equal", {
+  expect_equal(res_mat, res_dbdm)
+})

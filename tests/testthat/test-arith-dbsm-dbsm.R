@@ -24,21 +24,31 @@ test_that("+ matrix equal", {
   expect_equal(res_dgc, res_dbsm)
 })
 
-
-# FIXME:
-# Interesting edge case where the result is a zero matrix
-# How to handle this?
-# res_dgc = dgc - dgc
-# res_dbsm = dbsm - dbsm
-# res_dbsm = as.matrix(res_dbsm)
-# test_that("- matrix equal", {
-#   expect_equal(res_dgc, res_dbsm)
-# })
+res_dgc = dgc - dgc
+res_dbsm = dbsm - dbsm
+res_dbsm = as.matrix(res_dbsm, sparse = TRUE, names = TRUE)
+test_that("- matrix equal", {
+  expect_equal(res_dgc, res_dbsm)
+})
 
 res_dgc = dgc * dgc
 res_dbsm = dbsm * dbsm
 res_dbsm = as.matrix(res_dbsm, sparse = TRUE, names = TRUE)
 test_that("* matrix equal", {
+  expect_equal(res_dgc, res_dbsm)
+})
+
+dgc2 = dgc * 2
+dbsm2 = dbMatrix::dbMatrix(value = dgc2,
+                           con = con1,
+                           name = 'dgc2',
+                           class = "dbSparseMatrix",
+                           overwrite = TRUE)
+
+res_dgc = dgc - dgc2
+res_dbsm = dbsm - dbsm2
+res_dbsm = as.matrix(res_dbsm, sparse = TRUE, names = TRUE)
+test_that("- different matrix equal", {
   expect_equal(res_dgc, res_dbsm)
 })
 
