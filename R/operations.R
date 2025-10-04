@@ -1587,7 +1587,7 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
   is_lazy_table <- is.null(name)
   if (is_lazy_table) {
     name <- unique_table_name(prefix = "tmp")
-    to_view(x, name = name)
+    to_view(x[], name = name)
   }
 
   # Get schema

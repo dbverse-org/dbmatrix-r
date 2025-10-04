@@ -163,7 +163,7 @@ setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'),
   if (is.null(name)) {
     name <- unique_table_name('tmp_dbm')
   }
-  dbm[] <- to_view(x = dbm, name = name)
+  dbm[] <- to_view(x = dbm[], name = name)
   dbm@name <- name
 
   return(name)
