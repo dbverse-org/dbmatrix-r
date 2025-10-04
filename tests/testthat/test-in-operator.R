@@ -1,5 +1,3 @@
-context("Testing %in% operator for dbMatrix")
-
 # Helper function to set up test environment
 setup_test_env <- function() {
   # Create a connection to an in-memory database
