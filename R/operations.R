@@ -639,7 +639,6 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
             if (memory) {
               res <- rowSum |>
                 dplyr::collapse() |>
-                dplyr::arrange(i) |>
                 dplyr::pull(sum_x)
 
               names(res) <- rownames(x)
@@ -647,8 +646,8 @@ setMethod('rowSums', signature(x = 'dbDenseMatrix'),
               rowSum <- rowSum |>
                 dplyr::mutate(j = 1) |>
                 dplyr::rename(x = sum_x) |>
-                dplyr::arrange(i) |>
-                dplyr::select(i, j, x)
+                dplyr::select(i, j, x) |>
+                dplyr::collapse()
 
               res <- new(Class = "dbDenseMatrix",
                          value = rowSum,
@@ -690,10 +689,10 @@ setMethod('rowSums', signature(x = 'dbSparseMatrix'),
               dplyr::mutate(x = dplyr::coalesce(sum_x, 0)) |>
               dplyr::mutate(j = 1) |>
               dplyr::select(i, j, x) |>
-              dplyr::collapse() |>
-              dplyr::arrange(i)
+              dplyr::collapse()
 
             if (memory) {
+              rowSum <- rowSum |> dplyr::arrange(i)
               res <- rowSum |>
                 dplyr::pull(x)
 
@@ -735,8 +734,8 @@ setMethod('colSums', signature(x = 'dbDenseMatrix'),
                 dplyr::select(i = j, sum_x) |>
                 dplyr::mutate(j = 1) |>
                 dplyr::rename(x = sum_x) |>
-                dplyr::arrange(i) |>
-                dplyr::select(i, j, x)
+                dplyr::select(i, j, x) |>
+                dplyr::collapse()
 
               res <- new(Class = "dbDenseMatrix",
                          value = colSum,
@@ -777,10 +776,10 @@ setMethod('colSums', signature(x = 'dbSparseMatrix'),
               dplyr::select(i = j, x) |>
               dplyr::mutate(j = 1) |>
               dplyr::select(i, j, x) |>
-              dplyr::collapse() |>
-              dplyr::arrange(i)
+              dplyr::collapse()
 
             if (memory) {
+              colSum <- colSum |> dplyr::arrange(i)
               res <- colSum |>
                 dplyr::pull(x)
 
@@ -885,16 +884,19 @@ setMethod("colSds", signature(x = "dbDenseMatrix"),
               dplyr::mutate(
                 sd_x = if (m <= 1) NA_real_
                 else sqrt((sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1))
-              ) |>
-              dplyr::arrange(j)
+              )
 
             if (memory) {
-              res <- dplyr::pull(col_stats, sd_x)
+              res <- col_stats |>
+                dplyr::arrange(j) |>
+                dplyr::pull(sd_x)
               if (useNames) names(res) <- colnames(x)
               return(res)
             }
 
-            colSd <- dplyr::transmute(col_stats, i = j, j = 1L, x = sd_x)
+            colSd <- col_stats |>
+              dplyr::transmute(i = j, j = 1L, x = sd_x) |>
+              dplyr::collapse()
 
             res <- new("dbDenseMatrix",
                        value = colSd,
@@ -925,11 +927,12 @@ setMethod("colSds", signature(x = "dbSparseMatrix"),
               dplyr::mutate(
                 sd_x = if (m <= 1) NA_real_
                 else sqrt((sum_x2 - (sum_x * sum_x) / m) / (m - 1))
-              ) |>
-              dplyr::arrange(j)
+              )
 
             if (memory) {
-              res <- dplyr::pull(col_stats, sd_x)
+              res <- col_stats |>
+                dplyr::arrange(j) |>
+                dplyr::pull(sd_x)
               if (useNames) names(res) <- colnames(x)
               return(res)
             }
@@ -966,16 +969,19 @@ setMethod("rowSds", signature(x = "dbDenseMatrix"),
               dplyr::mutate(
                 sd_x = if (k <= 1) NA_real_
                 else sqrt((sum_x2 - (sum_x * sum_x) / !!k) / (!!k - 1))
-              ) |>
-              dplyr::arrange(i)
+              )
 
             if (memory) {
-              res <- dplyr::pull(row_stats, sd_x)
+              res <- row_stats |>
+                dplyr::arrange(i) |>
+                dplyr::pull(sd_x)
               if (useNames) names(res) <- rownames(x)
               return(res)
             }
 
-            rowSd <- dplyr::transmute(row_stats, i = i, j = 1L, x = sd_x)
+            rowSd <- row_stats |>
+              dplyr::transmute(i = i, j = 1L, x = sd_x) |>
+              dplyr::collapse()
 
             res <- new("dbDenseMatrix",
                        value = rowSd,
@@ -1007,11 +1013,12 @@ setMethod("rowSds", signature(x = "dbSparseMatrix"),
               dplyr::mutate(
                 sd_x = if (k <= 1) NA_real_
                 else sqrt((sum_x2 - (sum_x * sum_x) / k) / (k - 1))
-              ) |>
-              dplyr::arrange(i)
+              )
 
             if (memory) {
-              res <- dplyr::pull(row_stats, sd_x)
+              res <- row_stats |>
+                dplyr::arrange(i) |>
+                dplyr::pull(sd_x)
               if (useNames) names(res) <- rownames(x)
               return(res)
             }
@@ -1070,17 +1077,19 @@ setMethod("rowVars", signature(x = "dbDenseMatrix"),
               ) |>
               dplyr::mutate(
                 var_x = (sum_x2 - (sum_x * sum_x) / !!k) / (!!k - 1)
-              ) |>
-              dplyr::arrange(i)
+              )
 
             if (memory) {
-              v <- dplyr::pull(row_stats, var_x)
+              v <- row_stats |>
+                dplyr::arrange(i) |>
+                dplyr::pull(var_x)
               if (useNames) names(v) <- rownames(x)
               return(v)
             }
 
             rowVar <- row_stats |>
-              dplyr::transmute(i, j = 1L, x = var_x)
+              dplyr::transmute(i, j = 1L, x = var_x) |>
+              dplyr::collapse()
 
             res <- new(
               Class = "dbDenseMatrix",
@@ -1116,12 +1125,12 @@ setMethod('rowVars', signature(x = 'dbSparseMatrix'),
                   k <= 1 ~ NA_real_,
                   TRUE ~ (sum_x2 - (sum_x * sum_x) / k) / (k - 1)
                 )
-              ) |>
-              dplyr::arrange(i)
+              )
 
             if (memory) {
               # Return as named vector
               res <- row_stats |>
+                dplyr::arrange(i) |>
                 dplyr::pull(var_x)
 
               if (useNames) names(res) <- rownames(x)
@@ -1164,17 +1173,19 @@ setMethod("colVars", signature(x = "dbDenseMatrix"),
               ) |>
               dplyr::mutate(
                 var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
-              ) |>
-              dplyr::arrange(j)
+              )
 
             if (memory) {
-              v <- dplyr::pull(col_stats, var_x)
+              v <- col_stats |>
+                dplyr::arrange(j) |>
+                dplyr::pull(var_x)
               if (useNames) names(v) <- colnames(x)
               return(v)
             }
 
             colVars <- col_stats |>
-              dplyr::transmute(i = j, j = 1L, x = var_x)
+              dplyr::transmute(i = j, j = 1L, x = var_x) |>
+              dplyr::collapse()
 
             res <-  new(
               "dbDenseMatrix",
@@ -1207,11 +1218,12 @@ setMethod("colVars", signature(x = "dbSparseMatrix"),
               ) |>
               dplyr::mutate(
                 var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
-              ) |>
-              dplyr::arrange(j)
+              )
 
             if (memory) {
-              v <- dplyr::pull(col_stats, var_x)
+              v <- col_stats |>
+                dplyr::arrange(j) |>
+                dplyr::pull(var_x)
               if (useNames) names(v) <- colnames(x)
               return(v)
             }
