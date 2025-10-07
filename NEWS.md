@@ -1,5 +1,47 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# dbMatrix 0.0.0.9123 (2025-10-07)
+
+## Features
+
+- **dbProject Integration**: Full integration with `dbProject` package and `dbData` base class architecture. dbMatrix now inherits from `dbData` providing unified database-backed object interface across dbverse ecosystem.
+
+- **Statistical Methods**: Added `rowSds()`, `colSds()`, `rowVars()`, and `colVars()` methods for both dbDenseMatrix and dbSparseMatrix.
+
+- **dbVector Support**: Internal support for dbVector arithmetic operations.
+
+## Chore
+
+- Migrated repository to `dbverse-org` organization from previous location.
+- Updated all URLs and links to reflect new `dbverse-org` organization structure.
+- Required DuckDB >= 1.4.0 (LTS) for improved stability.
+- Updated documentation with markdown formatting improvements.
+- Added `cli` to imports for better user messaging.
+
+## Docs
+
+- Added S4 class documentation to pkgdown reference index (dbMatrix-class, dbDenseMatrix-class, dbSparseMatrix-class).
+- Updated vignettes to include `memory` and `names` parameters for summary functions.
+- Improved roxygen documentation for `compute()`, `as.matrix()`, and arithmetic operations.
+- Enhanced documentation for dbProject integration and dbData inheritance.
+
+## Bug Fixes
+
+- **Eliminated ORDER BY Warnings**: Fixed ORDER BY warnings by removing `arrange()` from lazy evaluation paths in summary methods. Now only applies ordering when materializing results to memory.
+- Fixed `sim_dgc()` function to use correct number of random values (`rnorm(n_vals)` instead of `rnorm(num_cols)`), eliminating "number of items to replace" warnings.
+- Removed deprecated `context()` call in test files (testthat 3rd edition).
+- Fixed `to_view()` calls to pass `tbl` objects instead of dbMatrix objects to dbProject functions.
+- Imported dbProject generics properly to avoid namespace conflicts.
+- Added `init` slot to dbMatrix class definition.
+- Removed redundant export for `t()` method.
+- Fixed `names()` method to return NULL for regular matrices instead of throwing errors.
+- Corrected name attribute assignment in `Ops()` method for dbMatrix.
+- Improved connection handling in internal `get_con()` function.
+- Removed `dbReconnect()` method from generics (moved to dbProject/dbData).
+- Refactored extract methods - functionality now comes from `dbProject::dbData` base class.
+- Exported dbMatrix class properly in NAMESPACE.
+- Fixed DESCRIPTION dependencies: removed duplicate `dbProject` from Suggests, added proper Remotes reference.
+
 # dbMatrix 0.0.0.9023 (2024-09-18)
 
 ## Breaking Changes 
