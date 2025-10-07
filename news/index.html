@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9123</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,48 @@
       <small>Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.0.9123" id="dbmatrix-0009123-2025-10-07">dbMatrix 0.0.0.9123 (2025-10-07)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009123-2025-10-07"></a></h2>
+<div class="section level3">
+<h3 id="features-0-0-0-9123">Features<a class="anchor" aria-label="anchor" href="#features-0-0-0-9123"></a></h3>
+<ul><li><p><strong>dbProject Integration</strong>: Full integration with <code>dbProject</code> package and <code>dbData</code> base class architecture. dbMatrix now inherits from <code>dbData</code> providing unified database-backed object interface across dbverse ecosystem.</p></li>
+<li><p><strong>Statistical Methods</strong>: Added <code>rowSds()</code>, <code>colSds()</code>, <code>rowVars()</code>, and <code>colVars()</code> methods for both dbDenseMatrix and dbSparseMatrix.</p></li>
+<li><p><strong>dbVector Support</strong>: Internal support for dbVector arithmetic operations.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="chore-0-0-0-9123">Chore<a class="anchor" aria-label="anchor" href="#chore-0-0-0-9123"></a></h3>
+<ul><li>Migrated repository to <code>dbverse-org</code> organization from previous location.</li>
+<li>Updated all URLs and links to reflect new <code>dbverse-org</code> organization structure.</li>
+<li>Required DuckDB &gt;= 1.4.0 (LTS) for improved stability.</li>
+<li>Updated documentation with markdown formatting improvements.</li>
+<li>Added <code>cli</code> to imports for better user messaging.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="docs-0-0-0-9123">Docs<a class="anchor" aria-label="anchor" href="#docs-0-0-0-9123"></a></h3>
+<ul><li>Added S4 class documentation to pkgdown reference index (dbMatrix-class, dbDenseMatrix-class, dbSparseMatrix-class).</li>
+<li>Updated vignettes to include <code>memory</code> and <code>names</code> parameters for summary functions.</li>
+<li>Improved roxygen documentation for <code>compute()</code>, <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code>, and arithmetic operations.</li>
+<li>Enhanced documentation for dbProject integration and dbData inheritance.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-0-9123">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-0-9123"></a></h3>
+<ul><li>
+<strong>Eliminated ORDER BY Warnings</strong>: Fixed ORDER BY warnings by removing <code>arrange()</code> from lazy evaluation paths in summary methods. Now only applies ordering when materializing results to memory.</li>
+<li>Fixed <code><a href="../reference/simulate_objects.html">sim_dgc()</a></code> function to use correct number of random values (<code>rnorm(n_vals)</code> instead of <code>rnorm(num_cols)</code>), eliminating “number of items to replace” warnings.</li>
+<li>Removed deprecated <code>context()</code> call in test files (testthat 3rd edition).</li>
+<li>Fixed <code>to_view()</code> calls to pass <code>tbl</code> objects instead of dbMatrix objects to dbProject functions.</li>
+<li>Imported dbProject generics properly to avoid namespace conflicts.</li>
+<li>Added <code>init</code> slot to dbMatrix class definition.</li>
+<li>Removed redundant export for <code><a href="https://rdrr.io/r/base/t.html" class="external-link">t()</a></code> method.</li>
+<li>Fixed <code><a href="https://rdrr.io/r/base/names.html" class="external-link">names()</a></code> method to return NULL for regular matrices instead of throwing errors.</li>
+<li>Corrected name attribute assignment in <code><a href="https://rdrr.io/r/methods/S4groupGeneric.html" class="external-link">Ops()</a></code> method for dbMatrix.</li>
+<li>Improved connection handling in internal <code><a href="../reference/get_con.html">get_con()</a></code> function.</li>
+<li>Removed <code>dbReconnect()</code> method from generics (moved to dbProject/dbData).</li>
+<li>Refactored extract methods - functionality now comes from <code>dbProject::dbData</code> base class.</li>
+<li>Exported dbMatrix class properly in NAMESPACE.</li>
+<li>Fixed DESCRIPTION dependencies: removed duplicate <code>dbProject</code> from Suggests, added proper Remotes reference.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9023" id="dbmatrix-0009023-2024-09-18">dbMatrix 0.0.0.9023 (2024-09-18)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009023-2024-09-18"></a></h2>
 <div class="section level3">
@@ -85,7 +127,7 @@
 <h2 class="pkg-version" data-toc-text="0.0.0.9022" id="dbmatrix-0009022-2024-08-14">dbMatrix 0.0.0.9022 (2024-08-14)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009022-2024-08-14"></a></h2>
 <div class="section level3">
 <h3 id="breaking-changes-0-0-0-9022">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-0-0-9022"></a></h3>
-<ul><li>Rename dbMatrix constructor to <code><a href="https://rdrr.io/pkg/dbMatrix/man/dbMatrix-class.html" class="external-link">dbMatrix::dbMatrix()</a></code>.</li>
+<ul><li>Rename dbMatrix constructor to <code><a href="https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html">dbMatrix::dbMatrix()</a></code>.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="features-0-0-0-9022">Features<a class="anchor" aria-label="anchor" href="#features-0-0-0-9022"></a></h3>

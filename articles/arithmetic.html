@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9123</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -126,7 +126,7 @@ single-cell RNA-seq data, the matrix is sparse.</p>
 <code class="sourceCode R"><span><span class="co"># Note: by default the constructor creates a dbMatrix object in-memory</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dbMatrix/man/dbMatrix-class.html" class="external-link">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
+<span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
 <span>                 con <span class="op">=</span> <span class="va">con</span>, </span>
 <span>                 name <span class="op">=</span> <span class="st">'visium'</span>, </span>
 <span>                 class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span>
@@ -257,7 +257,7 @@ single-cell RNA-seq data, the matrix is sparse.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] dbMatrix_0.0.0.9023</span></span>
+<span><span class="co">#&gt; [1] dbMatrix_0.0.0.9123</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] bit_4.6.0             Matrix_1.7-3          jsonlite_2.0.0       </span></span>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9023</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9123</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -202,7 +202,7 @@ the <code>data</code> directory of the package.</p>
 <code class="sourceCode R"><span><span class="co"># create dbSparseMatrix from the same dgc</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dbMatrix/man/dbMatrix-class.html" class="external-link">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
+<span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
 <span>                   con <span class="op">=</span> <span class="va">con</span>, </span>
 <span>                   name <span class="op">=</span> <span class="st">'visium'</span>, </span>
 <span>                   class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span>
@@ -483,7 +483,7 @@ Click to expand
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] Matrix_1.7-3        dbMatrix_0.0.0.9023</span></span>
+<span><span class="co">## [1] Matrix_1.7-3        dbMatrix_0.0.0.9123</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] jsonlite_2.0.0       dplyr_1.1.4          compiler_4.5.1      </span></span>
