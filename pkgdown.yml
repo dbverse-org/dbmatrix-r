@@ -5,7 +5,7 @@ articles:
   arithmetic: arithmetic.html
   operations: operations.html
   overview: overview.html
-last_built: 2025-09-24T21:53Z
+last_built: 2025-10-07T10:34Z
 urls:
-  reference: https://drieslab.github.io/dbMatrix/reference
-  article: https://drieslab.github.io/dbMatrix/articles
+  reference: https://dbverse-org.github.io/dbmatrix-r/reference
+  article: https://dbverse-org.github.io/dbmatrix-r/articles

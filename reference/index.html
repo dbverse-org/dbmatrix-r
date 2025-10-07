@@ -25,7 +25,7 @@
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/drieslab/dbMatrix" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/dbverse-org/dbmatrix-r" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch"><li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
@@ -44,6 +44,35 @@
     </div>
 
     <div class="section level2">
+      <h2 id="s-classes">S4 Classes<a class="anchor" aria-label="anchor" href="#s-classes"></a></h2>
+
+      <div class="section-desc"><p>S4 class definitions for dbMatrix objects</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="dbMatrix-class.html">dbMatrix()</a></code>
+
+        </dt>
+        <dd>S4 virtual class for <code>dbMatrix</code></dd>
+      </dl><dl><dt>
+
+          <code><a href="dbDenseMatrix-class.html">dbDenseMatrix-class</a></code> <code><a href="dbDenseMatrix-class.html">dbDenseMatrix</a></code>
+
+        </dt>
+        <dd>S4 Class for <code>dbDenseMatrix</code></dd>
+      </dl><dl><dt>
+
+          <code><a href="dbSparseMatrix-class.html">dbSparseMatrix-class</a></code> <code><a href="dbSparseMatrix-class.html">dbSparseMatrix</a></code>
+
+        </dt>
+        <dd>S4 Class for dbSparseMatrix</dd>
+      </dl></div><div class="section level2">
       <h2 id="constructor">Constructor<a class="anchor" aria-label="anchor" href="#constructor"></a></h2>
 
       <div class="section-desc"><p>Function for creating <code>dbMatrix</code> objects</p></div>
@@ -62,7 +91,7 @@
         <dd>Convert <code>Matrix</code> to <code>dbMatrix</code></dd>
       </dl><dl><dt>
 
-          <code><a href="as.matrix-dbMatrix-method.html">as.matrix(<i>&lt;dbMatrix&gt;</i>)</a></code>
+          <code><a href="as.matrix.dbMatrix.html">as.matrix(<i>&lt;dbMatrix&gt;</i>)</a></code>
 
         </dt>
         <dd>Convert <code>dbMatrix</code> to in-memory matrix</dd>
@@ -218,24 +247,6 @@
 
         </dt>
         <dd>List remote tables, temporary tables, and views</dd>
-      </dl><dl><dt>
-
-          <code><a href="to_view-dbData-method.html">to_view(<i>&lt;dbData&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert lazy table to named view</dd>
-      </dl><dl><dt>
-
-          <code><a href="to_view-missing-method.html">to_view(<i>&lt;missing&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert lazy table to named view</dd>
-      </dl><dl><dt>
-
-          <code><a href="to_view-tbl_duckdb_connection-method.html">to_view(<i>&lt;tbl_duckdb_connection&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Convert lazy table to named view</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

@@ -44,7 +44,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/drieslab/dbMatrix" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/dbverse-org/dbmatrix-r" aria-label="GitHub"><span class="fa fab fa-github"></span></a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
@@ -69,14 +69,14 @@
       <h1>Arithmetic</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/drieslab/dbMatrix/blob/dev/vignettes/arithmetic.Rmd" class="external-link"><code>vignettes/arithmetic.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/vignettes/arithmetic.Rmd" class="external-link"><code>vignettes/arithmetic.Rmd</code></a></small>
       <div class="d-none name"><code>arithmetic.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://drieslab.github.io/dbMatrix/">dbMatrix</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dbverse-org/dbmatrix-r" class="external-link">dbMatrix</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Attaching package: 'dbMatrix'</span></span>
 <span><span class="co">#&gt; The following object is masked from 'package:base':</span></span>
@@ -91,7 +91,7 @@ arithmetic operations on <code>dbSparseMatrix</code> objects.</p>
 <p><strong>Note:</strong> Some operations with zero values are not yet
 supported with dbMatrix objects. In addition, certain arithmetic
 operations between <code>dbMatrix</code> objects are also not yet
-supported. We welcome user feedback and reporting issues on the <a href="https://github.com/drieslab/dbMatrix/" class="external-link">Github page</a>.</p>
+supported. We welcome user feedback and reporting issues on the <a href="https://github.com/dbverse-org/dbmatrix-r/" class="external-link">Github page</a>.</p>
 <div class="section level3">
 <h3 id="get-test-data">Get test data<a class="anchor" aria-label="anchor" href="#get-test-data"></a>
 </h3>
@@ -126,7 +126,7 @@ single-cell RNA-seq data, the matrix is sparse.</p>
 <code class="sourceCode R"><span><span class="co"># Note: by default the constructor creates a dbMatrix object in-memory</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dbMatrix.html">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
+<span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dbMatrix/man/dbMatrix-class.html" class="external-link">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
 <span>                 con <span class="op">=</span> <span class="va">con</span>, </span>
 <span>                 name <span class="op">=</span> <span class="st">'visium'</span>, </span>
 <span>                 class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span>
@@ -262,20 +262,21 @@ single-cell RNA-seq data, the matrix is sparse.</p>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] bit_4.6.0             Matrix_1.7-3          jsonlite_2.0.0       </span></span>
 <span><span class="co">#&gt;  [4] dplyr_1.1.4           compiler_4.5.1        tidyselect_1.2.1     </span></span>
-<span><span class="co">#&gt;  [7] blob_1.2.4            jquerylib_0.1.4       systemfonts_1.2.3    </span></span>
-<span><span class="co">#&gt; [10] textshaping_1.0.3     yaml_2.3.10           fastmap_1.2.0        </span></span>
-<span><span class="co">#&gt; [13] lattice_0.22-7        R6_2.6.1              generics_0.1.4       </span></span>
-<span><span class="co">#&gt; [16] knitr_1.50            tibble_3.3.0          desc_1.4.3           </span></span>
-<span><span class="co">#&gt; [19] MatrixGenerics_1.20.0 DBI_1.2.3             bslib_0.9.0          </span></span>
-<span><span class="co">#&gt; [22] pillar_1.11.1         rlang_1.1.6           cachem_1.1.0         </span></span>
-<span><span class="co">#&gt; [25] xfun_0.53             fs_1.6.6              sass_0.4.10          </span></span>
-<span><span class="co">#&gt; [28] bit64_4.6.0-1         cli_3.6.5             pkgdown_2.1.3        </span></span>
-<span><span class="co">#&gt; [31] withr_3.0.2           magrittr_2.0.4        digest_0.6.37        </span></span>
-<span><span class="co">#&gt; [34] grid_4.5.1            dbplyr_2.5.1          lifecycle_1.0.4      </span></span>
-<span><span class="co">#&gt; [37] vctrs_0.6.5           evaluate_1.0.5        glue_1.8.0           </span></span>
-<span><span class="co">#&gt; [40] data.table_1.17.8     duckdb_1.4.0          ragg_1.5.0           </span></span>
-<span><span class="co">#&gt; [43] purrr_1.1.0           rmarkdown_2.29        matrixStats_1.5.0    </span></span>
-<span><span class="co">#&gt; [46] tools_4.5.1           pkgconfig_2.0.3       htmltools_0.5.8.1</span></span></code></pre></div>
+<span><span class="co">#&gt;  [7] blob_1.2.4            dbProject_0.0.0.9000  jquerylib_0.1.4      </span></span>
+<span><span class="co">#&gt; [10] systemfonts_1.3.1     textshaping_1.0.3     yaml_2.3.10          </span></span>
+<span><span class="co">#&gt; [13] fastmap_1.2.0         lattice_0.22-7        R6_2.6.1             </span></span>
+<span><span class="co">#&gt; [16] generics_0.1.4        knitr_1.50            tibble_3.3.0         </span></span>
+<span><span class="co">#&gt; [19] desc_1.4.3            MatrixGenerics_1.20.0 DBI_1.2.3            </span></span>
+<span><span class="co">#&gt; [22] bslib_0.9.0           pillar_1.11.1         rlang_1.1.6          </span></span>
+<span><span class="co">#&gt; [25] cachem_1.1.0          xfun_0.53             fs_1.6.6             </span></span>
+<span><span class="co">#&gt; [28] sass_0.4.10           bit64_4.6.0-1         cli_3.6.5            </span></span>
+<span><span class="co">#&gt; [31] pkgdown_2.1.3         withr_3.0.2           magrittr_2.0.4       </span></span>
+<span><span class="co">#&gt; [34] digest_0.6.37         grid_4.5.1            dbplyr_2.5.1         </span></span>
+<span><span class="co">#&gt; [37] lifecycle_1.0.4       vctrs_0.6.5           evaluate_1.0.5       </span></span>
+<span><span class="co">#&gt; [40] glue_1.8.0            data.table_1.17.8     duckdb_1.4.0         </span></span>
+<span><span class="co">#&gt; [43] ragg_1.5.0            purrr_1.1.0           rmarkdown_2.30       </span></span>
+<span><span class="co">#&gt; [46] matrixStats_1.5.0     tools_4.5.1           pkgconfig_2.0.3      </span></span>
+<span><span class="co">#&gt; [49] htmltools_0.5.8.1</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
