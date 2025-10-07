@@ -38,10 +38,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    irlba,
-    dbProject
+    irlba
 Remotes:
-    dbverse-org/dbproject-r
+    dbProject=dbverse-org/dbproject-r
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

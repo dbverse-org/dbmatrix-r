@@ -15,6 +15,13 @@ navbar:
       aria-label: GitHub
 
 reference:
+  - title: "S4 Classes"
+    desc: "S4 class definitions for dbMatrix objects"
+    contents:
+      - dbMatrix-class
+      - dbDenseMatrix-class
+      - dbSparseMatrix-class
+
   - title: "Constructor"
     desc: "Function for creating `dbMatrix` objects"
     contents:
