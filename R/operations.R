@@ -734,7 +734,7 @@ setMethod(
     x <- castNumeric(x)
 
     # add 0 to rowSum
-    view_name <- unique_table_name('tmp_view')
+    view_name <- unique_table_name('_tmp')
     num_row <- nrow(x)
     sql <- glue::glue(
       '
@@ -832,7 +832,7 @@ setMethod(
   function(x, ..., memory = FALSE) {
     x = castNumeric(x)
 
-    view_name <- unique_table_name('tmp_view')
+    view_name <- unique_table_name('_tmp')
     num_col <- ncol(x)
     sql <- glue::glue(
       '
