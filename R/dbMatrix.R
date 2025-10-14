@@ -1066,18 +1066,23 @@ readMM <- function(
     }
 
     # .mtx reader
+    # Note: Using read_csv instead of read_csv_auto for explicit control
+    # MTX format: rows starting with % are comments, then a header line with dims,
+    # then space-separated triplets (row col value)
     sql <- glue::glue(
       "{create_statement} {name} AS
-       SELECT * FROM read_csv_auto(
+       SELECT * FROM read_csv(
           '{value}',
-          sep = ' ',
-          skip = 1,
+          delim = ' ',
+          comment = '%',
           columns = {{
               'i': 'BIGINT',
               'j': 'BIGINT',
               'x': 'DOUBLE'
           }},
-          header = TRUE
+          header = FALSE,
+          skip = 1,
+          ignore_errors = FALSE
       );"
     )
 
@@ -1113,7 +1118,13 @@ get_MM_dim <- function(mtx_file_path) {
   }
 
   # Read all lines starting with '%' and one additional line representing dims
-  con <- file(mtx_file_path, "r")
+  # Use gzfile for compressed files, otherwise use file
+  if (grepl("\\.gz$", mtx_file_path)) {
+    con <- gzfile(mtx_file_path, "r")
+  } else {
+    con <- file(mtx_file_path, "r")
+  }
+  
   header <- character(0)
   while (TRUE) {
     line <- readLines(con, n = 1)
