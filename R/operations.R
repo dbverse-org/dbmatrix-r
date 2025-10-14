@@ -408,7 +408,7 @@ arith_call_dbm_vect_multi = function(
 #' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
-  dbm = castNumeric(e1)
+  dbm = .castNumeric(e1)
 
   num_vect = if (typeof(e2) != 'double') {
     as.numeric(e2)
@@ -432,7 +432,7 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
-  dbm = castNumeric(e2)
+  dbm = .castNumeric(e2)
 
   num_vect = if (typeof(e1) != 'double') {
     as.numeric(e1)
@@ -689,7 +689,7 @@ setMethod(
   'rowSums',
   signature(x = 'dbDenseMatrix'),
   function(x, ..., memory = FALSE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
 
     # calculate rowSums
     rowSum <- x[] |>
@@ -731,7 +731,7 @@ setMethod(
   'rowSums',
   signature(x = 'dbSparseMatrix'),
   function(x, ..., memory = FALSE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
 
     # add 0 to rowSum
     view_name <- unique_table_name('_tmp')
@@ -786,7 +786,7 @@ setMethod(
   'colSums',
   signature(x = 'dbDenseMatrix'),
   function(x, ..., memory = FALSE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
 
     # calculate colSums
     colSum <- x[] |>
@@ -830,7 +830,7 @@ setMethod(
   'colSums',
   signature(x = 'dbSparseMatrix'),
   function(x, ..., memory = FALSE) {
-    x = castNumeric(x)
+    x = .castNumeric(x)
 
     view_name <- unique_table_name('_tmp')
     num_col <- ncol(x)
@@ -896,7 +896,7 @@ setMethod(
   'rowMeans',
   signature(x = 'dbMatrix'),
   function(x, ..., memory = FALSE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
 
     # calculate rowMeans
     rowSums <- rowSums(x, memory = FALSE) # dbDenseMatrix
@@ -921,7 +921,7 @@ setMethod(
   'colMeans',
   signature(x = 'dbMatrix'),
   function(x, ..., memory = FALSE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
 
     colSums <- colSums(x, memory = FALSE) # dbDenseMatrix
     n_rows <- nrow(x)
@@ -959,7 +959,7 @@ setMethod(
   "colSds",
   signature(x = "dbDenseMatrix"),
   function(x, ..., memory = FALSE, useNames = TRUE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     m <- nrow(x)
 
     col_stats <- x[] |>
@@ -1011,7 +1011,7 @@ setMethod(
   "colSds",
   signature(x = "dbSparseMatrix"),
   function(x, ..., memory = FALSE, useNames = TRUE) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     m <- nrow(x)
 
     col_stats <- x[] |>
@@ -1070,7 +1070,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     k <- ncol(x)
 
     row_stats <- x[] |>
@@ -1131,7 +1131,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     k <- ncol(x)
 
     row_stats <- x[] |>
@@ -1207,7 +1207,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     k <- ncol(x)
 
     row_stats <- x[] |>
@@ -1265,7 +1265,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     k <- ncol(x)
 
     row_stats <- x[] |>
@@ -1328,7 +1328,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     m <- nrow(x) # total rows
 
     col_stats <- x[] |>
@@ -1386,7 +1386,7 @@ setMethod(
     memory = FALSE,
     useNames = TRUE
   ) {
-    x <- castNumeric(x)
+    x <- .castNumeric(x)
     m <- nrow(x)
 
     col_stats <- x[] |>
@@ -1436,7 +1436,7 @@ setMethod(
 #' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
-  x <- castNumeric(x)
+  x <- .castNumeric(x)
 
   res <- x[] |>
     dplyr::summarise(mean_x = mean(x, na.rm = TRUE)) |>
@@ -1450,7 +1450,7 @@ setMethod('mean', signature(x = 'dbDenseMatrix'), function(x, ...) {
 #' @rdname mean
 #' @export
 setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
-  x <- castNumeric(x)
+  x <- .castNumeric(x)
 
   dim <- dim(x)
   n <- dim[1] * dim[2]
@@ -1808,38 +1808,33 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
   return(res)
 }
 
-## castNumeric ####
+## .castNumeric ####
 
 #' @title Set a column to numeric
 #' @description
 #' Sets a column to numeric type if not already
 #' This precaution is to avoid truncation of values
 #' @param x dbData object
-#' @param col column to cast to numeric
+#' @param col column to cast to numeric (optional for dbMatrix)
 #' @param ... additional params to pass
 #' @noRd
 #' @keywords internal
-setMethod(
-  'castNumeric',
-  signature(x = 'dbData', col = 'character'),
-  function(x, col, ...) {
-    if (.colTypes(x)[col] != 'double') {
-      sym_col = dplyr::sym(col)
-      x[] = x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
-    }
-    return(x)
-  }
-)
-
-#' @noRd
-#' @export
-setMethod(
-  'castNumeric',
-  signature(x = 'dbMatrix', col = 'missing'),
-  function(x, ...) {
+.castNumeric <- function(x, col = NULL, ...) {
+  # For dbMatrix objects, cast the 'x' column
+  if (is(x, 'dbMatrix')) {
     if (.colTypes(x)['x'] != 'double') {
-      x[] = x[] |> dplyr::mutate(x := as.double(x))
+      x[] <- x[] |> dplyr::mutate(x := as.double(x))
     }
     return(x)
   }
-)
+  
+  # For other dbData objects with specified column
+  if (!is.null(col)) {
+    if (.colTypes(x)[col] != 'double') {
+      sym_col <- dplyr::sym(col)
+      x[] <- x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
+    }
+  }
+  
+  return(x)
+}
