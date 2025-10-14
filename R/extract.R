@@ -30,21 +30,22 @@ setMethod(
       dplyr::filter(rowname %in% filter_i) |>
       dplyr::mutate(new_i = seq_along(filter_i)) # reset index
 
-    # send map to db for subsetting
-    name = unique_table_name('tmp_i')
-
-    # FIXME: workaround for lack of support for writing
-    # tables to a custom schema that is invisible to the user
-    # i.e. not present in DBI::dbListTables(con)
-    #
-    # To see the tables in the arrow schema,
-    # use duckdb::duckdb_list_arrow(conn = con)
-    map_temp <- arrow::to_duckdb(
-      .data = map, # converts to arrow-compliant object
-      con = con,
-      table_name = name,
-      auto_disconnect = TRUE # remove tbl when gc
+    # Create inline table reference using sql() to avoid materializing in main schema
+    # This uses VALUES clause which doesn't create any tables visible to dbListTables()
+    values_clause <- paste0(
+      '(',
+      map$i,
+      ', ',
+      map$new_i,
+      ')',
+      collapse = ', '
     )
+    sql_query <- paste0(
+      'SELECT * FROM (VALUES ',
+      values_clause,
+      ') AS map_i(i, new_i)'
+    )
+    map_temp <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query, ')')))
 
     # subset dbMatrix
     x[] <- x[] |>
@@ -84,16 +85,21 @@ setMethod(
       dplyr::filter(colname %in% filter_j) |>
       dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
-    # send map to db for subsetting
-    name <- unique_table_name('tmp_j')
-
-    # FIXME:
-    map_temp <- arrow::to_duckdb(
-      .data = map, # converts to arrow-compliant object
-      con = con,
-      table_name = name,
-      auto_disconnect = TRUE # remove tbl when gc
+    # Create inline table reference using sql() to avoid materializing in main schema
+    values_clause <- paste0(
+      '(',
+      map$j,
+      ', ',
+      map$new_j,
+      ')',
+      collapse = ', '
     )
+    sql_query <- paste0(
+      'SELECT * FROM (VALUES ',
+      values_clause,
+      ') AS map_j(j, new_j)'
+    )
+    map_temp <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query, ')')))
 
     # Subset with arrow virtual table
     x[] <- x[] |>
@@ -142,21 +148,36 @@ setMethod(
       dplyr::filter(colname %in% filter_j) |>
       dplyr::mutate(new_j = seq_along(filter_j)) # reset index
 
-    name = unique_table_name('tmp_map_ij_i')
-    map_temp_j <- arrow::to_duckdb(
-      .data = map_j, # converts to arrow-compliant object
-      con = con,
-      table_name = name,
-      auto_disconnect = TRUE # remove tbl when gc
+    # Create inline table references using sql() to avoid materializing in main schema
+    values_clause_j <- paste0(
+      '(',
+      map_j$j,
+      ', ',
+      map_j$new_j,
+      ')',
+      collapse = ', '
     )
+    sql_query_j <- paste0(
+      'SELECT * FROM (VALUES ',
+      values_clause_j,
+      ') AS map_j(j, new_j)'
+    )
+    map_temp_j <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query_j, ')')))
 
-    name = unique_table_name('tmp_map_ij_j')
-    map_temp_i <- arrow::to_duckdb(
-      .data = map_i, # converts to arrow-compliant object
-      con = con,
-      table_name = name,
-      auto_disconnect = TRUE # remove tbl when gc
+    values_clause_i <- paste0(
+      '(',
+      map_i$i,
+      ', ',
+      map_i$new_i,
+      ')',
+      collapse = ', '
     )
+    sql_query_i <- paste0(
+      'SELECT * FROM (VALUES ',
+      values_clause_i,
+      ') AS map_i(i, new_i)'
+    )
+    map_temp_i <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query_i, ')')))
 
     x[] <- x[] |>
       dplyr::filter(i %in% !!map_i$i, j %in% !!map_j$j) |>
