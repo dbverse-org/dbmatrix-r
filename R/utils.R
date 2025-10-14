@@ -135,12 +135,12 @@ ij_array_map = function(i, j, dims) {
 
 # dbMatrix ####
 
-## load ####
+## dbLoad ####
 #' Create a dbMatrix object computed in a database
 #' @export
 #' @noRd
 setMethod(
-  'load',
+  'dbLoad',
   signature(conn = 'DBIConnection'),
   function(conn, name, class) {
     .check_con(conn = conn)
@@ -199,7 +199,7 @@ unique_table_name <- function(prefix = "dbMatrix") {
 #' in the database. If TRUE, the table will be removed after the session ends.
 #' @param dimnames default = TRUE. If TRUE, the rownames and colnames will be
 #' saved in the database. This allows full reconstruction of the dbMatrix object
-#' using \link{\code{dbMatrix::load()}}.
+#' using \link{\code{dbMatrix::dbLoad()}}.
 #' @param ... other args passed tokffk \link{\code{dplyr::compute()}}
 #' @return `[dbMatrix]` object
 #' @export
