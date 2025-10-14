@@ -1675,7 +1675,7 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
-setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
+nrow.dbMatrix <- function(x) {
   if (is.na(x@dims[1L])) {
     conn <- get_con(x)
     res <- DBI::dbGetQuery(
@@ -1687,14 +1687,14 @@ setMethod('nrow', signature(x = 'dbMatrix'), function(x) {
   }
 
   return(base::nrow(res))
-})
+}
 
 ### ncol ####
 
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
-setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
+ncol.dbMatrix <- function(x) {
   if (is.na(x@dims[2L])) {
     conn <- get_con(x)
     res <- DBI::dbGetQuery(
@@ -1705,7 +1705,7 @@ setMethod('ncol', signature(x = 'dbMatrix'), function(x) {
     return(x@dims[2L])
   }
   return(base::nrow(res))
-})
+}
 
 ### dim ####
 

@@ -29,14 +29,14 @@ setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export
-setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
+rownames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "row") {
   x@dim_names[[1]]
-})
+}
 
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export
-setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
+`rownames<-.dbMatrix` <- function(x, value) {
   if (is.null(value)) {
     stopf('rownames are required for dbMatrix objects')
   }
@@ -44,29 +44,29 @@ setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
   if (x@dims[1] != length(value)) {
     stopf('length of rownames to set does not equal number of rows')
   }
-  x@dim_names[[1]] = value
+  x@dim_names[[1]] <- value
   x
-})
+}
 
 # colnames ####
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export
-setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
+colnames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "col") {
   x@dim_names[[2]]
-})
+}
 
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export
-setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
+`colnames<-.dbMatrix` <- function(x, value) {
   if (x@dims[2] != length(value)) {
     stopf('length of colnames to set does not equal number of columns')
   }
 
-  x@dim_names[[2]] = value
+  x@dim_names[[2]] <- value
   x
-})
+}
 
 # dimnames ####
 #' @rdname matrix_props
