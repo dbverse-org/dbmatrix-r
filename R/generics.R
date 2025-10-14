@@ -30,8 +30,5 @@ NULL
 # dbMatrix ####
 setGeneric('load', function(conn, name, class, ...) standardGeneric('load'))
 
-# dbData ####
-setGeneric("dbList", function(conn, ...) standardGeneric("dbList"))
-
-#' @importFrom dbProject to_view conn conn<- dbReconnect
+#' @importFrom dbProject to_view conn conn<- dbReconnect dbList
 NULL
