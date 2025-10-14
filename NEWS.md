@@ -1,5 +1,30 @@
 <!-- NEWS.md is maintained by https://cynkra.github.io/fledge, do not edit -->
 
+# dbMatrix 0.0.0.9124 (2025-10-14)
+
+## Breaking Changes
+
+- **Renamed `load()` to `dbLoad()`**: The `load` method has been renamed to `dbLoad` to avoid masking `base::load()`. Generic moved to `dbProject` package for consistency across dbverse.
+
+## Refactoring
+
+- **S4 to S3 Method Conversion**: Converted `rownames()`, `colnames()`, `nrow()`, `ncol()`, and their setters from S4 to S3 methods for simpler dispatch. Only `%in%` remains S4 (requires double dispatch). This significantly reduces package load messages.
+
+- **Internal Function Cleanup**: 
+  - Converted `castNumeric` from S4 generic to internal function `.castNumeric()`
+  - Renamed temporary tables to use `_tmp` prefix in row/column summary methods for consistency
+  - Moved `dbList` generic to `dbProject` package
+
+## Bug Fixes
+
+- **Arrow Filter Pushdown Error**: Fixed "Arrow table filter pushdown optional: new_i IN (...) not supported yet" error by replacing `arrow::to_duckdb()` with inline SQL for extract operations.
+- Fixed `.mtx` file reader header detection logic.
+
+## Chore
+
+- Applied consistent code formatting across the package.
+
+
 # dbMatrix 0.0.0.9123 (2025-10-07)
 
 ## Features
