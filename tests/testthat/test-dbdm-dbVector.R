@@ -32,4 +32,3 @@ test_that("rowSums rev equal (memory=TRUE)", {
   res_dbdm = (rowSums(dbdm, memory = TRUE) + dbdm) |> as.matrix()
   expect_equal(res_mat, res_dbdm)
 })
-

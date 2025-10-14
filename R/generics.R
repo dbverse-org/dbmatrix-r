@@ -6,12 +6,24 @@ setGeneric('castNumeric', function(x, col, ...) standardGeneric('castNumeric'))
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  if (!isGeneric("rownames")) methods::setGeneric("rownames")
-  if (!isGeneric("rownames<-")) methods::setGeneric("rownames<-")
-  if (!isGeneric("colnames")) methods::setGeneric("colnames")
-  if (!isGeneric("colnames<-")) methods::setGeneric("colnames<-")
-  if (!isGeneric("nrow")) methods::setGeneric("nrow")
-  if (!isGeneric("ncol")) methods::setGeneric("ncol")
+  if (!isGeneric("rownames")) {
+    methods::setGeneric("rownames")
+  }
+  if (!isGeneric("rownames<-")) {
+    methods::setGeneric("rownames<-")
+  }
+  if (!isGeneric("colnames")) {
+    methods::setGeneric("colnames")
+  }
+  if (!isGeneric("colnames<-")) {
+    methods::setGeneric("colnames<-")
+  }
+  if (!isGeneric("nrow")) {
+    methods::setGeneric("nrow")
+  }
+  if (!isGeneric("ncol")) {
+    methods::setGeneric("ncol")
+  }
   if (!isGeneric("%in%")) methods::setGeneric("%in%")
 }
 

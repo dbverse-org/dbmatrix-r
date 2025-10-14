@@ -8,11 +8,13 @@ mat = as.matrix(dgc + 1)
 
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbdm = dbMatrix::dbMatrix(value = mat,
-                          con = con1,
-                          name = 'mat',
-                          class = "dbDenseMatrix",
-                          overwrite = TRUE)
+dbdm = dbMatrix::dbMatrix(
+  value = mat,
+  con = con1,
+  name = 'mat',
+  class = "dbDenseMatrix",
+  overwrite = TRUE
+)
 
 # ---------------------------------------------------------------------------- #
 # Test scalar arithmetic
@@ -70,8 +72,8 @@ test_that("/ 0 equal", {
   expect_equal(res_mat, res_dbdm)
 })
 
-res_mat = mat ^ 0
-res_dbdm = dbdm ^ 0
+res_mat = mat^0
+res_dbdm = dbdm^0
 res_dbdm = as.matrix(res_dbdm, names = TRUE)
 
 test_that("^ 0 equal", {

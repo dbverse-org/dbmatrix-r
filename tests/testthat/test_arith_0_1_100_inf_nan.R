@@ -100,32 +100,32 @@ test_that(" * NaN equal", {
 })
 
 test_that(" ^ 0 equal", {
-  res_dgc = (dgc ^ 0) |> as.matrix()
-  res_dbsm = (dbsm ^ 0) |> as.matrix()
+  res_dgc = (dgc^0) |> as.matrix()
+  res_dbsm = (dbsm^0) |> as.matrix()
   expect_equal(res_dgc, res_dbsm)
 })
 
 test_that(" ^ 1 equal", {
-  res_dgc = (dgc ^ 1)
-  res_dbsm = (dbsm ^ 1) |> as.matrix(sparse = TRUE)
+  res_dgc = (dgc^1)
+  res_dbsm = (dbsm^1) |> as.matrix(sparse = TRUE)
   expect_equal(res_dgc, res_dbsm)
 })
 
 test_that(" ^ 100 equal", {
-  res_dgc = (dgc ^ 100)
-  res_dbsm = (dbsm ^ 100) |> as.matrix(sparse = TRUE)
+  res_dgc = (dgc^100)
+  res_dbsm = (dbsm^100) |> as.matrix(sparse = TRUE)
   expect_equal(res_dgc, res_dbsm)
 })
 
 test_that(" ^ Inf equal", {
-  res_dgc = (dgc ^ Inf)
-  res_dbsm = (dbsm ^ Inf) |> as.matrix(sparse = TRUE, names = FALSE)
+  res_dgc = (dgc^Inf)
+  res_dbsm = (dbsm^Inf) |> as.matrix(sparse = TRUE, names = FALSE)
   expect_equal(res_dgc, res_dbsm)
 })
 
 test_that(" ^ NaN equal", {
-  res_dgc = (dgc ^ NaN) |> as.matrix()
-  res_dbsm = (dbsm ^ NaN) |> as.matrix()
+  res_dgc = (dgc^NaN) |> as.matrix()
+  res_dbsm = (dbsm^NaN) |> as.matrix()
   expect_equal(res_dgc, res_dbsm)
 })
 

@@ -1,15 +1,16 @@
 #' @describeIn simulate_objects Simulate a duckdb connection dplyr tbl_Pool in memory
 #' @keywords internal
-sim_duckdb = function(value = datasets::iris,
-                      name = 'test',
-                      con = NULL,
-                      memory = TRUE) {
-
+sim_duckdb = function(
+  value = datasets::iris,
+  name = 'test',
+  con = NULL,
+  memory = TRUE
+) {
   # setup in-memory db
-  if(is.null(con)) {
-    if(memory){
+  if (is.null(con)) {
+    if (memory) {
       drv = duckdb::duckdb(dbdir = ':memory:')
-    }else{
+    } else {
       # create temporary temp.db file
       temp_file = tempfile(fileext = '.duckdb')
       drv = duckdb::duckdb(dbdir = temp_file)
@@ -20,7 +21,7 @@ sim_duckdb = function(value = datasets::iris,
   }
 
   # check to see if table already exists and if so remove it
-  if(DBI::dbExistsTable(con, name)){
+  if (DBI::dbExistsTable(con, name)) {
     DBI::dbRemoveTable(con, name)
   }
 
@@ -37,12 +38,12 @@ sim_duckdb = function(value = datasets::iris,
 #' @details
 #' This function generates a simulated sparse matrix (dgCMatrix) with number
 #' of rows and columns and sets n_vals random values to a non-zero value.
-sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
+sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50) {
   # create simulated dgc matrix
   data <- matrix(0, nrow = num_rows, ncol = num_cols)
 
   # Set n random values to non-zero
-  non_zero_indices <- sample(1:(num_rows*num_cols), n_vals)
+  non_zero_indices <- sample(1:(num_rows * num_cols), n_vals)
   data[non_zero_indices] <- rnorm(n_vals)
 
   # Create dumby sparse dgc matrix (column-major)
@@ -57,9 +58,9 @@ sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50){
 #' @details
 #' This function generates a simulated dense matrix object with a specified number
 #' of rows and columns.
-sim_denseMat <- function(num_rows = 50, num_cols = 50){
+sim_denseMat <- function(num_rows = 50, num_cols = 50) {
   # create simulated dense matrix
-  mat <- matrix(rnorm(num_rows*num_cols), nrow = num_rows, ncol = num_cols)
+  mat <- matrix(rnorm(num_rows * num_cols), nrow = num_rows, ncol = num_cols)
 
   return(mat)
 }
@@ -82,10 +83,12 @@ sim_denseMat <- function(num_rows = 50, num_cols = 50){
 #' sim_ijx_matrix()
 #'
 #' @keywords internal
-sim_ijx_matrix = function(mat_type = NULL,
-                          num_rows = 50,
-                          num_cols = 50,
-                          seed_num = 42){
+sim_ijx_matrix = function(
+  mat_type = NULL,
+  num_rows = 50,
+  num_cols = 50,
+  seed_num = 42
+) {
   # check if mat_type is empty
   if (is.null(mat_type)) {
     stop("mat_type must be either 'dense' or 'sparse'")
@@ -105,15 +108,14 @@ sim_ijx_matrix = function(mat_type = NULL,
   set.seed(seed_num)
 
   # setup dummy matrix data
-  if(mat_type == 'sparse'){
-
+  if (mat_type == 'sparse') {
     # Simulate dgcMatrix
     mat = sim_dgc(num_rows = num_rows, num_cols = num_cols)
 
     # Create sparse ijx representation
     ijx = Matrix::summary(mat)
-
-  } else { # dense matrix
+  } else {
+    # dense matrix
     # Create dumby dataset
     mat = matrix(rnorm(num_rows * num_cols), nrow = num_rows, ncol = num_cols)
 
@@ -133,7 +135,6 @@ sim_ijx_matrix = function(mat_type = NULL,
       j = col_idx[col(mat)],
       x = as.numeric(mat)
     )
-
   }
 
   return(ijx)
@@ -142,21 +143,25 @@ sim_ijx_matrix = function(mat_type = NULL,
 #' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
 #' @description  Simulate a dbSparseMatrix in memory
 #' @export
-sim_dbSparseMatrix = function(num_rows = 50,
-                              num_cols = 50,
-                              seed_num = 42,
-                              name = 'sparse_test',
-                              memory = FALSE) {
+sim_dbSparseMatrix = function(
+  num_rows = 50,
+  num_cols = 50,
+  seed_num = 42,
+  name = 'sparse_test',
+  memory = FALSE
+) {
   # check input
   if (num_rows < 10 | num_cols < 10) {
     stop("Number of rows and columns must be at least 10.")
   }
 
   # simulate ijx matrix
-  ijx = sim_ijx_matrix(mat_type = 'sparse',
-                       num_rows = num_rows,
-                       num_cols = num_cols,
-                       seed_num = seed_num)
+  ijx = sim_ijx_matrix(
+    mat_type = 'sparse',
+    num_rows = num_rows,
+    num_cols = num_cols,
+    seed_num = seed_num
+  )
 
   ijx = ijx |> as.data.frame()
 
@@ -175,14 +180,16 @@ sim_dbSparseMatrix = function(num_rows = 50,
   dim = c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbSparseMatrix obj
-  res = dbMatrix(value = data,
-                 con = conn,
-                 name = name,
-                 dims = dim,
-                 dim_names = dim_names,
-                 overwrite = TRUE,
-                 class = "dbSparseMatrix",
-                 init = TRUE)
+  res = dbMatrix(
+    value = data,
+    con = conn,
+    name = name,
+    dims = dim,
+    dim_names = dim_names,
+    overwrite = TRUE,
+    class = "dbSparseMatrix",
+    init = TRUE
+  )
 
   # show
   res
@@ -191,21 +198,25 @@ sim_dbSparseMatrix = function(num_rows = 50,
 #' @describeIn simulate_objects Simulate a dbDenseMatrix in memory
 #' @description Simulate a dbDenseMatrix in memory.
 #' @export
-sim_dbDenseMatrix = function(num_rows = 50,
-                             num_cols = 50,
-                             seed_num = 42,
-                             name = 'dense_test',
-                             memory = FALSE) {
+sim_dbDenseMatrix = function(
+  num_rows = 50,
+  num_cols = 50,
+  seed_num = 42,
+  name = 'dense_test',
+  memory = FALSE
+) {
   # check input
   if (num_rows < 10 | num_cols < 10) {
     stop("Number of rows and columns must be at least 10.")
   }
 
   # simulate dense matrix
-  data = sim_ijx_matrix(mat_type = 'dense',
-                        num_rows = num_rows,
-                        num_cols = num_cols,
-                        seed_num = seed_num)
+  data = sim_ijx_matrix(
+    mat_type = 'dense',
+    num_rows = num_rows,
+    num_cols = num_cols,
+    seed_num = seed_num
+  )
 
   # add dense matrix as table to duckdb database
   data = sim_duckdb(value = data, name = name, memory = memory)
@@ -224,14 +235,16 @@ sim_dbDenseMatrix = function(num_rows = 50,
   dim = c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbDenseMatrix object
-  res = dbMatrix(value = data,
-                 con = conn,
-                 name = name,
-                 dims = dim,
-                 dim_names = dim_names,
-                 overwrite = TRUE,
-                 class = "dbDenseMatrix",
-                 init = TRUE)
+  res = dbMatrix(
+    value = data,
+    con = conn,
+    name = name,
+    dims = dim,
+    dim_names = dim_names,
+    overwrite = TRUE,
+    class = "dbDenseMatrix",
+    init = TRUE
+  )
 
   # Show
   res

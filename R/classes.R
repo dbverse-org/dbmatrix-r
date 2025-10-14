@@ -64,5 +64,7 @@ dbSparseMatrix = setClass(
 #' Based on the 'index' class implemented in \pkg{Matrix}
 #' @keywords internal
 #' @noRd
-setClassUnion(name = 'dbIndex',
-              members = c('logical', 'numeric', 'integer', 'character'))
+setClassUnion(
+  name = 'dbIndex',
+  members = c('logical', 'numeric', 'integer', 'character')
+)

@@ -7,11 +7,13 @@ dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm = dbMatrix::dbMatrix(value = dgc,
-                          con = con1,
-                          name = 'dgc',
-                          class = "dbSparseMatrix",
-                          overwrite = TRUE)
+dbsm = dbMatrix::dbMatrix(
+  value = dgc,
+  con = con1,
+  name = 'dgc',
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
 # ---------------------------------------------------------------------------- #
 # Test scalar arithmetic
@@ -39,11 +41,13 @@ test_that("* matrix equal", {
 })
 
 dgc2 = dgc * 2
-dbsm2 = dbMatrix::dbMatrix(value = dgc2,
-                           con = con1,
-                           name = 'dgc2',
-                           class = "dbSparseMatrix",
-                           overwrite = TRUE)
+dbsm2 = dbMatrix::dbMatrix(
+  value = dgc2,
+  con = con1,
+  name = 'dgc2',
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
 res_dgc = dgc - dgc2
 res_dbsm = dbsm - dbsm2

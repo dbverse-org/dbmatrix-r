@@ -9,11 +9,13 @@ dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
 # Create dbSparseMatrix
-dbsm = dbMatrix::dbMatrix(value = dgc,
-                          con = con1,
-                          name = 'dgc',
-                          class = "dbSparseMatrix",
-                          overwrite = TRUE)
+dbsm = dbMatrix::dbMatrix(
+  value = dgc,
+  con = con1,
+  name = 'dgc',
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 # ---------------------------------------------------------------------------- #
 # rowSums
 
@@ -76,4 +78,3 @@ test_that("colMeans equal (memory=FALSE)", {
 
 # Close the database connection
 DBI::dbDisconnect(con1)
-

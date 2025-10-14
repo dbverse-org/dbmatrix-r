@@ -10,11 +10,13 @@ mat = as.matrix(dgc)
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
 # Create dbDenseMatrix
-dbdm = dbMatrix::dbMatrix(value = mat,
-                          con = con1,
-                          name = 'mat',
-                          class = "dbDenseMatrix",
-                          overwrite = TRUE)
+dbdm = dbMatrix::dbMatrix(
+  value = mat,
+  con = con1,
+  name = 'mat',
+  class = "dbDenseMatrix",
+  overwrite = TRUE
+)
 
 # ---------------------------------------------------------------------------- #
 # rowVars

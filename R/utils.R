@@ -1,4 +1,3 @@
-
 #' @importFrom data.table ":="
 NULL
 
@@ -22,17 +21,19 @@ wrap_msg = function(..., sep = ' ') {
 #' @noRd
 wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
   custom_width = ifelse(is.null(match.call()$strWidth), yes = FALSE, no = TRUE)
-  if(!isTRUE(custom_width)) {
-    if(isTRUE(errWidth)) strWidth = getOption('width') - 6
+  if (!isTRUE(custom_width)) {
+    if (isTRUE(errWidth)) strWidth = getOption('width') - 6
   }
 
   cat(..., sep = sep) |>
     capture.output() |>
-    strwrap(prefix =  ' ', initial = '', # indent later lines, no indent first line
-            width = min(80, getOption("width"), strWidth)) |>
+    strwrap(
+      prefix = ' ',
+      initial = '', # indent later lines, no indent first line
+      width = min(80, getOption("width"), strWidth)
+    ) |>
     paste(collapse = '\n')
 }
-
 
 
 # Custom stop function
@@ -55,18 +56,20 @@ vector_to_string = function(x) {
 #' @param fill fill character
 #' @param digits default = 5. If numeric, round to this number of digits
 #' @keywords internal
-print_array = function(i = NULL,
-                       j = NULL,
-                       x = NULL,
-                       dims,
-                       rownames = rep('', dims[1]),
-                       class = c('sparse', 'dense'),
-                       fill = '.',
-                       digits = 5L) {
+print_array = function(
+  i = NULL,
+  j = NULL,
+  x = NULL,
+  dims,
+  rownames = rep('', dims[1]),
+  class = c('sparse', 'dense'),
+  fill = '.',
+  digits = 5L
+) {
   total_len = prod(dims)
 
   # pre-generate filler values
-  if(class == "dense") {
+  if (class == "dense") {
     n_digits = getOption('dbMatrix.digits', default = 7)
     a_vals = rep(format(round(0, n_digits), nsmall = n_digits), total_len)
   } else {
@@ -74,20 +77,22 @@ print_array = function(i = NULL,
   }
 
   ijx_nargs = sum(!is.null(i), !is.null(j), !is.null(x))
-  if(ijx_nargs < 3 && ijx_nargs > 1) {
+  if (ijx_nargs < 3 && ijx_nargs > 1) {
     stopf('All values for i, j, and x must be given when printing')
   }
-  if(ijx_nargs == 3) {
+  if (ijx_nargs == 3) {
     # format numeric
-    if(is.numeric(x)) {
-      ifelse(x < 1e4,
-             format(x, digits = digits),
-             format(x, digits = digits, scientific = TRUE))
+    if (is.numeric(x)) {
+      ifelse(
+        x < 1e4,
+        format(x, digits = digits),
+        format(x, digits = digits, scientific = TRUE)
+      )
     }
     # populate sparse values by replace nth elements
     # note that i and j index values must be determined outside of this function
     # since the colnames are not known in here
-    for(n in seq_along(x)) {
+    for (n in seq_along(x)) {
       a_vals[ij_array_map(i = i[n], j = j[n], dims = dims)] <- x[n]
     }
   }
@@ -134,41 +139,45 @@ ij_array_map = function(i, j, dims) {
 #' Create a dbMatrix object computed in a database
 #' @export
 #' @noRd
-setMethod('load', signature(conn = 'DBIConnection'), function(conn, name, class) {
-  .check_con(conn = conn)
-  if (!name %in% DBI::dbListTables(conn)) {
-    stopf("'name' not found in database")
+setMethod(
+  'load',
+  signature(conn = 'DBIConnection'),
+  function(conn, name, class) {
+    .check_con(conn = conn)
+    if (!name %in% DBI::dbListTables(conn)) {
+      stopf("'name' not found in database")
+    }
+    if (!class %in% c('dbDenseMatrix', 'dbSparseMatrix')) {
+      stopf("Class must be 'dbDenseMatrix' or 'dbSparseMatrix'")
+    }
+
+    dim_names <- c(paste0(name, "_rownames"), paste0(name, "_colnames"))
+
+    # check if rownames and colnames exist
+    if (!all(dim_names %in% DBI::dbListTables(conn))) {
+      stopf("Dimension names not found. Did you save with dbMatrix::compute?")
+    }
+
+    # load values saved from dbMatrix::compute()
+    rownames <- dplyr::tbl(conn, dim_names[1]) |> dplyr::pull('rownames')
+    colnames <- dplyr::tbl(conn, dim_names[2]) |> dplyr::pull('colnames')
+    dim_names <- list(as.factor(rownames), as.factor(colnames))
+    dims <- c(length(rownames), length(colnames))
+    value <- dplyr::tbl(conn, name)
+
+    x <- dbMatrix::dbMatrix(
+      value = value,
+      class = class,
+      con = conn,
+      name = name,
+      dim_names = dim_names,
+      dims = dims,
+      overwrite = 'PASS'
+    )
+
+    return(x)
   }
-  if (!class %in% c('dbDenseMatrix', 'dbSparseMatrix')) {
-    stopf("Class must be 'dbDenseMatrix' or 'dbSparseMatrix'")
-  }
-
-  dim_names <- c(paste0(name, "_rownames"), paste0(name, "_colnames"))
-
-  # check if rownames and colnames exist
-  if (!all(dim_names %in% DBI::dbListTables(conn))) {
-    stopf("Dimension names not found. Did you save with dbMatrix::compute?")
-  }
-
-  # load values saved from dbMatrix::compute()
-  rownames <- dplyr::tbl(conn, dim_names[1]) |> dplyr::pull('rownames')
-  colnames <- dplyr::tbl(conn, dim_names[2]) |> dplyr::pull('colnames')
-  dim_names <- list(as.factor(rownames), as.factor(colnames))
-  dims <- c(length(rownames), length(colnames))
-  value <- dplyr::tbl(conn, name)
-
-  x <- dbMatrix::dbMatrix(
-    value = value,
-    class = class,
-    con = conn,
-    name = name,
-    dim_names = dim_names,
-    dims = dims,
-    overwrite = 'PASS'
-  )
-
-  return(x)
-})
+)
 
 
 # dbData ####
@@ -185,17 +194,21 @@ setMethod('load', signature(conn = 'DBIConnection'), function(conn, name, class)
 #' * Views (these may be removed when the connection is closed)
 #'
 #' @concept dbData
-setMethod('dbList', signature(conn = 'DBIConnection'), function(conn){
+setMethod('dbList', signature(conn = 'DBIConnection'), function(conn) {
   # Query to get table types
   query <- "SELECT table_name, table_type FROM information_schema.tables"
   table_types <- DBI::dbGetQuery(conn, query)
 
   # Categorize tables based on their types
   tables <- dplyr::filter(table_types, table_type == 'BASE TABLE')
-  views <- dplyr::filter(table_types, grepl("VIEW", table_type,
-                                            ignore.case = TRUE))
-  temp_tables <- dplyr::filter(table_types, grepl("TEMPORARY", table_type,
-                                                  ignore.case = TRUE))
+  views <- dplyr::filter(
+    table_types,
+    grepl("VIEW", table_type, ignore.case = TRUE)
+  )
+  temp_tables <- dplyr::filter(
+    table_types,
+    grepl("TEMPORARY", table_type, ignore.case = TRUE)
+  )
 
   print_category <- function(category_name, items) {
     cat(crayon::green(paste0(category_name, ": \n")))
@@ -220,7 +233,7 @@ setMethod('dbList', signature(conn = 'DBIConnection'), function(conn){
 #'
 #' @noRd
 #' @keywords internal
-unique_table_name <- function(prefix = "dbMatrix"){
+unique_table_name <- function(prefix = "dbMatrix") {
   vals <- c(letters, LETTERS, 0:9)
   name <- paste0(sample(vals, 10, replace = TRUE), collapse = "")
   paste0(prefix, "_", name)
@@ -237,45 +250,50 @@ unique_table_name <- function(prefix = "dbMatrix"){
 #' @return `[dbMatrix]` object
 #' @export
 #' @noRd
-setMethod('compute', signature(x = 'dbMatrix'),
-          function(x, temporary = TRUE, dimnames = TRUE, ...) {
-  con <- get_con(x)
-  .check_con(conn = con)
-  dots <- list(...)
+setMethod(
+  'compute',
+  signature(x = 'dbMatrix'),
+  function(x, temporary = TRUE, dimnames = TRUE, ...) {
+    con <- get_con(x)
+    .check_con(conn = con)
+    dots <- list(...)
 
-  # Determine the name to use
-  if (!is.null(dots$name)) {
-    name <- dots$name
-    dots$name <- NULL  # Remove name from dots to avoid duplication
-  } else if (!is.na(x@name)) {
-    name <- x@name
-  } else {
-    stopf("Please provide a 'name' to compute the lazy dbMatrix table")
+    # Determine the name to use
+    if (!is.null(dots$name)) {
+      name <- dots$name
+      dots$name <- NULL # Remove name from dots to avoid duplication
+    } else if (!is.na(x@name)) {
+      name <- x@name
+    } else {
+      stopf("Please provide a 'name' to compute the lazy dbMatrix table")
+    }
+
+    # Let dplyr/dbplyr handle errors
+    # if (name %in% DBI::dbListTables(con)) {
+    #   if (is.null(dots$overwrite) || !dots$overwrite) {
+    #     stopf("Table already exists in database. Set 'overwrite'= TRUE")
+    #   }
+    # } else {
+    #   if (!is.null(dots$overwrite) && dots$overwrite) {
+    #     stopf("Table does not exist in database. Set 'overwrite'= FALSE")
+    #   }
+    # }
+
+    # Use do.call to avoid 'name' conflicts with dots
+    result <- do.call(
+      dplyr::compute,
+      c(list(x[], name = name, temporary = temporary), dots)
+    )
+
+    if (dimnames) {
+      .write_dimnames(x = x, name = name)
+    }
+
+    # Update the dbMatrix object
+    x@value <- result
+    x@name <- name
+
+    # Return dbMatrix
+    return(x)
   }
-
-  # Let dplyr/dbplyr handle errors
-  # if (name %in% DBI::dbListTables(con)) {
-  #   if (is.null(dots$overwrite) || !dots$overwrite) {
-  #     stopf("Table already exists in database. Set 'overwrite'= TRUE")
-  #   }
-  # } else {
-  #   if (!is.null(dots$overwrite) && dots$overwrite) {
-  #     stopf("Table does not exist in database. Set 'overwrite'= FALSE")
-  #   }
-  # }
-
-  # Use do.call to avoid 'name' conflicts with dots
-  result <- do.call(dplyr::compute,
-                    c(list(x[], name = name, temporary = temporary), dots))
-
-  if(dimnames){
-    .write_dimnames(x = x, name = name)
-  }
-
-  # Update the dbMatrix object
-  x@value <- result
-  x@name <- name
-
-  # Return dbMatrix
-  return(x)
-})
+)

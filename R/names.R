@@ -8,14 +8,13 @@ setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
   # Only dbVector objects (1-dimensional matrices) should have names
   # Regular matrices should return NULL for names()
   if (!1 %in% x@dims) {
-    return(NULL)  # Regular matrices don't have names, return NULL instead of error
+    return(NULL) # Regular matrices don't have names, return NULL instead of error
   }
   if (1 %in% dim(x)[1]) {
     return(colnames(x))
   } else {
     return(rownames(x))
   }
-
 })
 
 #TODO implement names <- setter
@@ -38,11 +37,11 @@ setMethod('rownames', signature(x = 'dbMatrix'), function(x) {
 #' @concept matrix_props
 #' @export
 setMethod('rownames<-', signature(x = 'dbMatrix'), function(x, value) {
-  if(is.null(value)){
+  if (is.null(value)) {
     stopf('rownames are required for dbMatrix objects')
   }
 
-  if(x@dims[1] != length(value)){
+  if (x@dims[1] != length(value)) {
     stopf('length of rownames to set does not equal number of rows')
   }
   x@dim_names[[1]] = value
@@ -61,7 +60,7 @@ setMethod('colnames', signature(x = 'dbMatrix'), function(x) {
 #' @concept matrix_props
 #' @export
 setMethod('colnames<-', signature(x = 'dbMatrix'), function(x, value) {
-  if(x@dims[2] != length(value)){
+  if (x@dims[2] != length(value)) {
     stopf('length of colnames to set does not equal number of columns')
   }
 
@@ -80,11 +79,14 @@ setMethod('dimnames', signature(x = 'dbMatrix'), function(x) {
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export
-setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'),
-          function(x, value) {
-  x@dim_names = value
-  x
-})
+setMethod(
+  'dimnames<-',
+  signature(x = 'dbMatrix', value = 'list'),
+  function(x, value) {
+    x@dim_names = value
+    x
+  }
+)
 
 # internal functions ####
 #' @keywords internal
@@ -100,7 +102,7 @@ setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'),
   .check_con(con)
   dimnames = dimnames(x)
 
-  if(!inherits(x, 'dbMatrix')){
+  if (!inherits(x, 'dbMatrix')) {
     stopf('x must be a dbMatrix object')
   }
   if (is.na(x@name) & is.null(name)) {
@@ -121,8 +123,12 @@ setMethod('dimnames<-', signature(x = 'dbMatrix', value = 'list'),
     })
   }
 
-  rownames_dt = data.table::data.table(rownames = dimnames[[1]] |> as.character())
-  colnames_dt = data.table::data.table(colnames = dimnames[[2]] |> as.character())
+  rownames_dt = data.table::data.table(
+    rownames = dimnames[[1]] |> as.character()
+  )
+  colnames_dt = data.table::data.table(
+    colnames = dimnames[[2]] |> as.character()
+  )
 
   dplyr::copy_to(
     df = rownames_dt,

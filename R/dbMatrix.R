@@ -11,19 +11,21 @@ setMethod(
   f = 'initialize',
   signature(.Object = 'dbMatrix'),
   function(.Object, dim_names, dims, ...) {
-
     # call dbMatrix initialize
     .Object = methods::callNextMethod(.Object, ...)
 
     # matrix specific data input #
     # -------------------------- #
-    if(!missing(dim_names)) .Object@dim_names = dim_names
-    if(!missing(dims)) .Object@dims = dims
-
+    if (!missing(dim_names)) {
+      .Object@dim_names = dim_names
+    }
+    if (!missing(dims)) {
+      .Object@dims = dims
+    }
 
     # default values if no input provided #
     # ----------------------------------- #
-    if(is.null(.Object@value)) {
+    if (is.null(.Object@value)) {
       .Object@dims = c(0L, 0L)
       .Object@dim_names = list(NULL, NULL)
     }
@@ -72,7 +74,9 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
     message(
       "[[ Colnames ",
       vector_to_string(head(col_names, 3L)),
-      " ... suppressing ", colname_show_n, " ...",
+      " ... suppressing ",
+      colname_show_n,
+      " ...",
       vector_to_string(tail(col_names, 3L)),
       " ]]"
     )
@@ -102,14 +106,23 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
     dplyr::collect()
 
   # ij indices for printing
-  a_i <- sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
-  a_j <- sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
+  a_i <- sapply(preview_tbl$i, function(i_idx) {
+    which(row_names[i_idx] == p_rown)
+  })
+  a_j <- sapply(preview_tbl$j, function(j_idx) {
+    which(col_names[j_idx] == p_coln)
+  })
 
-  if (length(a_i) == 0L) a_i <- NULL
-  if (length(a_j) == 0L) a_j <- NULL
+  if (length(a_i) == 0L) {
+    a_i <- NULL
+  }
+  if (length(a_j) == 0L) {
+    a_j <- NULL
+  }
   a_x <- NULL
 
-  if (length(preview_tbl$x) != 0L) { # catch sparse case where if/else: null
+  if (length(preview_tbl$x) != 0L) {
+    # catch sparse case where if/else: null
     n_digits <- getOption("dbMatrix.digits", default = 7)
     a_x <- format(round(preview_tbl$x, n_digits), nsmall = n_digits)
   }
@@ -141,7 +154,8 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
     } else {
       sprintf(
         "\n......suppressing %d columns and %d rows\n\n",
-        dim_col_out, dim_row_out
+        dim_col_out,
+        dim_row_out
       ) |>
         cat()
     }
@@ -199,7 +213,9 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
     message(
       "[[ Colnames ",
       vector_to_string(head(col_names, 3L)),
-      " ... suppressing ", colname_show_n, " ...",
+      " ... suppressing ",
+      colname_show_n,
+      " ...",
       vector_to_string(tail(col_names, 3L)),
       " ]]"
     )
@@ -229,14 +245,23 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
     dplyr::collect()
 
   # ij indices for printing
-  a_i <- sapply(preview_tbl$i, function(i_idx) which(row_names[i_idx] == p_rown))
-  a_j <- sapply(preview_tbl$j, function(j_idx) which(col_names[j_idx] == p_coln))
+  a_i <- sapply(preview_tbl$i, function(i_idx) {
+    which(row_names[i_idx] == p_rown)
+  })
+  a_j <- sapply(preview_tbl$j, function(j_idx) {
+    which(col_names[j_idx] == p_coln)
+  })
 
-  if (length(a_i) == 0L) a_i <- NULL
-  if (length(a_j) == 0L) a_j <- NULL
+  if (length(a_i) == 0L) {
+    a_i <- NULL
+  }
+  if (length(a_j) == 0L) {
+    a_j <- NULL
+  }
   a_x <- NULL
 
-  if (length(preview_tbl$x) != 0L) { # catch sparse case where if/else: null
+  if (length(preview_tbl$x) != 0L) {
+    # catch sparse case where if/else: null
     n_digits <- getOption("dbMatrix.digits", default = 7)
     a_x <- format(round(preview_tbl$x, n_digits), nsmall = n_digits)
   }
@@ -267,7 +292,8 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
     } else {
       sprintf(
         "\n......suppressing %d columns and %d rows\n\n",
-        dim_col_out, dim_row_out
+        dim_col_out,
+        dim_row_out
       ) |>
         cat()
     }
@@ -330,18 +356,20 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 #'   overwrite = TRUE
 #' )
 #' dbSparse
-dbMatrix <- function(value,
-                     class = NULL,
-                     con = NULL,
-                     overwrite = FALSE,
-                     name = "dbMatrix",
-                     dims = NULL,
-                     dim_names = NULL,
-                     mtx_rowname_file_path,
-                     mtx_rowname_col_idx = 1,
-                     mtx_colname_file_path,
-                     mtx_colname_col_idx = 1,
-                     ...) {
+dbMatrix <- function(
+  value,
+  class = NULL,
+  con = NULL,
+  overwrite = FALSE,
+  name = "dbMatrix",
+  dims = NULL,
+  dim_names = NULL,
+  mtx_rowname_file_path,
+  mtx_rowname_col_idx = 1,
+  mtx_colname_file_path,
+  mtx_colname_col_idx = 1,
+  ...
+) {
   # check inputs
   .check_value(value)
   .check_con(con)
@@ -357,34 +385,47 @@ dbMatrix <- function(value,
   if (is.null(class)) {
     stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
-  if (!is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))) {
+  if (
+    !is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))
+  ) {
     stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
   # check value and class mismatch
-  if ((inherits(value, "matrix") | inherits(value, "denseMatrix")) & class == "dbSparseMatrix") {
+  if (
+    (inherits(value, "matrix") | inherits(value, "denseMatrix")) &
+      class == "dbSparseMatrix"
+  ) {
     stopf("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
   }
-  if ((inherits(value, "dgCMatrix") | inherits(value, "sparseMatrix")) & class == "dbDenseMatrix") {
+  if (
+    (inherits(value, "dgCMatrix") | inherits(value, "sparseMatrix")) &
+      class == "dbDenseMatrix"
+  ) {
     stopf("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
   }
 
   # check dims, dim_names
   if (inherits(value, "tbl_duckdb_connection")) {
     if (is.null(dims) | is.null(dim_names)) {
-      stop("Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects")
+      stop(
+        "Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects"
+      )
     }
   }
 
   # initialize data (value)
   data <- NULL
 
-  if (inherits(value, "tbl_duckdb_connection")) { # data is already in DB
+  if (inherits(value, "tbl_duckdb_connection")) {
+    # data is already in DB
     data <- value
     dims <- dims
     dim_names <- dim_names
-  } else { # data must be read in
-    if (is.character(value)) { # read in from file
+  } else {
+    # data must be read in
+    if (is.character(value)) {
+      # read in from file
       if (grepl("\\.csv|\\.tsv|\\.txt", value)) {
         stop("File type not yet supported. Please use .mtx file format.")
         # TODO: implement dense to sparse conversion. Long to wide pivot not yet
@@ -407,7 +448,9 @@ dbMatrix <- function(value,
           mtx_colname_col_idx = mtx_colname_col_idx
         )
       } else {
-        stop("Invalid file type. Please provide a .mtx, .csv, .txt, or .tsv file.")
+        stop(
+          "Invalid file type. Please provide a .mtx, .csv, .txt, or .tsv file."
+        )
       }
     } else if (inherits(value, "matrix") | inherits(value, "Matrix")) {
       # convert dense matrix to triplet vector ijx format
@@ -423,7 +466,8 @@ dbMatrix <- function(value,
         dest = con,
         name = name,
         df = ijx,
-        overwrite = overwrite, ...
+        overwrite = overwrite,
+        ...
       )
 
       dims <- dim(value)
@@ -444,7 +488,8 @@ dbMatrix <- function(value,
     set_class <- "dbSparseMatrix"
   } else if (class == "dbDenseMatrix") {
     set_class <- "dbDenseMatrix"
-  } else { ## redundant check from above
+  } else {
+    ## redundant check from above
     stopf("Please specify dbMatrix class: 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
@@ -506,7 +551,8 @@ dbMatrix <- function(value,
       dplyr::compute(temporary = FALSE, name = name)
   }
 
-  res <- new("dbDenseMatrix",
+  res <- new(
+    "dbDenseMatrix",
     value = data,
     name = name, # note that this is a temporary table
     dims = info$dims,
@@ -575,77 +621,77 @@ to_ijx_disk <- function(con, name) {
 #' @method as.matrix dbMatrix
 #' @export
 as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
-    dims <- dim(x)
-    n_rows <- dims[1]
-    n_cols <- dims[2]
-    dim_names <- dimnames(x)
+  dims <- dim(x)
+  n_rows <- dims[1]
+  n_cols <- dims[2]
+  dim_names <- dimnames(x)
 
-    # checks
-    if (1 %in% dims) {
-      stopf("Use `as.vector()` for dbVector objects")
-    }
+  # checks
+  if (1 %in% dims) {
+    stopf("Use `as.vector()` for dbVector objects")
+  }
 
-    if (dims[1] > 1e5 || dims[2] > 1e5) {
-      cli::cli_alert_warning(
-        "Warning: Converting large dbMatrix to in-memory Matrix."
-      )
-    }
-
-    if (is(x, "dbDenseMatrix") & sparse == TRUE) {
-      stopf("Cannot convert dbDensematrix into sparse matrix. Set sparse=FALSE")
-    }
-
-    if (is(x, "dbSparseMatrix") & sparse == FALSE) {
-      cli::cli_alert_info(
-        "Converting dbSparseMatrix into dense matrix. Set 'sparse=TRUE' to construct 'dgCMatrix'."
-      )
-    }
-
-    # Create temp file to write out ijx in db to disk
-    sql <- dbplyr::sql_render(x[])
-    con <- dbplyr::remote_con(x[])
-    dat <- DBI::dbGetQuery(con, sql)
-    # temp_file <- tempfile(tmpdir = tempdir(), fileext = ".parquet")
-    # x[] |>
-    #   arrow::to_arrow() |>
-    #   arrow::write_parquet(temp_file)
-
-    # Create matrix from ijx
-    # dat <- arrow::read_parquet(temp_file)
-    mat <- Matrix::sparseMatrix(
-      i = dat$i,
-      j = dat$j,
-      x = dat$x,
-      index1 = TRUE,
-      dims = c(n_rows, n_cols),
-      dimnames = dim_names
+  if (dims[1] > 1e5 || dims[2] > 1e5) {
+    cli::cli_alert_warning(
+      "Warning: Converting large dbMatrix to in-memory Matrix."
     )
-    # mat <- Matrix::drop0(mat)
+  }
 
-    if (!names) {
-      dimnames(mat) <- NULL
-    }
+  if (is(x, "dbDenseMatrix") & sparse == TRUE) {
+    stopf("Cannot convert dbDensematrix into sparse matrix. Set sparse=FALSE")
+  }
 
-    if (is(x, "dbSparseMatrix") & sparse == TRUE) {
-      return(mat)
-    } else {
-      mat <- as.matrix(mat)
-    }
+  if (is(x, "dbSparseMatrix") & sparse == FALSE) {
+    cli::cli_alert_info(
+      "Converting dbSparseMatrix into dense matrix. Set 'sparse=TRUE' to construct 'dgCMatrix'."
+    )
+  }
 
-    # Clean up temp files
-    # unlink(temp_file, recursive = TRUE, force = TRUE)
+  # Create temp file to write out ijx in db to disk
+  sql <- dbplyr::sql_render(x[])
+  con <- dbplyr::remote_con(x[])
+  dat <- DBI::dbGetQuery(con, sql)
+  # temp_file <- tempfile(tmpdir = tempdir(), fileext = ".parquet")
+  # x[] |>
+  #   arrow::to_arrow() |>
+  #   arrow::write_parquet(temp_file)
 
+  # Create matrix from ijx
+  # dat <- arrow::read_parquet(temp_file)
+  mat <- Matrix::sparseMatrix(
+    i = dat$i,
+    j = dat$j,
+    x = dat$x,
+    index1 = TRUE,
+    dims = c(n_rows, n_cols),
+    dimnames = dim_names
+  )
+  # mat <- Matrix::drop0(mat)
+
+  if (!names) {
+    dimnames(mat) <- NULL
+  }
+
+  if (is(x, "dbSparseMatrix") & sparse == TRUE) {
     return(mat)
+  } else {
+    mat <- as.matrix(mat)
+  }
+
+  # Clean up temp files
+  # unlink(temp_file, recursive = TRUE, force = TRUE)
+
+  return(mat)
 }
 
-#' @method as.matrix dbSparseMatrix  
+#' @method as.matrix dbSparseMatrix
 #' @export
 as.matrix.dbSparseMatrix <- function(x, ...) {
   as.matrix.dbMatrix(x, ...)
 }
 
 #' @method as.matrix dbDenseMatrix
-#' @export  
+#' @export
 as.matrix.dbDenseMatrix <- function(x, ...) {
   as.matrix.dbMatrix(x, ...)
 }
@@ -655,7 +701,8 @@ as.matrix.dbDenseMatrix <- function(x, ...) {
 #' @param x dbDenseMatrix containing 1 in dim
 # TODO: add support for dbVector
 setMethod(
-  "as.vector", signature(x = "dbDenseMatrix"),
+  "as.vector",
+  signature(x = "dbDenseMatrix"),
   function(x, mode = "any") {
     if (1 %in% dim(x)) {
       if (dim(x)[1] == 1) {
@@ -707,10 +754,13 @@ as.dbMatrix <- function(x, con, name, ...) {
     con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
     cli::cli_alert_info("Creating in-memory database connection...")
   } else if (is.character(con) && con == ":temp:") {
-    con <- DBI::dbConnect(duckdb::duckdb(), tempfile(
-      tmpdir = tempdir(),
-      fileext = ".db"
-    ))
+    con <- DBI::dbConnect(
+      duckdb::duckdb(),
+      tempfile(
+        tmpdir = tempdir(),
+        fileext = ".db"
+      )
+    )
     cli::cli_alert_info("Creating temporary database connection...")
   } else {
     stopifnot(inherits(con, "duckdb_connection"))
@@ -741,13 +791,16 @@ as.dbMatrix <- function(x, con, name, ...) {
 #' @noRd
 as_ijx <- function(x) {
   # check that x is a dgCMatrix, matrix, or dgeMatrix
-  stopifnot(inherits(x, "dgCMatrix") || inherits(x, "matrix") ||
-inherits(x, "dgeMatrix"))
+  stopifnot(
+    inherits(x, "dgCMatrix") ||
+      inherits(x, "matrix") ||
+      inherits(x, "dgeMatrix")
+  )
 
   # Convert dgc into TsparseMatrix class from {Matrix}
-if (is(x, "dgCMatrix")) {
-  ijx <- as(x, "TsparseMatrix")
-df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
+  if (is(x, "dgCMatrix")) {
+    ijx <- as(x, "TsparseMatrix")
+    df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
   } else if (is(x, "matrix") | is(x, "dgeMatrix")) {
     row_indices <- rep(1:nrow(x), times = ncol(x))
     col_indices <- rep(1:ncol(x), each = nrow(x))
@@ -778,11 +831,13 @@ df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
 #' @return `dbMatrix` object
 #' @concept dbMatrix
 #' @export
-dbMatrix_from_tbl <- function(tbl,
-                              rownames_colName,
-                              colnames_colName,
-                              name = "dbMatrix",
-                              overwrite = FALSE) {
+dbMatrix_from_tbl <- function(
+  tbl,
+  rownames_colName,
+  colnames_colName,
+  name = "dbMatrix",
+  overwrite = FALSE
+) {
   # Check args
   con <- dbplyr::remote_con(tbl)
   .check_con(con)
@@ -800,25 +855,32 @@ dbMatrix_from_tbl <- function(tbl,
   }
 
   if (!all(c(rownames_colName, colnames_colName) %in% colnames(tbl))) {
-    stop("rownames_colName and colnames_colName must be present in tbl colnames")
+    stop(
+      "rownames_colName and colnames_colName must be present in tbl colnames"
+    )
   }
 
   if (name %in% DBI::dbListTables(con) & !overwrite) {
-    stop("name already exists in the database.
-          Please choose a unique name or set overwrite to 'TRUE'.")
+    stop(
+      "name already exists in the database.
+          Please choose a unique name or set overwrite to 'TRUE'."
+    )
   }
 
   # check if i and j are column names
   check_names <- intersect(
     c(
-      colnames(tbl), as.character(rownames_colName),
+      colnames(tbl),
+      as.character(rownames_colName),
       as.character(colnames_colName)
     ),
     c("i", "j")
   )
   if (length(check_names) > 0) {
-    stop("i and j are reserved names for matrix dimensions. please choose
-         new column names")
+    stop(
+      "i and j are reserved names for matrix dimensions. please choose
+         new column names"
+    )
   }
 
   rownames_colName <- rlang::sym(rownames_colName)
@@ -906,11 +968,7 @@ dbMatrix_from_tbl <- function(tbl,
 #'
 #' @examples
 #' print('TODO')
-read_matrix <- function(con,
-                        value,
-                        name = "dbMatrix",
-                        overwrite = FALSE,
-                        ...) {
+read_matrix <- function(con, value, name = "dbMatrix", overwrite = FALSE, ...) {
   # check inputs
   .check_con(con)
   .check_value(value)
@@ -971,11 +1029,13 @@ read_matrix <- function(con,
 #'
 #' @examples
 #' print("TODO")
-readMM <- function(con,
-                   value,
-                   name = "dbMatrix",
-                   overwrite = FALSE,
-                   temporary = TRUE) {
+readMM <- function(
+  con,
+  value,
+  name = "dbMatrix",
+  overwrite = FALSE,
+  temporary = TRUE
+) {
   # check inputs
   .check_con(con)
   .check_value(value)
@@ -1062,7 +1122,7 @@ get_MM_dim <- function(mtx_file_path) {
     }
     header <- c(header, line)
   }
-  header <- c(header, line)  # Add the dims
+  header <- c(header, line) # Add the dims
   close(con)
 
   # Extract dimensions from the last line (dims)
@@ -1094,17 +1154,20 @@ get_MM_dim <- function(mtx_file_path) {
 #'
 #' @return list of row and column name character vectors
 #' @keywords internal
-get_MM_dimnames <- function(mtx_file_path,
-                            mtx_rowname_file_path,
-                            mtx_rowname_col_idx = 1,
-                            mtx_colname_file_path,
-                            mtx_colname_col_idx = 1,
-                            ...){
-
+get_MM_dimnames <- function(
+  mtx_file_path,
+  mtx_rowname_file_path,
+  mtx_rowname_col_idx = 1,
+  mtx_colname_file_path,
+  mtx_colname_col_idx = 1,
+  ...
+) {
   # check inputs
-  if (!file.exists(mtx_file_path) ||
+  if (
+    !file.exists(mtx_file_path) ||
       !file.exists(mtx_rowname_file_path) ||
-      !file.exists(mtx_colname_file_path)) {
+      !file.exists(mtx_colname_file_path)
+  ) {
     stop("File does not exist. Check for valid file path.")
   }
   if (!is.numeric(mtx_rowname_col_idx) || !is.numeric(mtx_colname_col_idx)) {
@@ -1120,17 +1183,21 @@ get_MM_dimnames <- function(mtx_file_path,
   dim_colnames = dim(colname_file)
 
   # check dimname and column indices
-  if(mtx_rowname_col_idx > dim_rownames[2]){
-    stop("'mtx_rowname_col_idx' exceeds number of columns in 'mtx_rowname_file_path'")
+  if (mtx_rowname_col_idx > dim_rownames[2]) {
+    stop(
+      "'mtx_rowname_col_idx' exceeds number of columns in 'mtx_rowname_file_path'"
+    )
   }
 
-  if(mtx_colname_col_idx > dim_colnames[2]){
-    stop("'mtx_colname_col_idx' exceeds number of columns in 'mtx_colname_file_path'")
+  if (mtx_colname_col_idx > dim_colnames[2]) {
+    stop(
+      "'mtx_colname_col_idx' exceeds number of columns in 'mtx_colname_file_path'"
+    )
   }
 
   # Extract row and column names
-  rownames = rowname_file[ , ..mtx_rowname_col_idx][[1]]
-  colnames = colname_file[ , ..mtx_colname_col_idx][[1]]
+  rownames = rowname_file[, ..mtx_rowname_col_idx][[1]]
+  colnames = colname_file[, ..mtx_colname_col_idx][[1]]
 
   # Make unique
   # Note: first replicates will be labeled --1, second --2, and so on...
@@ -1138,22 +1205,25 @@ get_MM_dimnames <- function(mtx_file_path,
   colnames <- make.unique(colnames, sep = "--")
 
   # check for duplicates and matching dimensions
-  if(length(unique(rownames)) != dims[1]){
-    stop("Number of unique row names does not match the number of rows in the
+  if (length(unique(rownames)) != dims[1]) {
+    stop(
+      "Number of unique row names does not match the number of rows in the
          matrix. Check selected col_idx of 'mtx_rowname_file_path' for valid
-         row names.")
+         row names."
+    )
   }
 
-  if(length(unique(colnames)) != dims[2]){
-    stop("Number of unique column names does not match the number of columns in
+  if (length(unique(colnames)) != dims[2]) {
+    stop(
+      "Number of unique column names does not match the number of columns in
          the matrix. Check selected col_idx of 'mtx_colname_file_path' for
-         valid column names.")
+         valid column names."
+    )
   }
 
   dimnames = list(rownames, colnames)
 
   return(dimnames)
-
 }
 
 # dimnames ####
@@ -1171,9 +1241,7 @@ get_MM_dimnames <- function(mtx_file_path,
 #' @param colName_j name of column colnames to add to database
 #' default: 'FALSE'.'
 #' @keywords internal
-map_ijx_dimnames <- function(dbMatrix,
-                             colName_i,
-                             colName_j) {
+map_ijx_dimnames <- function(dbMatrix, colName_i, colName_j) {
   # input validation
   .check_name(colName_i)
   .check_name(colName_j)
@@ -1201,73 +1269,13 @@ map_ijx_dimnames <- function(dbMatrix,
   res <- dbMatrix[] |>
     dplyr::left_join(dimnames1_tbl, by = "i") |>
     dplyr::left_join(dimnames2_tbl, by = "j") |>
-    dplyr::select(i,
-                  !!colName_i := colName_i, # !! to unquote
-                  j,
-                  !!colName_j := colName_j, # !! to unquote
-                  x)
+    dplyr::select(
+      i,
+      !!colName_i := colName_i, # !! to unquote
+      j,
+      !!colName_j := colName_j, # !! to unquote
+      x
+    )
 
   return(res)
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

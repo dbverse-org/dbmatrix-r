@@ -29,7 +29,7 @@
   dim_matrix <- do.call(rbind, lapply(dimensions, as.integer))
 
   # Create logical mask for valid dimensions
-  valid_dims <- dim_matrix[,1] <= n_rows & dim_matrix[,2] <= n_cols
+  valid_dims <- dim_matrix[, 1] <= n_rows & dim_matrix[, 2] <= n_cols
 
   # If no valid dimensions found, return NULL
   if (!any(valid_dims)) {
@@ -38,13 +38,17 @@
 
   # Calculate Manhattan distance for valid dimensions only
   valid_matrix <- dim_matrix[valid_dims, , drop = FALSE]
-  distances <- abs(valid_matrix[,1] - n_rows) +
-    abs(valid_matrix[,2] - n_cols)
+  distances <- abs(valid_matrix[, 1] - n_rows) +
+    abs(valid_matrix[, 2] - n_cols)
 
   # Find index of minimum distance
   min_idx <- which.min(distances)
-  res <- paste0('precomp_', valid_matrix[min_idx,][1], 'x',
-                valid_matrix[min_idx,][2])
+  res <- paste0(
+    'precomp_',
+    valid_matrix[min_idx, ][1],
+    'x',
+    valid_matrix[min_idx, ][2]
+  )
 
   # Return table name
   return(res)
@@ -58,7 +62,6 @@
 #' @noRd
 #' @return A [`tbl`] object representing the precomputed dense table
 .initialize_precompute_matrix <- function(con, n_rows, n_cols) {
-
   # helper functions ----------------------------------------------------------
   .can_use_existing_matrix <- function(n_rows, n_cols, dims) {
     n_rows <= dims$rows & n_cols <= dims$cols
@@ -78,10 +81,12 @@
 
   .create_transposed_matrix <- function(con, precompute_name, dims) {
     new_precompute_name <- glue::glue("precomp_{dims$cols}x{dims$rows}")
-    sql <- glue::glue("
+    sql <- glue::glue(
+      "
         CREATE OR REPLACE TEMPORARY VIEW {new_precompute_name} AS
         SELECT j AS i, i AS j FROM {precompute_name}
-    ")
+    "
+    )
     invisible(DBI::dbExecute(con, sql))
     dplyr::tbl(con, new_precompute_name)
   }
@@ -147,7 +152,7 @@
 #' @examples
 #' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' precompute(con = con , m = 100, n = 100)
-precompute <- function(conn, m, n, verbose = FALSE){
+precompute <- function(conn, m, n, verbose = FALSE) {
   # input validation
   .check_con(conn = conn)
 
@@ -161,15 +166,20 @@ precompute <- function(conn, m, n, verbose = FALSE){
   total = n_rows * n_cols
 
   # Note: this name pattern is parsed in .toDbDense(), do not modify
-  name <- paste0("precomp_",n_rows,"x", n_cols)
+  name <- paste0("precomp_", n_rows, "x", n_cols)
 
   # check if we need BIGINT based on INT32 limit
   int32_limit <- bit64::as.integer64(2147483647) # 2^31 - 1
-  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) "BIGINT" else "INT"
+  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) {
+    "BIGINT"
+  } else {
+    "INT"
+  }
 
   # Note: implicit order by j,i for downstream operations
   # TODO: row-major order
-  sql <- glue::glue("
+  sql <- glue::glue(
+    "
   COPY (
     SELECT
       CAST(((row_id.generate_series - 1) % {n_rows} + 1) AS {index_type}) AS i,
@@ -182,15 +192,18 @@ precompute <- function(conn, m, n, verbose = FALSE){
     ROW_GROUP_SIZE 1000000,
     COMPRESSION LZ4_RAW
   );
-  ")
+  "
+  )
   invisible(DBI::dbExecute(conn, sql))
 
-  sql <- glue::glue("
+  sql <- glue::glue(
+    "
     CREATE OR REPLACE TABLE {name} AS
     SELECT * FROM read_parquet('{name}.parquet');
-  ")
+  "
+  )
   invisible(DBI::dbExecute(conn, sql))
-  file.remove(paste0(name,'.parquet'))
+  file.remove(paste0(name, '.parquet'))
 
   key <- dplyr::tbl(conn, name)
 
@@ -198,8 +211,10 @@ precompute <- function(conn, m, n, verbose = FALSE){
   options(dbMatrix.precomp = name)
 
   if (verbose) {
-    str <- glue::glue("Precomputed tbl '{name}' with
-                    {n_rows} rows and {n_cols} columns")
+    str <- glue::glue(
+      "Precomputed tbl '{name}' with
+                    {n_rows} rows and {n_cols} columns"
+    )
     cat(str, "\n")
   }
 

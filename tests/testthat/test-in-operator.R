@@ -58,7 +58,10 @@ test_that("dbSparseMatrix %in% vector throws error", {
   env <- setup_test_env()
 
   # Test dbSparseMatrix %in% vector - should throw error
-  expect_error(env$db_sparse %in% c(1, 3, 5), "'match' requires vector arguments")
+  expect_error(
+    env$db_sparse %in% c(1, 3, 5),
+    "'match' requires vector arguments"
+  )
 })
 
 test_that("dbDenseMatrix %in% empty vector returns logical vector of FALSE values", {

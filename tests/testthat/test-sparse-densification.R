@@ -4,11 +4,13 @@ dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
 con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm = dbMatrix::dbMatrix(value = dgc,
-                          con = con1,
-                          name = 'dgc',
-                          class = "dbSparseMatrix",
-                          overwrite = TRUE)
+dbsm = dbMatrix::dbMatrix(
+  value = dgc,
+  con = con1,
+  name = 'dgc',
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
 test_that("sparse + non-zero scalar becomes dense", {
   res_dbsm = dbsm + 1

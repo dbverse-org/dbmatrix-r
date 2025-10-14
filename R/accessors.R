@@ -4,9 +4,9 @@
 #' @param dbMatrix
 #'
 #' @keywords internal
-get_tblName <- function(dbMatrix){
+get_tblName <- function(dbMatrix) {
   # check if dbData is a dbData object
-  if(!inherits(dbMatrix, "dbData")){
+  if (!inherits(dbMatrix, "dbData")) {
     stopf("dbMatrix must be a dbData object")
   }
 
@@ -21,9 +21,9 @@ get_tblName <- function(dbMatrix){
 #'
 #' @keywords internal
 #' string of the path to the database directory
-get_dbdir <- function(dbMatrix){
+get_dbdir <- function(dbMatrix) {
   # check if dbData is a dbData object
-  if(!inherits(dbMatrix, "dbData")){
+  if (!inherits(dbMatrix, "dbData")) {
     stopf("dbMatrix must be a dbData object")
   }
 
@@ -39,15 +39,15 @@ get_dbdir <- function(dbMatrix){
 #'
 #' @keywords internal
 #'
-get_con <- function(dbMatrix){
+get_con <- function(dbMatrix) {
   # check if dbData is a dbData object
-  if(!inherits(dbMatrix, "dbData")){
+  if (!inherits(dbMatrix, "dbData")) {
     stopf("dbMatrix must be a dbData object")
   }
 
   # Use dbProject's connection accessor for consistency and auto-reconnection
   con <- dbProject::conn(dbMatrix)
-  
+
   # Fallback to direct access if dbProject method doesn't work
   if (is.null(con)) {
     con <- dbMatrix@value[[1]]$con
