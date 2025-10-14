@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9123</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9124</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,35 @@
       <small>Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.0.9124" id="dbmatrix-0009124-2025-10-14">dbMatrix 0.0.0.9124 (2025-10-14)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009124-2025-10-14"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-0-0-9124">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-0-0-9124"></a></h3>
+<ul><li>
+<strong>Renamed <code><a href="https://rdrr.io/r/base/load.html" class="external-link">load()</a></code> to <code>dbLoad()</code></strong>: The <code>load</code> method has been renamed to <code>dbLoad</code> to avoid masking <code><a href="https://rdrr.io/r/base/load.html" class="external-link">base::load()</a></code>. Generic moved to <code>dbProject</code> package for consistency across dbverse.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="refactoring-0-0-0-9124">Refactoring<a class="anchor" aria-label="anchor" href="#refactoring-0-0-0-9124"></a></h3>
+<ul><li><p><strong>S4 to S3 Method Conversion</strong>: Converted <code><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames()</a></code>, <code><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames()</a></code>, <code><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow()</a></code>, <code><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol()</a></code>, and their setters from S4 to S3 methods for simpler dispatch. Only <code>%in%</code> remains S4 (requires double dispatch). This significantly reduces package load messages.</p></li>
+<li>
+<p><strong>Internal Function Cleanup</strong>:</p>
+<ul><li>Converted <code>castNumeric</code> from S4 generic to internal function <code>.castNumeric()</code>
+</li>
+<li>Renamed temporary tables to use <code>_tmp</code> prefix in row/column summary methods for consistency</li>
+<li>Moved <code>dbList</code> generic to <code>dbProject</code> package</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-0-9124">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-0-9124"></a></h3>
+<ul><li>
+<strong>Arrow Filter Pushdown Error</strong>: Fixed “Arrow table filter pushdown optional: new_i IN (…) not supported yet” error by replacing <code><a href="https://arrow.apache.org/docs/r/reference/to_duckdb.html" class="external-link">arrow::to_duckdb()</a></code> with inline SQL for extract operations.</li>
+<li>Fixed <code>.mtx</code> file reader header detection logic.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="chore-0-0-0-9124">Chore<a class="anchor" aria-label="anchor" href="#chore-0-0-0-9124"></a></h3>
+<ul><li>Applied consistent code formatting across the package.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9123" id="dbmatrix-0009123-2025-10-07">dbMatrix 0.0.0.9123 (2025-10-07)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009123-2025-10-07"></a></h2>
 <div class="section level3">
