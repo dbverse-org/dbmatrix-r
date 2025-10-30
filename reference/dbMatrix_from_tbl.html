@@ -55,6 +55,7 @@
 <span>  <span class="va">tbl</span>,</span>
 <span>  <span class="va">rownames_colName</span>,</span>
 <span>  <span class="va">colnames_colName</span>,</span>
+<span>  value_colName <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  name <span class="op">=</span> <span class="st">"dbMatrix"</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -76,6 +77,11 @@
 <dd><p><code>character</code> column name of colnames in tbl <code>(required)</code></p></dd>
 
 
+<dt id="arg-value-colname">value_colName<a class="anchor" aria-label="anchor" href="#arg-value-colname"></a></dt>
+<dd><p><code>character</code> column name containing pre-aggregated integer counts.
+If <code>NULL</code> (default), counts occurrences of each row-column pair. <code>(optional)</code></p></dd>
+
+
 <dt id="arg-name">name<a class="anchor" aria-label="anchor" href="#arg-name"></a></dt>
 <dd><p>table name to assign within database <code>(required, default: "dbMatrix")</code></p></dd>
 
@@ -95,6 +101,9 @@
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The <code>tbl_duckdb_connection</code> object must contain dimension names as columns in long format.</p>
+<p>If <code>value_colName</code> is provided, the function uses pre-aggregated counts from that column.
+This is useful when the input table already contains aggregated counts (e.g., from a GROUP BY + SUM operation).
+If <code>value_colName</code> is <code>NULL</code> (default), the function counts occurrences of each row-column pair.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
