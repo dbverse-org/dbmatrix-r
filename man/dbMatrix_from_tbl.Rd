@@ -8,6 +8,7 @@ dbMatrix_from_tbl(
   tbl,
   rownames_colName,
   colnames_colName,
+  value_colName = NULL,
   name = "dbMatrix",
   overwrite = FALSE
 )
@@ -18,6 +19,9 @@ dbMatrix_from_tbl(
 \item{rownames_colName}{\code{character} column name of rownames in tbl \code{(required)}}
 
 \item{colnames_colName}{\code{character} column name of colnames in tbl \code{(required)}}
+
+\item{value_colName}{\code{character} column name containing pre-aggregated integer counts.
+If \code{NULL} (default), counts occurrences of each row-column pair. \code{(optional)}}
 
 \item{name}{table name to assign within database \code{(required, default: "dbMatrix")}}
 
@@ -33,5 +37,9 @@ Constructs a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} ob
 }
 \details{
 The \code{tbl_duckdb_connection} object must contain dimension names as columns in long format.
+
+If \code{value_colName} is provided, the function uses pre-aggregated counts from that column.
+This is useful when the input table already contains aggregated counts (e.g., from a GROUP BY + SUM operation).
+If \code{value_colName} is \code{NULL} (default), the function counts occurrences of each row-column pair.
 }
 \concept{dbMatrix}

@@ -821,10 +821,17 @@ as_ijx <- function(x) {
 #' @description Constructs a \code{dbSparseMatrix} object from a \code{tbl_duckdb_connection} object.
 #' @details
 #' The \code{tbl_duckdb_connection} object must contain dimension names as columns in long format.
+#'
+#' If \code{value_colName} is provided, the function uses pre-aggregated counts from that column.
+#' This is useful when the input table already contains aggregated counts (e.g., from a GROUP BY + SUM operation).
+#' If \code{value_colName} is \code{NULL} (default), the function counts occurrences of each row-column pair.
+#'
 #' @param tbl \code{tbl_duckdb_connection} table in DuckDB database in long format
 #' @param con DBI or duckdb connection object \code{(required)}
 #' @param rownames_colName \code{character} column name of rownames in tbl \code{(required)}
 #' @param colnames_colName \code{character} column name of colnames in tbl \code{(required)}
+#' @param value_colName \code{character} column name containing pre-aggregated integer counts.
+#' If \code{NULL} (default), counts occurrences of each row-column pair. \code{(optional)}
 #' @param name table name to assign within database \code{(required, default: "dbMatrix")}
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
 #'
@@ -835,6 +842,7 @@ dbMatrix_from_tbl <- function(
   tbl,
   rownames_colName,
   colnames_colName,
+  value_colName = NULL,
   name = "dbMatrix",
   overwrite = FALSE
 ) {
@@ -883,6 +891,19 @@ dbMatrix_from_tbl <- function(
     )
   }
 
+  # Validate value_colName if provided
+  if (!is.null(value_colName)) {
+    if (!value_colName %in% colnames(tbl)) {
+      stop(
+        "value_colName '",
+        value_colName,
+        "' not found in tbl. ",
+        "Available columns: ",
+        paste(colnames(tbl), collapse = ", ")
+      )
+    }
+  }
+
   rownames_colName <- rlang::sym(rownames_colName)
   colnames_colName <- rlang::sym(colnames_colName)
 
@@ -896,10 +917,31 @@ dbMatrix_from_tbl <- function(
     stop("NA values found in rownames or colnames. Please remove NA values.")
   }
 
-  # summarize the number of counts for each gene per cell id
-  count_table <- tbl |>
-    dplyr::group_by(rownames_colName, colnames_colName) |>
-    dplyr::summarise(x = dplyr::n(), .groups = "drop")
+  # Aggregate counts based on whether pre-aggregated data is provided
+  if (!is.null(value_colName)) {
+    # Use pre-aggregated counts from specified column
+    value_colName_sym <- rlang::sym(value_colName)
+
+    count_table <- tbl |>
+      dplyr::group_by(rownames_colName, colnames_colName) |>
+      dplyr::summarise(
+        x = sum(!!value_colName_sym, na.rm = TRUE),
+        .groups = "drop"
+      )
+
+    cli::cli_alert_info(
+      "Using pre-aggregated counts from '{value_colName}' column"
+    )
+  } else {
+    # Count occurrences of each row-column pair (original behavior)
+    count_table <- tbl |>
+      dplyr::group_by(rownames_colName, colnames_colName) |>
+      dplyr::summarise(x = dplyr::n(), .groups = "drop")
+
+    cli::cli_alert_info(
+      "Counting occurrences of each row-column pair"
+    )
+  }
 
   # add label encodings and get dimensions, dim names
   i_encoded <- rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
@@ -1124,7 +1166,7 @@ get_MM_dim <- function(mtx_file_path) {
   } else {
     con <- file(mtx_file_path, "r")
   }
-  
+
   header <- character(0)
   while (TRUE) {
     line <- readLines(con, n = 1)
