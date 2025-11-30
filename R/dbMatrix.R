@@ -8,26 +8,26 @@
 #' @keywords internal
 #' @noRd
 setMethod(
-  f = 'initialize',
-  signature(.Object = 'dbMatrix'),
+  f = "initialize",
+  signature(.Object = "dbMatrix"),
   function(.Object, dim_names, dims, ...) {
     # call dbMatrix initialize
-    .Object = methods::callNextMethod(.Object, ...)
+    .Object <- methods::callNextMethod(.Object, ...)
 
     # matrix specific data input #
     # -------------------------- #
     if (!missing(dim_names)) {
-      .Object@dim_names = dim_names
+      .Object@dim_names <- dim_names
     }
     if (!missing(dims)) {
-      .Object@dims = dims
+      .Object@dims <- dims
     }
 
     # default values if no input provided #
     # ----------------------------------- #
     if (is.null(.Object@value)) {
-      .Object@dims = c(0L, 0L)
-      .Object@dim_names = list(NULL, NULL)
+      .Object@dims <- c(0L, 0L)
+      .Object@dim_names <- list(NULL, NULL)
     }
     # tbl_name = dbplyr::remote_name(.Object[])
     # .Object@name = ifelse(is.null(tbl_name), NA_character_, tbl_name)
@@ -511,50 +511,180 @@ dbMatrix <- function(
 #' @description Internal function to convert a [`dbSparseMatrix`] to
 #' [`dbDenseMatrix`].
 #' @param x A [`dbSparseMatrix`] object
+#' @param chunk_size integer. Number of columns to process per chunk during densification.
+#' If NULL (default), the function first checks the global option `dbMatrix.chunk_size`.
+#' If that is also NULL, it calculates a chunk size such that the estimated memory usage
+#' of each chunk does not exceed `dbMatrix.max_mem_convert` (default 8GB).
+#' If the total size is within the limit, a single chunk is used.
 #' @return A [`dbDenseMatrix`] object
 #' @keywords internal
 #' @examples
 #' dbsm <- sim_dbSparseMatrix(10, 10)
 #' dbdm <- toDbDense(dbsm)
-.to_db_dense <- function(x) {
+.to_db_dense <- function(x, chunk_size = NULL) {
   # input validation
   if (!inherits(x, "dbSparseMatrix")) {
     stopf("Input must be a dbSparseMatrix object")
   }
 
   info <- .get_dbMatrix_info(x)
-  precomp <- .initialize_precompute_matrix(info$con, info$n_rows, info$n_cols)
-  name <- unique_table_name(prefix = "tmp_dbDenseMatrix")
+  con <- info$con
 
-  # .add_idx <- function(x) {
-  #   x[] <- x[] |>
-  #     dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
-  # }
+  n_cols <- as.integer(info$n_cols)
+  n_rows <- as.integer(info$n_rows)
 
-  # add idx to sparse
-  x[] <- x[] |>
-    dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
-
-  # join by idx
-  data <- precomp |>
-    dplyr::left_join(x[], by = "idx", suffix = c("", ".dbsm")) |>
-    dplyr::transmute(i, j, x = dplyr::coalesce(x, 0))
-
-  # compute
-  if (getOption("dbMatrix.dbdm_auto_compute", default = FALSE)) {
-    cli::cli_alert_info(c(
-      "Converting {.cls dbSparseMatrix} to {.cls dbDenseMatrix}...",
-      "\n See {.help dbMatrix.dbdm_auto_compute} for details."
-    ))
-
-    data <- data |>
-      dplyr::compute(temporary = FALSE, name = name)
+  if (is.null(chunk_size)) {
+    chunk_size <- getOption("dbMatrix.chunk_size", default = NULL)
   }
 
+  # 1. Check for Precomputed Table (Hot Path)
+  precomp_name <- dbMatrix:::.find_precompute_table(con, n_rows, n_cols)
+  verbose <- getOption("dbMatrix.verbose", default = TRUE)
+
+  if (!is.null(precomp_name)) {
+    if (verbose) {
+      cli::cli_alert_info(
+        "Using precomputed table '{precomp_name}' for densification. Set options(dbMatrix.verbose = FALSE) to suppress this message."
+      )
+    }
+
+    precomp <- dplyr::tbl(con, precomp_name)
+    precomp_cols <- colnames(precomp)
+
+    # Filter to requested dimensions to avoid materializing excess rows
+    # Note: We must use !! to inject values into dbplyr filter
+    precomp_filtered <- precomp |>
+      dplyr::filter(i <= !!n_rows, j <= !!n_cols)
+
+    x_tbl <- x[]
+
+    if ("idx" %in% precomp_cols) {
+      x_tbl <- x_tbl |>
+        dplyr::mutate(idx = (j - 1) * !!n_rows + (i - 1))
+      data <- precomp_filtered |>
+        dplyr::left_join(x_tbl, by = "idx", suffix = c("", ".dbsm"))
+    } else {
+      data <- precomp_filtered |>
+        dplyr::left_join(x_tbl, by = c("i", "j"), suffix = c("", ".dbsm"))
+    }
+
+    # Final projection
+    # We assume x comes from x_tbl. If precomp had x, it would be x and x.dbsm.
+    # But precomp shouldn't have x.
+    # However, to be safe:
+    if ("x" %in% colnames(data)) {
+      data <- data |> dplyr::mutate(x = dplyr::coalesce(x, 0))
+    } else if ("x.dbsm" %in% colnames(data)) {
+      data <- data |> dplyr::transmute(i, j, x = dplyr::coalesce(x.dbsm, 0))
+    } else {
+      # Should not happen if join worked
+      data <- data |> dplyr::mutate(x = 0)
+    }
+
+    # Actually, simpler:
+    # x_tbl has 'x'.
+    # After join, 'x' column will exist (from x_tbl).
+    # If precomp also had 'x', we'd have x and x.dbsm.
+    # Let's assume precomp is pure grid.
+
+    data <- data |> dplyr::transmute(i, j, x = dplyr::coalesce(x, 0))
+
+    name <- dbMatrix:::unique_table_name(prefix = "tmp_dbDenseMatrix_hot")
+    res <- new(
+      "dbDenseMatrix",
+      value = data,
+      name = name,
+      dims = info$dims,
+      dim_names = info$dim_names,
+      init = TRUE
+    )
+    return(res)
+  }
+
+  # 2. Auto-Chunking Strategy (Cold Path)
+  if (verbose) {
+    cli::cli_alert_info(
+      "No suitable precomputed table found. Using auto-chunking strategy. Set options(dbMatrix.verbose = FALSE) to suppress this message."
+    )
+  }
+
+  if (is.null(chunk_size)) {
+    limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3)
+    bytes_per_col <- as.numeric(n_rows) * 8
+
+    # Calculate max columns that fit in limit
+    # We use floor to be safe
+    calc_chunk <- floor(limit / bytes_per_col)
+
+    # Ensure at least 1 column and at most n_cols
+    chunk_size <- max(1L, min(as.integer(calc_chunk), n_cols))
+  }
+
+  # 3. Safety Cap: Prevent excessive chunks (Parser Limit)
+  # With Tree Union, we can handle many more chunks, but we still cap to avoid
+  # extreme planning overhead.
+  MAX_CHUNKS <- getOption("dbMatrix.max_chunks", default = 10000L)
+  num_chunks <- ceiling(n_cols / chunk_size)
+
+  if (num_chunks > MAX_CHUNKS) {
+    old_chunk_size <- chunk_size
+    chunk_size <- ceiling(n_cols / MAX_CHUNKS)
+
+    cli::cli_alert_warning(
+      "Increasing chunk_size from {old_chunk_size} to {chunk_size} to limit query complexity ({MAX_CHUNKS} chunks)."
+    )
+  }
+
+  col_starts <- seq(1, n_cols, by = chunk_size)
+  queries <- vector("list", length(col_starts))
+
+  base_sql <- dbplyr::sql_render(x[])
+
+  for (i in seq_along(col_starts)) {
+    j_start <- as.integer(col_starts[i])
+    j_end <- as.integer(min(j_start + chunk_size - 1, n_cols))
+
+    grid_sql <- glue::glue(
+      "
+      SELECT i, j 
+      FROM range(1, {n_rows} + 1) t1(i) 
+      CROSS JOIN range({j_start}, {j_end} + 1) t2(j)
+    "
+    )
+
+    queries[[i]] <- glue::glue(
+      "
+      SELECT grid.i, grid.j, COALESCE(data.x, 0) as x
+      FROM ({grid_sql}) grid
+      LEFT JOIN ({base_sql}) data ON grid.i = data.i AND grid.j = data.j
+    "
+    )
+  }
+
+  # Helper for Balanced Tree Union
+  .combine_tree <- function(qs) {
+    n <- length(qs)
+    if (n == 0) {
+      return(NULL)
+    }
+    if (n == 1) {
+      return(qs[[1]])
+    }
+
+    mid <- floor(n / 2)
+    left <- .combine_tree(qs[1:mid])
+    right <- .combine_tree(qs[(mid + 1):n])
+
+    return(glue::glue("({left}) UNION ALL ({right})"))
+  }
+
+  final_sql <- .combine_tree(queries)
+
+  # Return as lazy query
   res <- new(
     "dbDenseMatrix",
-    value = data,
-    name = name, # note that this is a temporary table
+    value = dplyr::tbl(con, dplyr::sql(final_sql)),
+    name = NA_character_, # Not a table
     dims = info$dims,
     dim_names = info$dim_names,
     init = TRUE
@@ -647,41 +777,81 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
     )
   }
 
-  # Create temp file to write out ijx in db to disk
-  sql <- dbplyr::sql_render(x[])
-  con <- dbplyr::remote_con(x[])
-  dat <- DBI::dbGetQuery(con, sql)
-  # temp_file <- tempfile(tmpdir = tempdir(), fileext = ".parquet")
-  # x[] |>
-  #   arrow::to_arrow() |>
-  #   arrow::write_parquet(temp_file)
+  # Optimization for dense matrix: Sparse Stream to Dense R
+  if (!sparse) {
+    # Check memory limit before allocation
+    .check_mem_limit(x)
 
-  # Create matrix from ijx
-  # dat <- arrow::read_parquet(temp_file)
-  mat <- Matrix::sparseMatrix(
-    i = dat$i,
-    j = dat$j,
-    x = dat$x,
-    index1 = TRUE,
-    dims = c(n_rows, n_cols),
-    dimnames = dim_names
-  )
-  # mat <- Matrix::drop0(mat)
+    # Pre-allocate dense matrix with zeros
+    # This allocates O(N*M) memory once.
+    mat <- matrix(0, nrow = n_rows, ncol = n_cols)
 
-  if (!names) {
-    dimnames(mat) <- NULL
-  }
+    # Stream triplets in chunks to avoid memory spike
+    chunk_size <- 1e6
+    offset <- 0
 
-  if (is(x, "dbSparseMatrix") & sparse == TRUE) {
+    # Get the base query
+    con <- dbplyr::remote_con(x[])
+    base_sql <- dbplyr::sql_render(x[])
+
+    while (TRUE) {
+      # Construct chunk query
+      # We order by j, i to optimize cache locality when filling (column-major)
+      sql <- glue::glue(
+        "SELECT i, j, x FROM ({base_sql}) q ORDER BY j, i LIMIT {chunk_size} OFFSET {offset}"
+      )
+
+      chunk <- DBI::dbGetQuery(con, sql)
+
+      if (nrow(chunk) == 0) {
+        break
+      }
+
+      # Fill matrix
+      # Direct vector indexing is faster than cbind: (j-1)*nrow + i
+      # Ensure indices are integer
+      idx <- (as.integer(chunk$j) - 1L) *
+        as.numeric(n_rows) +
+        as.integer(chunk$i)
+      mat[idx] <- chunk$x
+
+      offset <- offset + chunk_size
+
+      # Safety break for infinite loops (shouldn't happen)
+      if (nrow(chunk) < chunk_size) break
+    }
+
+    dimnames(mat) <- dim_names
     return(mat)
-  } else {
-    mat <- as.matrix(mat)
   }
 
-  # Clean up temp files
-  # unlink(temp_file, recursive = TRUE, force = TRUE)
+  # Optimization for sparse matrix: Stream to disk using writeMM
+  temp_file <- tempfile(fileext = ".mtx")
 
-  return(mat)
+  # Use tryCatch to ensure cleanup
+  tryCatch(
+    {
+      # Write to disk
+      writeMM(x, temp_file)
+
+      # Read back as sparse matrix
+      mat <- Matrix::readMM(temp_file)
+
+      # Convert to dgCMatrix (standard sparse format)
+      mat <- as(mat, "CsparseMatrix")
+
+      # Restore dimnames (readMM does not preserve them)
+      dimnames(mat) <- dim_names
+
+      return(mat)
+    },
+    finally = {
+      # Clean up temp file
+      if (file.exists(temp_file)) {
+        unlink(temp_file)
+      }
+    }
+  )
 }
 
 #' @method as.matrix dbSparseMatrix
@@ -815,6 +985,86 @@ as_ijx <- function(x) {
   }
 
   return(df)
+}
+
+# Coercion Methods ####
+
+#' @title Coerce dbMatrix to matrix
+#' @name coerce-dbMatrix-matrix
+#' @description
+#' Coercion methods to convert `dbMatrix` objects to in-memory `matrix` objects.
+#' Respects `dbMatrix.max_mem_convert` option to prevent OOM errors.
+#' @export
+setAs("dbMatrix", "matrix", function(from) {
+  .check_mem_limit(from)
+  as.matrix(from)
+})
+
+#' @rdname coerce-dbMatrix-matrix
+#' @export
+setAs("dbDenseMatrix", "matrix", function(from) {
+  .check_mem_limit(from)
+  as.matrix(from)
+})
+
+#' @rdname coerce-dbMatrix-matrix
+#' @export
+setAs("dbSparseMatrix", "matrix", function(from) {
+  .check_mem_limit(from)
+  as.matrix(from, sparse = FALSE)
+})
+
+#' @title Coerce dbMatrix to dgCMatrix
+#' @name coerce-dbMatrix-dgCMatrix
+#' @description
+#' Coercion methods to convert `dbMatrix` objects to in-memory `dgCMatrix` objects.
+#' Respects `dbMatrix.max_mem_convert` option to prevent OOM errors.
+#' @export
+setAs("dbMatrix", "dgCMatrix", function(from) {
+  .check_mem_limit(from)
+  as.matrix(from, sparse = TRUE)
+})
+
+#' @rdname coerce-dbMatrix-dgCMatrix
+#' @export
+setAs("dbDenseMatrix", "dgCMatrix", function(from) {
+  .check_mem_limit(from)
+  # dbDenseMatrix cannot be directly converted to sparse via as.matrix with sparse=TRUE
+  # so we convert to dense first, then to sparse
+  mat <- as.matrix(from)
+  as(mat, "dgCMatrix")
+})
+
+#' @rdname coerce-dbMatrix-dgCMatrix
+#' @export
+setAs("dbSparseMatrix", "dgCMatrix", function(from) {
+  .check_mem_limit(from)
+  as.matrix(from, sparse = TRUE)
+})
+
+# Helper to check memory limit
+.check_mem_limit <- function(x) {
+  limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3) # 8GB default
+
+  # Estimate size: rows * cols * 8 bytes (double)
+  # This is a conservative estimate for dense matrices.
+  # For sparse, it might be an overestimate, but safer.
+  dims <- dim(x)
+  est_size <- as.numeric(dims[1]) * as.numeric(dims[2]) * 8
+
+  if (est_size > limit) {
+    stop(sprintf(
+      "dbMatrix: Implicit conversion to in-memory matrix blocked.\nEstimated size: %s\nLimit: %s\nIncrease 'dbMatrix.max_mem_convert' option to override.",
+      format(structure(est_size, class = "object_size"), units = "auto"),
+      format(structure(limit, class = "object_size"), units = "auto")
+    ))
+  }
+
+  if (getOption("dbMatrix.verbose", default = TRUE)) {
+    cli::cli_alert_info(
+      "Coercing dbMatrix to in-memory matrix (est. size: {format(structure(est_size, class = 'object_size'), units = 'auto')}). Control with 'dbMatrix.max_mem_convert'. See ?GiottoDB::GiottoDB-options for more info."
+    )
+  }
 }
 
 #' dbMatrix_from_tbl
@@ -1009,7 +1259,7 @@ dbMatrix_from_tbl <- function(
 #' @keywords internal
 #'
 #' @examples
-#' print('TODO')
+#' print("TODO")
 read_matrix <- function(con, value, name = "dbMatrix", overwrite = FALSE, ...) {
   # check inputs
   .check_con(con)
@@ -1227,13 +1477,13 @@ get_MM_dimnames <- function(
     stop("Column index must be an integer.")
   }
 
-  dims = get_MM_dim(mtx_file_path)
+  dims <- get_MM_dim(mtx_file_path)
 
   # Read row and column name files using data.table fread
   rowname_file <- data.table::fread(mtx_rowname_file_path, header = FALSE)
-  dim_rownames = dim(rowname_file)
+  dim_rownames <- dim(rowname_file)
   colname_file <- data.table::fread(mtx_colname_file_path, header = FALSE)
-  dim_colnames = dim(colname_file)
+  dim_colnames <- dim(colname_file)
 
   # check dimname and column indices
   if (mtx_rowname_col_idx > dim_rownames[2]) {
@@ -1249,8 +1499,8 @@ get_MM_dimnames <- function(
   }
 
   # Extract row and column names
-  rownames = rowname_file[, ..mtx_rowname_col_idx][[1]]
-  colnames = colname_file[, ..mtx_colname_col_idx][[1]]
+  rownames <- rowname_file[, ..mtx_rowname_col_idx][[1]]
+  colnames <- colname_file[, ..mtx_colname_col_idx][[1]]
 
   # Make unique
   # Note: first replicates will be labeled --1, second --2, and so on...
@@ -1274,7 +1524,7 @@ get_MM_dimnames <- function(
     )
   }
 
-  dimnames = list(rownames, colnames)
+  dimnames <- list(rownames, colnames)
 
   return(dimnames)
 }
@@ -1332,3 +1582,84 @@ map_ijx_dimnames <- function(dbMatrix, colName_i, colName_j) {
 
   return(res)
 }
+
+# compute ####
+#' @title Force computation of a dbMatrix
+#' @description
+#' Explicitly compute a dbMatrix and save it to a table in the database.
+#' This overrides the default `dplyr::compute` to use a direct `CREATE TABLE AS`
+#' statement, which is more robust for large tables in DuckDB.
+#'
+#' @param x A `dbMatrix` object
+#' @param name Name of the table to create. If NULL, a random name is generated.
+#' @param temporary Logical. If TRUE (default), create a temporary table.
+#' @param ... Additional arguments passed to methods (ignored).
+#' @param dimnames default = TRUE. If TRUE, the rownames and colnames will be
+#' saved in the database. This allows full reconstruction of the dbMatrix object
+#' using \link{\code{dbMatrix::dbLoad()}}.
+#' @return A `dbMatrix` object pointing to the new table.
+#' @export
+#' @method compute dbMatrix
+compute.dbMatrix <- function(
+  x,
+  name = NULL,
+  temporary = TRUE,
+  dimnames = TRUE,
+  ...
+) {
+  con <- dbplyr::remote_con(x@value)
+
+  if (is.null(name)) {
+    if (!is.na(x@name)) {
+      name <- x@name
+    } else {
+      name <- unique_table_name("dbmatrix_compute")
+    }
+  }
+
+  # Generate SQL from the lazy tbl
+  sql_query <- dbplyr::sql_render(x@value)
+
+  # Construct CTAS
+  # Note: DuckDB supports CREATE OR REPLACE TEMPORARY TABLE
+  temp_str <- if (temporary) "TEMPORARY" else ""
+
+  # We use CREATE OR REPLACE to handle overwrite=TRUE implicitly
+  full_sql <- glue::glue(
+    "CREATE OR REPLACE {temp_str} TABLE {name} AS {sql_query}"
+  )
+
+  # Execute
+  # We wrap in tryCatch to provide better error messages
+  tryCatch(
+    {
+      invisible(DBI::dbExecute(con, full_sql))
+    },
+    error = function(e) {
+      cli::cli_abort("Failed to compute dbMatrix: {e$message}")
+    }
+  )
+
+  # Write dimnames if requested
+  if (dimnames) {
+    # .write_dimnames is an internal function in R/names.R
+    # It expects the table to exist (which it does now)
+    .write_dimnames(x = x, name = name)
+  }
+
+  # Return new dbMatrix pointing to the new table
+  new_tbl <- dplyr::tbl(con, name)
+
+  # Update the object
+  x@value <- new_tbl
+  x@name <- name
+  return(x)
+}
+
+#' @export
+#' @method compute dbSparseMatrix
+compute.dbSparseMatrix <- compute.dbMatrix
+
+#' @export
+#' @method compute dbDenseMatrix
+compute.dbDenseMatrix <- compute.dbMatrix
