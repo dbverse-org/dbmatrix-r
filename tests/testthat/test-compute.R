@@ -1,4 +1,7 @@
 test_that("compute() works for dbMatrix", {
+  # Load package
+  devtools::load_all()
+  
   # Setup
   con <- DBI::dbConnect(duckdb::duckdb())
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
@@ -68,4 +71,18 @@ test_that("compute() works for dbMatrix", {
     "SELECT table_type FROM information_schema.tables WHERE table_name = 'my_computed_table'"
   )
   expect_equal(info_temp$table_type, "LOCAL TEMPORARY")
+
+  # 4. Test overwrite = FALSE (default)
+  compute(dbsm, name = "overwrite_test")
+  expect_true(DBI::dbExistsTable(con, "overwrite_test"))
+
+  # Try to overwrite without flag should fail
+  expect_error(
+    compute(dbsm, name = "overwrite_test", overwrite = FALSE)
+  )
+
+  # 5. Test overwrite = TRUE
+  res_over <- compute(dbsm, name = "overwrite_test", overwrite = TRUE)
+  expect_s4_class(res_over, "dbSparseMatrix")
+  expect_equal(res_over@name, "overwrite_test")
 })
