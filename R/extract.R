@@ -16,44 +16,86 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing'),
   function(x, i, ..., drop = FALSE) {
-    # get dbMatrix info
     con = get_con(x)
     dim = dim(x)
-
-    # check inputs
     .check_extract(x = x, i = i, j = NULL, dim = dim)
 
-    # create mapping of filtered rownames to row index
-    map = data.frame(i = seq_along(rownames(x)), rowname = rownames(x))
-    filter_i = get_dbM_sub_idx(index = i, dbM_dimnames = x@dim_names, dims = 1)
-    map = map |>
-      dplyr::filter(rowname %in% filter_i) |>
-      dplyr::mutate(new_i = seq_along(filter_i)) # reset index
+    if (is.numeric(i)) {
+      if (is.logical(i)) {
+        if (length(i) < dim[1]) {
+          i <- rep_len(i, dim[1])
+        }
+        i <- which(i)
+      }
 
-    # Create inline table reference using sql() to avoid materializing in main schema
-    # This uses VALUES clause which doesn't create any tables visible to dbListTables()
-    values_clause <- paste0(
-      '(',
-      map$i,
-      ', ',
-      map$new_i,
-      ')',
-      collapse = ', '
-    )
-    sql_query <- paste0(
-      'SELECT * FROM (VALUES ',
-      values_clause,
-      ') AS map_i(i, new_i)'
-    )
-    map_temp <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query, ')')))
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(i) < 2000) {
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(i)}, {as.integer(i)})"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, i)")
+        map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_i = seq_along(i),
+          i = as.integer(i),
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_i")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        map_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
 
-    # subset dbMatrix
+      filter_i <- x@dim_names[[1]][i]
+    } else {
+      filter_i = get_dbM_sub_idx(
+        index = i,
+        dbM_dimnames = x@dim_names,
+        dims = 1
+      )
+
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(filter_i) < 2000) {
+        safe_names <- gsub("'", "''", filter_i)
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)")
+        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_i = seq_along(filter_i),
+          rowname = filter_i,
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_i")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        req_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
+
+      # Use UNNEST to create dimension mapping inline
+      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
+      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+
+      dim_mapping_sql <- glue::glue(
+        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
+         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      )
+
+      map_tbl <- req_tbl |>
+        dplyr::inner_join(
+          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          by = "rowname"
+        ) |>
+        dplyr::select(new_i, i)
+    }
+
     x[] <- x[] |>
-      dplyr::filter(i %in% !!map$i) |>
-      dplyr::inner_join(map_temp, by = c("i" = "i")) |>
+      dplyr::inner_join(map_tbl, by = "i") |>
       dplyr::select(i = new_i, j, x)
 
-    # update dbMatrix attributes
     x@dim_names[[1L]] <- filter_i
     x@dims[1L] <- length(filter_i)
     x@name <- NA_character_
@@ -70,44 +112,86 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex'),
   function(x, j, ..., drop = FALSE) {
-    # get dbMatrix info
     con <- get_con(x)
     dim = dim(x)
-
-    # check for dims
     .check_extract(x = x, i = NULL, j = j, dim = dim)
 
-    # create mapping of filtered colnames to col index
-    map <- data.frame(j = seq_along(colnames(x)), colname = colnames(x))
-    filter_j <- get_dbM_sub_idx(index = j, dbM_dimnames = x@dim_names, dims = 2)
+    if (is.numeric(j)) {
+      if (is.logical(j)) {
+        if (length(j) < dim[2]) {
+          j <- rep_len(j, dim[2])
+        }
+        j <- which(j)
+      }
 
-    map <- map |>
-      dplyr::filter(colname %in% filter_j) |>
-      dplyr::mutate(new_j = seq_along(filter_j)) # reset index
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(j) < 2000) {
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(j)}, {as.integer(j)})"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, j)")
+        map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_j = seq_along(j),
+          j = as.integer(j),
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_j")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        map_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
 
-    # Create inline table reference using sql() to avoid materializing in main schema
-    values_clause <- paste0(
-      '(',
-      map$j,
-      ', ',
-      map$new_j,
-      ')',
-      collapse = ', '
-    )
-    sql_query <- paste0(
-      'SELECT * FROM (VALUES ',
-      values_clause,
-      ') AS map_j(j, new_j)'
-    )
-    map_temp <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query, ')')))
+      filter_j <- x@dim_names[[2]][j]
+    } else {
+      filter_j = get_dbM_sub_idx(
+        index = j,
+        dbM_dimnames = x@dim_names,
+        dims = 2
+      )
 
-    # Subset with arrow virtual table
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(filter_j) < 2000) {
+        safe_names <- gsub("'", "''", filter_j)
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)")
+        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_j = seq_along(filter_j),
+          colname = filter_j,
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_j")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        req_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
+
+      # Use UNNEST to create dimension mapping inline
+      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
+      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+
+      dim_mapping_sql <- glue::glue(
+        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
+         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      )
+
+      map_tbl <- req_tbl |>
+        dplyr::inner_join(
+          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          by = "colname"
+        ) |>
+        dplyr::select(new_j, j)
+    }
+
     x[] <- x[] |>
-      dplyr::filter(j %in% !!map$j) |>
-      dplyr::inner_join(map_temp, by = c("j" = "j")) |>
+      dplyr::inner_join(map_tbl, by = "j") |>
       dplyr::select(i, j = new_j, x)
 
-    # Update dbMatrix attributes
     x@dim_names[[2L]] <- filter_j
     x@dims[2L] <- length(filter_j)
     x@name <- NA_character_
@@ -124,68 +208,161 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex'),
   function(x, i, j, ..., drop = FALSE) {
-    # get dbMatrix info
     con = get_con(x)
     dim = dim(x)
-
-    # check for dims
     .check_extract(x = x, i = i, j = j, dim = dim)
 
-    # create mapping of dim indices and dimnames
-    map_i = data.frame(i = seq_along(rownames(x)), rowname = rownames(x))
+    # Process i index (same logic as row-only subsetting)
+    if (is.numeric(i)) {
+      if (is.logical(i)) {
+        if (length(i) < dim[1]) {
+          i <- rep_len(i, dim[1])
+        }
+        i <- which(i)
+      }
 
-    map_j = data.frame(j = seq_along(colnames(x)), colname = colnames(x))
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(i) < 2000) {
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(i)}, {as.integer(i)})"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, i)")
+        map_tbl_i <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_i = seq_along(i),
+          i = as.integer(i),
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_i")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        map_tbl_i <- dplyr::tbl(con, req_tbl_name)
+      }
 
-    # subset map by filtered dimnames
-    filter_i = get_dbM_sub_idx(index = i, dbM_dimnames = x@dim_names, dims = 1)
-    filter_j = get_dbM_sub_idx(index = j, dbM_dimnames = x@dim_names, dims = 2)
+      filter_i <- x@dim_names[[1]][i]
+    } else {
+      filter_i = get_dbM_sub_idx(
+        index = i,
+        dbM_dimnames = x@dim_names,
+        dims = 1
+      )
 
-    map_i = map_i |>
-      dplyr::filter(rowname %in% filter_i) |>
-      dplyr::mutate(new_i = seq_along(filter_i)) # reset index
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(filter_i) < 2000) {
+        safe_names <- gsub("'", "''", filter_i)
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)")
+        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_i = seq_along(filter_i),
+          rowname = filter_i,
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_i")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        req_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
 
-    map_j = map_j |>
-      dplyr::filter(colname %in% filter_j) |>
-      dplyr::mutate(new_j = seq_along(filter_j)) # reset index
+      # Use UNNEST to create dimension mapping inline
+      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
+      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
 
-    # Create inline table references using sql() to avoid materializing in main schema
-    values_clause_j <- paste0(
-      '(',
-      map_j$j,
-      ', ',
-      map_j$new_j,
-      ')',
-      collapse = ', '
-    )
-    sql_query_j <- paste0(
-      'SELECT * FROM (VALUES ',
-      values_clause_j,
-      ') AS map_j(j, new_j)'
-    )
-    map_temp_j <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query_j, ')')))
+      dim_mapping_sql <- glue::glue(
+        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
+         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      )
 
-    values_clause_i <- paste0(
-      '(',
-      map_i$i,
-      ', ',
-      map_i$new_i,
-      ')',
-      collapse = ', '
-    )
-    sql_query_i <- paste0(
-      'SELECT * FROM (VALUES ',
-      values_clause_i,
-      ') AS map_i(i, new_i)'
-    )
-    map_temp_i <- dplyr::tbl(con, dplyr::sql(paste0('(', sql_query_i, ')')))
+      map_tbl_i <- req_tbl |>
+        dplyr::inner_join(
+          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          by = "rowname"
+        ) |>
+        dplyr::select(new_i, i)
+    }
+
+    # Process j index (same logic as column-only subsetting)
+    if (is.numeric(j)) {
+      if (is.logical(j)) {
+        if (length(j) < dim[2]) {
+          j <- rep_len(j, dim[2])
+        }
+        j <- which(j)
+      }
+
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(j) < 2000) {
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(j)}, {as.integer(j)})"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, j)")
+        map_tbl_j <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_j = seq_along(j),
+          j = as.integer(j),
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_j")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        map_tbl_j <- dplyr::tbl(con, req_tbl_name)
+      }
+
+      filter_j <- x@dim_names[[2]][j]
+    } else {
+      filter_j = get_dbM_sub_idx(
+        index = j,
+        dbM_dimnames = x@dim_names,
+        dims = 2
+      )
+
+      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+      if (length(filter_j) < 2000) {
+        safe_names <- gsub("'", "''", filter_j)
+        values_list <- glue::glue_collapse(
+          glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
+          sep = ", "
+        )
+        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)")
+        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      } else {
+        req_df <- data.frame(
+          new_j = seq_along(filter_j),
+          colname = filter_j,
+          stringsAsFactors = FALSE
+        )
+        req_tbl_name <- unique_table_name("subset_req_j")
+        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        req_tbl <- dplyr::tbl(con, req_tbl_name)
+      }
+
+      # Use UNNEST to create dimension mapping inline
+      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
+      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+
+      dim_mapping_sql <- glue::glue(
+        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
+         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      )
+
+      map_tbl_j <- req_tbl |>
+        dplyr::inner_join(
+          dplyr::tbl(con, dplyr::sql(paste0("(", dim_mapping_sql, ")"))),
+          by = "colname"
+        ) |>
+        dplyr::select(new_j, j)
+    }
 
     x[] <- x[] |>
-      dplyr::filter(i %in% !!map_i$i, j %in% !!map_j$j) |>
-      dplyr::inner_join(map_temp_i, by = c("i" = "i")) |>
-      dplyr::inner_join(map_temp_j, by = c("j" = "j")) |>
+      dplyr::inner_join(map_tbl_i, by = "i") |>
+      dplyr::inner_join(map_tbl_j, by = "j") |>
       dplyr::select(i = new_i, j = new_j, x)
 
-    # update dbMatrix attributes
     x@dim_names[[1L]] = filter_i
     x@dim_names[[2L]] = filter_j
     x@dims[1L] <- length(filter_i)
