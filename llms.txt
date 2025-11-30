@@ -1,0 +1,168 @@
+# dbMatrix
+
+[dbMatrix](https://github.com/dbverse-org/dbmatrix-r) is a core package
+in the [`dbverse`](https://dbverse-org.github.io/dbverse/) library.
+
+The goal of [dbMatrix](https://github.com/dbverse-org/dbmatrix-r) is to
+support larger-than-memory matrix computations.
+
+**Note: Work in progress! Bugs or unexpected behavior are likely to
+occur. We welcome user feedback and reporting issues on the [Github
+page](https://github.com/dbverse-org/dbmatrix-r/).**
+
+## Installation
+
+You can install the development version of dbMatrix from Github like so:
+
+``` r
+# install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
+pak::pak("dbverse-org/dbmatrix-r")
+```
+
+# Package index
+
+## S4 Classes
+
+S4 class definitions for dbMatrix objects
+
+- [`dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.md)
+  :
+
+  S4 virtual class for `dbMatrix`
+
+- [`dbDenseMatrix-class`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
+  [`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
+  :
+
+  S4 Class for `dbDenseMatrix`
+
+- [`dbSparseMatrix-class`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
+  [`dbSparseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
+  : S4 Class for dbSparseMatrix
+
+## Constructor
+
+Function for creating `dbMatrix` objects
+
+- [`as.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/as.dbMatrix.md)
+  :
+
+  Convert `Matrix` to `dbMatrix`
+
+- [`as.matrix(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/as.matrix.dbMatrix.md)
+  :
+
+  Convert `dbMatrix` to in-memory matrix
+
+- [`dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  :
+
+  Create a `dbSparseMatrix` or `dbDenseMatrix` object
+
+- [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md)
+  : dbMatrix_from_tbl
+
+## Matrix Summary Operations
+
+Methods to compute summary statistics for `dbMatrix` objects
+
+- [`Summary(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/Summary-dbMatrix-method.md)
+  :
+
+  Summary Methods for `dbMatrix` Objects
+
+- [`mean(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/mean.md)
+  [`mean(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/mean.md)
+  :
+
+  Arithmetic Mean for `dbMatrix` objects
+
+- [`rowMeans(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_means.md)
+  [`colMeans(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_means.md)
+  :
+
+  Row (column) means for `dbMatrix` objects
+
+- [`colSds(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sds.md)
+  [`colSds(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sds.md)
+  [`rowSds(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sds.md)
+  [`rowSds(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sds.md)
+  :
+
+  Row (column) standard deviations for `dbMatrix` objects
+
+- [`rowSums(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sums.md)
+  [`rowSums(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sums.md)
+  [`colSums(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sums.md)
+  [`colSums(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_sums.md)
+  :
+
+  Row (column) sums for `dbMatrix` objects
+
+- [`rowVars(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_vars.md)
+  [`rowVars(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_vars.md)
+  [`colVars(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_vars.md)
+  [`colVars(`*`<dbSparseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/row_col_vars.md)
+  :
+
+  Row (column) variances for `dbMatrix` objects
+
+## Matrix Transformations
+
+Methods for transforming `dbMatrix` objects
+
+- [`Math(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/Math-dbMatrix-method.md)
+  :
+
+  Math Operations for `dbMatrix` Objects
+
+- [`` `%in%`( ``*`<dbDenseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
+  [`` `%in%`( ``*`<ANY>`*`,`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
+  [`` `%in%`( ``*`<dbSparseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
+  : Value Matching
+
+- [`t(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/t-dbMatrix.md)
+  : Matrix Transpose
+
+## Matrix Properties
+
+Methods to retrieve basic properties of `dbMatrix` objects
+
+- [`dim(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dim-dbMatrix-method.md)
+  : Dimensions of an Object
+
+- [`head(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/head_tail.md)
+  [`tail(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/head_tail.md)
+  : Return the First or Last Parts of an Object
+
+- [`length(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/length.md)
+  :
+
+  Length of a `dbMatrix` Object
+
+- [`rownames.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`` `rownames.dbMatrix<-`() ``](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`colnames.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`` `colnames.dbMatrix<-`() ``](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`dimnames(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`` `dimnames<-`( ``*`<dbMatrix>`*`,`*`<list>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  : Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects
+
+- [`names(`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/names-dbDenseMatrix-method.md)
+  : The names of a dbMatrix Object
+
+- [`nrow.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/nrow_ncol.md)
+  [`ncol.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/nrow_ncol.md)
+  : The Number of Rows/Columns of a dbMatrix Object
+
+## dbData objects
+
+Convenience methods for `dbData` objects
+
+# Articles
+
+### All vignettes
+
+- [Arithmetic](https://dbverse-org.github.io/dbmatrix-r/articles/arithmetic.md):
+- [Operations](https://dbverse-org.github.io/dbmatrix-r/articles/operations.md):
+- [Overview](https://dbverse-org.github.io/dbmatrix-r/articles/overview.md):
