@@ -9,7 +9,7 @@
 #' Representation of sparse and dense matrices in a database. Each object
 #' is used as a connection to a single table that exists within the database.
 #' Inherits from `dbData`.
-#' @slot dim_names row [1] and col [2] names
+#' @slot dim_names row (1) and col (2) names
 #' @slot dims dimensions of the matrix
 #' @slot init logical. Whether the object is fully initialized
 #' @name dbMatrix-class

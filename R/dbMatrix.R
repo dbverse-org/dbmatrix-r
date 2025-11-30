@@ -339,7 +339,7 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 #'  \item [`matrix`] In-memory dense matrix from base R
 #'  \item \code{.mtx} Path to [.mtx](https://math.nist.gov/MatrixMarket/formats.html) file
 #'  \item \code{.csv} Path to .csv file
-#'  \item [`tbl_duckdb_connection`] Table in [`duckdb`] database in ijx format from
+#'  \item `tbl_duckdb_connection` Table in [`duckdb`] database in ijx format from
 #'  existing [`dbMatrix`] object. \code{dims} and \code{dim_names} must be
 #'  specified if \code{value} is \code{tbl_duckdb_connection}.
 #' }
@@ -907,7 +907,7 @@ setMethod(
 #' If no `name` is provided, a unique table name is generated.
 #'
 #' @param x [`matrix`], [`Matrix::dgeMatrix-class`], or [`Matrix::dgCMatrix-class`] \code{required}
-#' @param con [`tbl_duckdb_connection`] \code{default:"memory"} Connection to
+#' @param con `tbl_duckdb_connection` \code{default:"memory"} Connection to
 #' DuckDB database connection. If not provided, a temporary in-memory
 #' DuckDB database is created. \code{':temp:'}  will create a DuckDB database
 #' in the temporary directory. \code{':memory:'} will create a DuckDB database

@@ -1827,7 +1827,7 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
     }
     return(x)
   }
-  
+
   # For other dbData objects with specified column
   if (!is.null(col)) {
     if (.colTypes(x)[col] != 'double') {
@@ -1835,6 +1835,6 @@ setMethod('length', signature(x = 'dbMatrix'), function(x) {
       x[] <- x[] |> dplyr::mutate(!!sym_col := as.numeric(!!sym_col))
     }
   }
-  
+
   return(x)
 }
