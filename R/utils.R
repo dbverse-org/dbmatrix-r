@@ -192,3 +192,30 @@ unique_table_name <- function(prefix = "dbMatrix") {
   name <- paste0(sample(vals, 10, replace = TRUE), collapse = "")
   paste0(prefix, "_", name)
 }
+
+# Helper to check memory limit
+#' @keywords internal
+#' @noRd
+.check_mem_limit <- function(x) {
+  limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3) # 8GB default
+
+  # Estimate size: rows * cols * 8 bytes (double)
+  # This is a conservative estimate for dense matrices.
+  # For sparse, it might be an overestimate, but safer.
+  dims <- dim(x)
+  est_size <- as.numeric(dims[1]) * as.numeric(dims[2]) * 8
+
+  if (est_size > limit) {
+    stop(sprintf(
+      "dbMatrix: Implicit conversion to in-memory matrix blocked.\nEstimated size: %s\nLimit: %s\nIncrease 'dbMatrix.max_mem_convert' option to override.",
+      format(structure(est_size, class = "object_size"), units = "auto"),
+      format(structure(limit, class = "object_size"), units = "auto")
+    ))
+  }
+
+  if (getOption("dbMatrix.verbose", default = TRUE)) {
+    cli::cli_alert_info(
+      "Coercing dbMatrix to in-memory matrix (est. size: {format(structure(est_size, class = 'object_size'), units = 'auto')}). Control with 'dbMatrix.max_mem_convert'. See ?GiottoDB::GiottoDB-options for more info."
+    )
+  }
+}
