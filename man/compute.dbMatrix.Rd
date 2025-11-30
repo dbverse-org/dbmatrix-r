@@ -4,7 +4,14 @@
 \alias{compute.dbMatrix}
 \title{Force computation of a dbMatrix}
 \usage{
-\method{compute}{dbMatrix}(x, name = NULL, temporary = TRUE, dimnames = TRUE, ...)
+\method{compute}{dbMatrix}(
+  x,
+  name = NULL,
+  temporary = TRUE,
+  dimnames = TRUE,
+  overwrite = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{dbMatrix} object}
@@ -16,6 +23,9 @@
 \item{dimnames}{default = TRUE. If TRUE, the rownames and colnames will be
 saved in the database. This allows full reconstruction of the dbMatrix object
 using \link{\code{dbMatrix::dbLoad()}}.}
+
+\item{overwrite}{Logical. If TRUE, overwrite the table if it already exists.
+Default is FALSE.}
 
 \item{...}{Additional arguments passed to methods (ignored).}
 }
