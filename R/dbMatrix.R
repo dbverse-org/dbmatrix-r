@@ -1332,3 +1332,84 @@ map_ijx_dimnames <- function(dbMatrix, colName_i, colName_j) {
 
   return(res)
 }
+
+# compute ####
+#' @title Force computation of a dbMatrix
+#' @description
+#' Explicitly compute a dbMatrix and save it to a table in the database.
+#' This overrides the default `dplyr::compute` to use a direct `CREATE TABLE AS`
+#' statement, which is more robust for large tables in DuckDB.
+#'
+#' @param x A `dbMatrix` object
+#' @param name Name of the table to create. If NULL, a random name is generated.
+#' @param temporary Logical. If TRUE (default), create a temporary table.
+#' @param ... Additional arguments passed to methods (ignored).
+#' @param dimnames default = TRUE. If TRUE, the rownames and colnames will be
+#' saved in the database. This allows full reconstruction of the dbMatrix object
+#' using \link{\code{dbMatrix::dbLoad()}}.
+#' @return A `dbMatrix` object pointing to the new table.
+#' @export
+#' @method compute dbMatrix
+compute.dbMatrix <- function(
+  x,
+  name = NULL,
+  temporary = TRUE,
+  dimnames = TRUE,
+  ...
+) {
+  con <- dbplyr::remote_con(x@value)
+
+  if (is.null(name)) {
+    if (!is.na(x@name)) {
+      name <- x@name
+    } else {
+      name <- unique_table_name("dbmatrix_compute")
+    }
+  }
+
+  # Generate SQL from the lazy tbl
+  sql_query <- dbplyr::sql_render(x@value)
+
+  # Construct CTAS
+  # Note: DuckDB supports CREATE OR REPLACE TEMPORARY TABLE
+  temp_str <- if (temporary) "TEMPORARY" else ""
+
+  # We use CREATE OR REPLACE to handle overwrite=TRUE implicitly
+  full_sql <- glue::glue(
+    "CREATE OR REPLACE {temp_str} TABLE {name} AS {sql_query}"
+  )
+
+  # Execute
+  # We wrap in tryCatch to provide better error messages
+  tryCatch(
+    {
+      invisible(DBI::dbExecute(con, full_sql))
+    },
+    error = function(e) {
+      cli::cli_abort("Failed to compute dbMatrix: {e$message}")
+    }
+  )
+
+  # Write dimnames if requested
+  if (dimnames) {
+    # .write_dimnames is an internal function in R/names.R
+    # It expects the table to exist (which it does now)
+    .write_dimnames(x = x, name = name)
+  }
+
+  # Return new dbMatrix pointing to the new table
+  new_tbl <- dplyr::tbl(con, name)
+
+  # Update the object
+  x@value <- new_tbl
+  x@name <- name
+  return(x)
+}
+
+#' @export
+#' @method compute dbSparseMatrix
+compute.dbSparseMatrix <- compute.dbMatrix
+
+#' @export
+#' @method compute dbDenseMatrix
+compute.dbDenseMatrix <- compute.dbMatrix
