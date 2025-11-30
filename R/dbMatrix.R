@@ -97,13 +97,28 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
     p_rown <- row_names
   }
 
-  filter_i <- sapply(p_rown, function(f_i) which(f_i == row_names))
-  filter_j <- sapply(p_coln, function(f_j) which(f_j == col_names))
-
   # prepare subset to print
-  preview_tbl <- object@value |>
-    dplyr::filter(i %in% filter_i & j %in% filter_j) |>
-    dplyr::collect()
+  if (suppress_rows) {
+    # Head query
+    df_head <- object@value |>
+      dplyr::filter(j <= 10L, i <= 3L) |>
+      dplyr::arrange(i, j) |>
+      dplyr::collect()
+
+    # Tail query
+    df_tail <- object@value |>
+      dplyr::filter(j <= 10L, i >= (dim_row - 2L)) |>
+      dplyr::arrange(i, j) |>
+      dplyr::collect()
+
+    preview_tbl <- dplyr::bind_rows(df_head, df_tail)
+  } else {
+    preview_tbl <- object@value |>
+      dplyr::filter(j <= 10L) |>
+      dplyr::arrange(i, j) |>
+      head(100L) |>
+      dplyr::collect()
+  }
 
   # ij indices for printing
   a_i <- sapply(preview_tbl$i, function(i_idx) {
@@ -236,13 +251,28 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
     p_rown <- row_names
   }
 
-  filter_i <- sapply(p_rown, function(f_i) which(f_i == row_names))
-  filter_j <- sapply(p_coln, function(f_j) which(f_j == col_names))
-
   # prepare subset to print
-  preview_tbl <- object@value |>
-    dplyr::filter(i %in% filter_i & j %in% filter_j) |>
-    dplyr::collect()
+  if (suppress_rows) {
+    # Head query
+    df_head <- object@value |>
+      dplyr::filter(j <= 10L, i <= 3L) |>
+      dplyr::arrange(i, j) |>
+      dplyr::collect()
+
+    # Tail query
+    df_tail <- object@value |>
+      dplyr::filter(j <= 10L, i >= (dim_row - 2L)) |>
+      dplyr::arrange(i, j) |>
+      dplyr::collect()
+
+    preview_tbl <- dplyr::bind_rows(df_head, df_tail)
+  } else {
+    preview_tbl <- object@value |>
+      dplyr::filter(j <= 10L) |>
+      dplyr::arrange(i, j) |>
+      head(100L) |>
+      dplyr::collect()
+  }
 
   # ij indices for printing
   a_i <- sapply(preview_tbl$i, function(i_idx) {
