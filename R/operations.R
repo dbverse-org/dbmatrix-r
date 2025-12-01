@@ -296,82 +296,55 @@ arith_call_dbm_vect_multi = function(
   .perform_dense_join <- function(dbm, dbVector, op) {
     # get precomputed matrix
     precomp <- .initialize_precompute_matrix(con, n_rows, n_cols)
-    name_precomp <- dbplyr::remote_name(precomp)
-    if (is.na(name_precomp)) {
-      stopf("precompute error")
-    }
-
-    # add idx to dbm
-    dbm[] <- dbm[] |>
-      dplyr::mutate(idx = (j - 1) * n_rows + (i - 1))
-
-    # assign names to lazy tables in db
-    dbvector_name <- .assign_dbm_name(dbm = dbVector)
-    dbm_name <- .assign_dbm_name(dbm = dbm)
-
-    # set order for arith
-    arith_expr <- if (swap_arith_order) {
-      paste0("v.x ", op, " ", dbm_name, ".x")
+    
+    # Prepare precomp with v_idx
+    # We use idx (0-based) which is explicitly present in precomp table
+    precomp_aug <- precomp |>
+      dplyr::mutate(v_idx = dplyr::sql(glue::glue("(idx % {length}) + 1")))
+    
+    # Prepare dbVector (v)
+    v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
+    
+    # Prepare dbm (m)
+    # Join on i, j directly to avoid calculating idx
+    m_tbl <- dbm[] |> dplyr::select(m_i = i, m_j = j, m_x = x)
+    
+    # Join everything
+    # Join precomp (i, j) with dbm (m_i, m_j)
+    res <- precomp_aug |>
+      dplyr::inner_join(m_tbl, by = c("i" = "m_i", "j" = "m_j")) |>
+      dplyr::left_join(v_tbl, by = c("v_idx" = "v_i"))
+      
+    # Calculate x
+    if (swap_arith_order) {
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("v_x {op} m_x")))
     } else {
-      paste0(dbm_name, ".x ", op, " v.x")
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("m_x {op} v_x")))
     }
-
-    sql <- glue::glue(
-      "
-    CREATE TEMPORARY VIEW {name_ijx} AS
-    WITH base_data AS (
-      SELECT p.i, p.j, {arith_expr} AS x
-      FROM (
-        SELECT *,
-        (rowid % {length}) + 1 as v_idx
-        FROM {name_precomp}
-      ) p
-      LEFT JOIN {dbvector_name} v
-        ON p.v_idx = v.i
-      INNER JOIN {dbm_name}
-        ON p.idx = {dbm_name}.idx
-    )
-    SELECT i,j, x
-    FROM base_data;
-    "
-    )
-
-    invisible(DBI::dbExecute(con, sql))
-
-    return(dplyr::tbl(con, name_ijx))
+    
+    return(res |> dplyr::select(i, j, x))
   }
 
   .perform_sparse_join <- function(dbm, dbVector, op) {
-    # assign names to lazy tables in db
-    dbvector_name <- .assign_dbm_name(dbm = dbVector)
-    dbm_name <- .assign_dbm_name(dbm = dbm)
-
-    # set order for arith
-    arith_expr <- if (swap_arith_order) {
-      paste("v.x", op, dbm_name, ".x")
+    # Prepare tables
+    m_tbl <- dbm[] |> dplyr::select(i, j, m_x = x)
+    v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
+    
+    # Join
+    res <- m_tbl |>
+      dplyr::left_join(v_tbl, by = c("i" = "v_i"))
+      
+    # Calculate x
+    if (swap_arith_order) {
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("v_x {op} m_x")))
     } else {
-      paste(dbm_name, ".x", op, "v.x")
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("m_x {op} v_x")))
     }
-
-    # join dbm, dbvector
-    sql <- glue::glue(
-      "
-      CREATE OR REPLACE TEMPORARY VIEW {name_ijx} AS
-      SELECT
-          {dbm_name}.i,
-          {dbm_name}.j,
-          {arith_expr} as x  -- perform arith operation
-      FROM {dbm_name}
-      LEFT JOIN {dbvector_name} v
-          ON {dbm_name}.i = v.i
-    "
-    )
-    invisible(DBI::dbExecute(con, sql))
-    return(dplyr::tbl(con, name_ijx))
+    
+    return(res |> dplyr::select(i, j, x))
   }
 
   # main function
-  name_ijx <- unique_table_name('tmp_ijx')
   if (is(dbm, "dbSparseMatrix")) {
     if (.eval_op_densify(generic_char = op, dbVector = dbVector)) {
       dense_dbm <- .to_db_dense(dbm)
