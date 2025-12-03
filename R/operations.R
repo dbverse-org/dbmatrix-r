@@ -994,6 +994,11 @@ setMethod(
         sum_x2 = sum(x * x, na.rm = TRUE),
         .groups = "drop"
       ) |>
+      dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
+      dplyr::mutate(
+        sum_x = dplyr::coalesce(sum_x, 0),
+        sum_x2 = dplyr::coalesce(sum_x2, 0)
+      ) |>
       dplyr::mutate(
         sd_x = if (m <= 1) {
           NA_real_
@@ -1113,6 +1118,11 @@ setMethod(
         sum_x = sum(x, na.rm = na.rm),
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
+      ) |>
+      dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |>
+      dplyr::mutate(
+        sum_x = dplyr::coalesce(sum_x, 0),
+        sum_x2 = dplyr::coalesce(sum_x2, 0)
       ) |>
       dplyr::mutate(
         sd_x = if (k <= 1) {
