@@ -22,6 +22,12 @@ reference:
       - dbDenseMatrix-class
       - dbSparseMatrix-class
 
+  - title: "Coercion"
+    desc: "Methods for coercing `dbMatrix` objects to other types"
+    contents:
+      - coerce-dbMatrix-dgCMatrix
+      - coerce-dbMatrix-matrix
+
   - title: "Constructor"
     desc: "Function for creating `dbMatrix` objects"
     contents:
@@ -36,6 +42,7 @@ reference:
     desc: "Methods for transforming `dbMatrix` objects"
     contents:
       - has_concept("transform")
+      - compute.dbMatrix
 
   - title: "Matrix Properties"
     desc: "Methods to retrieve basic properties of `dbMatrix` objects"
@@ -46,3 +53,8 @@ reference:
     desc: "Convenience methods for `dbData` objects"
     contents:
       - has_concept("dbData")
+
+  - title: "Package Options"
+    desc: "Global options for the dbMatrix package"
+    contents:
+      - dbMatrix_options
