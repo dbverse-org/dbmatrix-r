@@ -296,32 +296,32 @@ arith_call_dbm_vect_multi = function(
   .perform_dense_join <- function(dbm, dbVector, op) {
     # get precomputed matrix
     precomp <- .initialize_precompute_matrix(con, n_rows, n_cols)
-    
+
     # Prepare precomp with v_idx
     # We use idx (0-based) which is explicitly present in precomp table
     precomp_aug <- precomp |>
       dplyr::mutate(v_idx = dplyr::sql(glue::glue("(idx % {length}) + 1")))
-    
+
     # Prepare dbVector (v)
     v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
-    
+
     # Prepare dbm (m)
     # Join on i, j directly to avoid calculating idx
     m_tbl <- dbm[] |> dplyr::select(m_i = i, m_j = j, m_x = x)
-    
+
     # Join everything
     # Join precomp (i, j) with dbm (m_i, m_j)
     res <- precomp_aug |>
       dplyr::inner_join(m_tbl, by = c("i" = "m_i", "j" = "m_j")) |>
       dplyr::left_join(v_tbl, by = c("v_idx" = "v_i"))
-      
+
     # Calculate x
     if (swap_arith_order) {
       res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("v_x {op} m_x")))
     } else {
       res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("m_x {op} v_x")))
     }
-    
+
     return(res |> dplyr::select(i, j, x))
   }
 
@@ -329,18 +329,18 @@ arith_call_dbm_vect_multi = function(
     # Prepare tables
     m_tbl <- dbm[] |> dplyr::select(i, j, m_x = x)
     v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
-    
+
     # Join
     res <- m_tbl |>
       dplyr::left_join(v_tbl, by = c("i" = "v_i"))
-      
+
     # Calculate x
     if (swap_arith_order) {
       res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("v_x {op} m_x")))
     } else {
       res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("m_x {op} v_x")))
     }
-    
+
     return(res |> dplyr::select(i, j, x))
   }
 
@@ -707,18 +707,26 @@ setMethod(
     x <- .castNumeric(x)
 
     # add 0 to rowSum
-    view_name <- unique_table_name('_tmp')
     num_row <- nrow(x)
-    sql <- glue::glue(
-      '
-                CREATE OR REPLACE TEMPORARY TABLE {view_name} AS
-                SELECT generate_series AS i
-                FROM generate_series(1, {num_row});
-            '
+
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(i) |>
+        dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+        dplyr::collect()
+
+      res <- numeric(num_row)
+      res[res_sparse$i] <- res_sparse$sum_x
+      names(res) <- rownames(x)
+      return(res)
+    }
+
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as i FROM generate_series(1, {num_row})"
+      ))
     )
-    con <- dbplyr::remote_con(x[])
-    invisible(DBI::dbExecute(con, sql))
-    dim_tbl <- dplyr::tbl(con, view_name)
 
     # calc rowsum for nonzero values in ijx
     rowSum <- x[] |>
@@ -730,22 +738,14 @@ setMethod(
       dplyr::select(i, j, x) |>
       dplyr::collapse()
 
-    if (memory) {
-      rowSum <- rowSum |> dplyr::arrange(i)
-      res <- rowSum |>
-        dplyr::pull(x)
-
-      names(res) <- rownames(x)
-    } else {
-      res <- new(
-        Class = "dbDenseMatrix",
-        value = rowSum,
-        name = NA_character_,
-        init = TRUE,
-        dims = c(nrow(x), 1L),
-        dim_names = list(rownames(x), c('col1'))
-      )
-    }
+    res <- new(
+      Class = "dbDenseMatrix",
+      value = rowSum,
+      name = NA_character_,
+      init = TRUE,
+      dims = c(nrow(x), 1L),
+      dim_names = list(rownames(x), c('col1'))
+    )
 
     # show
     return(res)
@@ -805,18 +805,26 @@ setMethod(
   function(x, ..., memory = FALSE) {
     x = .castNumeric(x)
 
-    view_name <- unique_table_name('_tmp')
     num_col <- ncol(x)
-    sql <- glue::glue(
-      '
-                CREATE OR REPLACE TEMPORARY TABLE {view_name} AS
-                SELECT generate_series AS j
-                FROM generate_series(1, {num_col});
-            '
+
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(j) |>
+        dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+        dplyr::collect()
+
+      res <- numeric(num_col)
+      res[res_sparse$j] <- res_sparse$sum_x
+      names(res) <- colnames(x)
+      return(res)
+    }
+
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as j FROM generate_series(1, {num_col})"
+      ))
     )
-    con <- dbplyr::remote_con(x[])
-    invisible(DBI::dbExecute(con, sql))
-    dim_tbl <- dplyr::tbl(con, view_name)
 
     # calc colsum for nonzero values in ijx
     colSum = x[] |>
@@ -829,22 +837,14 @@ setMethod(
       dplyr::select(i, j, x) |>
       dplyr::collapse()
 
-    if (memory) {
-      colSum <- colSum |> dplyr::arrange(i)
-      res <- colSum |>
-        dplyr::pull(x)
-
-      names(res) <- colnames(x)
-    } else {
-      res <- new(
-        Class = "dbDenseMatrix",
-        value = colSum,
-        name = NA_character_,
-        init = TRUE,
-        dims = c(ncol(x), 1L),
-        dim_names = list(colnames(x), c('col1'))
-      )
-    }
+    res <- new(
+      Class = "dbDenseMatrix",
+      value = colSum,
+      name = NA_character_,
+      init = TRUE,
+      dims = c(ncol(x), 1L),
+      dim_names = list(colnames(x), c('col1'))
+    )
 
     # show
     return(res)
@@ -986,6 +986,47 @@ setMethod(
   function(x, ..., memory = FALSE, useNames = TRUE) {
     x <- .castNumeric(x)
     m <- nrow(x)
+    num_col <- ncol(x)
+
+    # Create temp table for all columns
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(j) |>
+        dplyr::summarise(
+          sum_x = sum(x, na.rm = TRUE),
+          sum_x2 = sum(x * x, na.rm = TRUE),
+          .groups = "drop"
+        ) |>
+        dplyr::collect()
+
+      # Initialize with 0 if m > 1, else NA
+      # sd(rep(0, m)) is 0 if m > 1
+      default_val <- if (m <= 1) NA_real_ else 0
+      res <- rep(default_val, num_col)
+
+      # Calculate sd for non-zeros
+      # Formula: sqrt((sum_x2 - (sum_x * sum_x) / m) / (m - 1))
+      if (m > 1) {
+        sds <- sqrt(
+          (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / m) /
+            (m - 1)
+        )
+        res[res_sparse$j] <- sds
+      }
+
+      if (useNames) {
+        names(res) <- colnames(x)
+      }
+      return(res)
+    }
+
+    # Create temp table for all columns
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as j FROM generate_series(1, {num_col})"
+      ))
+    )
 
     col_stats <- x[] |>
       dplyr::group_by(j) |>
@@ -1006,16 +1047,6 @@ setMethod(
           sqrt((sum_x2 - (sum_x * sum_x) / m) / (m - 1))
         }
       )
-
-    if (memory) {
-      res <- col_stats |>
-        dplyr::arrange(j) |>
-        dplyr::pull(sd_x)
-      if (useNames) {
-        names(res) <- colnames(x)
-      }
-      return(res)
-    }
 
     colSd <- dplyr::transmute(col_stats, i = j, j = 1L, x = sd_x)
 
@@ -1111,6 +1142,43 @@ setMethod(
   ) {
     x <- .castNumeric(x)
     k <- ncol(x)
+    num_row <- nrow(x)
+
+    # Create temp table for all rows
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(i) |>
+        dplyr::summarise(
+          sum_x = sum(x, na.rm = na.rm),
+          sum_x2 = sum(x * x, na.rm = na.rm),
+          .groups = "drop"
+        ) |>
+        dplyr::collect()
+
+      default_val <- if (k <= 1) NA_real_ else 0
+      res <- rep(default_val, num_row)
+
+      if (k > 1) {
+        sds <- sqrt(
+          (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / k) /
+            (k - 1)
+        )
+        res[res_sparse$i] <- sds
+      }
+
+      if (useNames) {
+        names(res) <- rownames(x)
+      }
+      return(res)
+    }
+
+    # Create temp table for all rows
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as i FROM generate_series(1, {num_row})"
+      ))
+    )
 
     row_stats <- x[] |>
       dplyr::group_by(i) |>
@@ -1131,16 +1199,6 @@ setMethod(
           sqrt((sum_x2 - (sum_x * sum_x) / k) / (k - 1))
         }
       )
-
-    if (memory) {
-      res <- row_stats |>
-        dplyr::arrange(i) |>
-        dplyr::pull(sd_x)
-      if (useNames) {
-        names(res) <- rownames(x)
-      }
-      return(res)
-    }
 
     rowSd <- dplyr::transmute(row_stats, i = i, j = 1L, x = sd_x)
 
@@ -1250,6 +1308,41 @@ setMethod(
   ) {
     x <- .castNumeric(x)
     k <- ncol(x)
+    num_row <- nrow(x)
+
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(i) |>
+        dplyr::summarise(
+          sum_x = sum(x, na.rm = na.rm),
+          sum_x2 = sum(x * x, na.rm = na.rm),
+          .groups = "drop"
+        ) |>
+        dplyr::collect()
+
+      default_val <- if (k <= 1) NA_real_ else 0
+      res <- rep(default_val, num_row)
+
+      if (k > 1) {
+        vars <- (res_sparse$sum_x2 -
+          (res_sparse$sum_x * res_sparse$sum_x) / k) /
+          (k - 1)
+        res[res_sparse$i] <- vars
+      }
+
+      if (useNames) {
+        names(res) <- rownames(x)
+      }
+      return(res)
+    }
+
+    # Create temp table for all rows
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as i FROM generate_series(1, {num_row})"
+      ))
+    )
 
     row_stats <- x[] |>
       dplyr::group_by(i) |>
@@ -1258,6 +1351,11 @@ setMethod(
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
       ) |>
+      dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |>
+      dplyr::mutate(
+        sum_x = dplyr::coalesce(sum_x, 0),
+        sum_x2 = dplyr::coalesce(sum_x2, 0)
+      ) |>
       dplyr::mutate(
         var_x = dplyr::case_when(
           k <= 1 ~ NA_real_,
@@ -1265,33 +1363,21 @@ setMethod(
         )
       )
 
-    if (memory) {
-      # Return as named vector
-      res <- row_stats |>
-        dplyr::arrange(i) |>
-        dplyr::pull(var_x)
+    # Return as dbDenseMatrix
+    rowVar <- row_stats |>
+      dplyr::mutate(j = 1, x = var_x) |>
+      dplyr::select(i, j, x)
 
-      if (useNames) {
-        names(res) <- rownames(x)
-      }
-      return(res)
-    } else {
-      # Return as dbDenseMatrix
-      rowVar <- row_stats |>
-        dplyr::mutate(j = 1, x = var_x) |>
-        dplyr::select(i, j, x)
+    res <- new(
+      Class = "dbDenseMatrix",
+      value = rowVar,
+      name = NA_character_,
+      init = TRUE,
+      dims = c(nrow(x), 1L),
+      dim_names = list(rownames(x), c('col1'))
+    )
 
-      res <- new(
-        Class = "dbDenseMatrix",
-        value = rowVar,
-        name = NA_character_,
-        init = TRUE,
-        dims = c(nrow(x), 1L),
-        dim_names = list(rownames(x), c('col1'))
-      )
-
-      return(res)
-    }
+    return(res)
   }
 )
 
@@ -1371,6 +1457,41 @@ setMethod(
   ) {
     x <- .castNumeric(x)
     m <- nrow(x)
+    num_col <- ncol(x)
+
+    if (memory) {
+      res_sparse <- x[] |>
+        dplyr::group_by(j) |>
+        dplyr::summarise(
+          sum_x = sum(x, na.rm = na.rm),
+          sum_x2 = sum(x * x, na.rm = na.rm),
+          .groups = "drop"
+        ) |>
+        dplyr::collect()
+
+      default_val <- if (m <= 1) NA_real_ else 0
+      res <- rep(default_val, num_col)
+
+      if (m > 1) {
+        vars <- (res_sparse$sum_x2 -
+          (res_sparse$sum_x * res_sparse$sum_x) / m) /
+          (m - 1)
+        res[res_sparse$j] <- vars
+      }
+
+      if (useNames) {
+        names(res) <- colnames(x)
+      }
+      return(res)
+    }
+
+    # Create temp table for all columns
+    dim_tbl <- dplyr::tbl(
+      dbplyr::remote_con(x[]),
+      dplyr::sql(glue::glue(
+        "SELECT generate_series as j FROM generate_series(1, {num_col})"
+      ))
+    )
 
     col_stats <- x[] |>
       dplyr::group_by(j) |>
@@ -1379,19 +1500,14 @@ setMethod(
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
       ) |>
+      dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
+      dplyr::mutate(
+        sum_x = dplyr::coalesce(sum_x, 0),
+        sum_x2 = dplyr::coalesce(sum_x2, 0)
+      ) |>
       dplyr::mutate(
         var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
       )
-
-    if (memory) {
-      v <- col_stats |>
-        dplyr::arrange(j) |>
-        dplyr::pull(var_x)
-      if (useNames) {
-        names(v) <- colnames(x)
-      }
-      return(v)
-    }
 
     colVars <- col_stats |>
       dplyr::transmute(i = j, j = 1L, x = var_x)
@@ -1598,11 +1714,9 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
   }
 
   if (as.character(.Generic) == 'any' | as.character(.Generic) == 'all') {
-    x_class <- x[] |> head(n = 1) |> dplyr::pull(x) |> class()
-    if (x_class != 'logical') {
-      x[] <- x[] |> dplyr::mutate(x = as.logical(x))
-    }
-    warning("coercing argument of type 'double' to logical")
+    # Always cast to logical for any/all to be safe and avoid eager evaluation
+    x[] <- x[] |> dplyr::mutate(x = as.logical(x))
+    # warning("coercing argument of type 'double' to logical")
   }
 
   build_call = glue::glue(
