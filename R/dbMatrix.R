@@ -667,51 +667,116 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
     )
   }
 
-  if (is(x, "dbDenseMatrix") & sparse == TRUE) {
+  if (is(x, "dbDenseMatrix") & sparse) {
     stopf("Cannot convert dbDensematrix into sparse matrix. Set sparse=FALSE")
   }
 
-  if (is(x, "dbSparseMatrix") & sparse == FALSE) {
+  if (is(x, "dbSparseMatrix") & !sparse) {
     cli::cli_alert_info(
       "Converting dbSparseMatrix into dense matrix. Set 'sparse=TRUE' to construct 'dgCMatrix'."
     )
   }
 
-  # Create temp file to write out ijx in db to disk
-  sql <- dbplyr::sql_render(x[])
-  con <- dbplyr::remote_con(x[])
-  dat <- DBI::dbGetQuery(con, sql)
-  # temp_file <- tempfile(tmpdir = tempdir(), fileext = ".parquet")
-  # x[] |>
-  #   arrow::to_arrow() |>
-  #   arrow::write_parquet(temp_file)
+  # Chunked dense matrix conversion to avoid memory inflation
+  if (!sparse) {
+    # Limit max memory usage
+    .check_mem_limit(x)
 
-  # Create matrix from ijx
-  # dat <- arrow::read_parquet(temp_file)
-  mat <- Matrix::sparseMatrix(
-    i = dat$i,
-    j = dat$j,
-    x = dat$x,
-    index1 = TRUE,
-    dims = c(n_rows, n_cols),
-    dimnames = dim_names
-  )
-  # mat <- Matrix::drop0(mat)
+    # Calculate memory limits
+    limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3)
+    est_final_size <- as.numeric(n_rows) * as.numeric(n_cols) * 8
+    
+    # Intermediate df is ~16 bytes per element (4+4+8)
+    # Use 24 to be safe and account for vectors
+    est_intermediate_size <- as.numeric(n_rows) * as.numeric(n_cols) * 24
+    est_peak_memory <- est_final_size + est_intermediate_size
 
-  if (!names) {
-    dimnames(mat) <- NULL
-  }
+    # Pre-allocate dense matrix with zeros
+    mat <- matrix(0, nrow = n_rows, ncol = n_cols)
+    
+    if (est_peak_memory < limit) {
+      if (getOption("dbMatrix.verbose", default = TRUE)) {
+        cli::cli_alert_info("Using fast in-memory conversion.")
+      }
+      
+      # Get all data
+      con <- dbplyr::remote_con(x[])
+      sql <- dbplyr::sql_render(x[])
+      dat <- DBI::dbGetQuery(con, sql)
+      
+      if (nrow(dat) > 0) {
+        # Fill matrix
+        idx <- (as.integer(dat$j) - 1L) * as.numeric(n_rows) + as.integer(dat$i)
+        mat[idx] <- dat$x
+      }
+      
+    } else {
+      if (getOption("dbMatrix.verbose", default = TRUE)) {
+        cli::cli_alert_info("Using chunked streaming conversion to save memory.")
+      }
 
-  if (is(x, "dbSparseMatrix") & sparse == TRUE) {
+      # Stream triplets in chunks to avoid memory spike
+      chunk_size <- 1e6
+      offset <- 0
+  
+      # Get the base query
+      con <- dbplyr::remote_con(x[])
+      base_sql <- dbplyr::sql_render(x[])
+  
+      while (TRUE) {
+        # Order by j, i for cache locality when filling
+        sql <- glue::glue(
+          "SELECT i, j, x FROM ({base_sql}) q ORDER BY j, i LIMIT {chunk_size} OFFSET {offset}"
+        )
+  
+        chunk <- DBI::dbGetQuery(con, sql)
+  
+        if (nrow(chunk) == 0) {
+          break
+        }
+  
+        # Fill matrix
+        # Direct vector indexing is faster than cbind: (j-1)*nrow + i
+        idx <- (as.integer(chunk$j) - 1L) *
+          as.numeric(n_rows) +
+          as.integer(chunk$i)
+        mat[idx] <- chunk$x
+  
+        offset <- offset + chunk_size
+  
+        # Safety break for infinite loops (shouldn't happen)
+        if (nrow(chunk) < chunk_size) break
+      }
+    }
+
+    if (names) {
+      dimnames(mat) <- dim_names
+    }
     return(mat)
-  } else {
-    mat <- as.matrix(mat)
   }
 
-  # Clean up temp files
-  # unlink(temp_file, recursive = TRUE, force = TRUE)
+  # Stream to disk for sparse matrix
+  temp_file <- tempfile(fileext = ".mtx")
 
-  return(mat)
+  # Ensure cleanup
+  tryCatch(
+    {
+      writeMM(x, temp_file)
+      mat <- Matrix::readMM(temp_file)
+      mat <- as(mat, "CsparseMatrix")
+
+      if (names) {
+        dimnames(mat) <- dim_names
+      }
+
+      return(mat)
+    },
+    finally = {
+      if (file.exists(temp_file)) {
+        unlink(temp_file)
+      }
+    }
+  )
 }
 
 #' @method as.matrix dbSparseMatrix
