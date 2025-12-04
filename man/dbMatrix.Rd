@@ -53,12 +53,12 @@ Create an S4 \code{dbMatrix} object in sparse or dense triplet vector format.
 This function reads in data into a pre-existing DuckDB database.
 Supported \code{value} data types:
 \itemize{
-\item \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} In-memory sparse matrix from the \code{\link{Matrix}} package
+\item \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} In-memory sparse matrix from the \code{\link[Matrix:Matrix]{Matrix::Matrix}} package
 \item \code{\link[Matrix:dgTMatrix-class]{Matrix::dgTMatrix}} In-memory triplet vector or COO matrix
-\item \code{\link[=Matrix]{matrix}} In-memory dense matrix from base R
+\item \code{\link[Matrix:Matrix]{matrix}} In-memory dense matrix from base R
 \item \code{.mtx} Path to \href{https://math.nist.gov/MatrixMarket/formats.html}{.mtx} file
 \item \code{.csv} Path to .csv file
-\item \code{\link{tbl_duckdb_connection}} Table in \code{\link{duckdb}} database in ijx format from
+\item \code{tbl_duckdb_connection} Table in \code{\link[duckdb:duckdb]{duckdb::duckdb}} database in ijx format from
 existing \code{\link{dbMatrix}} object. \code{dims} and \code{dim_names} must be
 specified if \code{value} is \code{tbl_duckdb_connection}.
 }

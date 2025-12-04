@@ -28,7 +28,7 @@ Inherits from \code{dbData}.
 \section{Slots}{
 
 \describe{
-\item{\code{dim_names}}{row \link{1} and col \link{2} names}
+\item{\code{dim_names}}{row (1) and col (2) names}
 
 \item{\code{dims}}{dimensions of the matrix}
 
