@@ -3,11 +3,11 @@ rlang::local_options(lifecycle_verbosity = "quiet")
 
 # ---------------------------------------------------------------------------- #
 # Load the RDS file in the 'data' folder
-dgc = readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
 
-con1 = DBI::dbConnect(duckdb::duckdb(), ":memory:")
+con1 <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm = dbMatrix::dbMatrix(
+dbsm <- dbMatrix::dbMatrix(
   value = dgc,
   con = con1,
   name = 'dgc',
@@ -18,30 +18,30 @@ dbsm = dbMatrix::dbMatrix(
 # ---------------------------------------------------------------------------- #
 # Test name equivalence
 
-names_dgc = names(dgc)
-names_dbsm = names(dbsm)
+names_dgc <- names(dgc)
+names_dbsm <- names(dbsm)
 
 test_that("names() works", {
   expect_equal(names_dgc, names_dbsm)
 })
 
 
-names_dgc = rownames(dgc)
-names_dbsm = rownames(dbsm)
+names_dgc <- rownames(dgc)
+names_dbsm <- rownames(dbsm)
 
 test_that("rownames() works", {
   expect_equal(names_dgc, names_dbsm)
 })
 
-names_dgc = colnames(dgc)
-names_dbsm = colnames(dbsm)
+names_dgc <- colnames(dgc)
+names_dbsm <- colnames(dbsm)
 
 test_that("colnames() works", {
   expect_equal(names_dgc, names_dbsm)
 })
 
-names_dgc = dimnames(dgc)
-names_dbsm = dimnames(dbsm)
+names_dgc <- dimnames(dgc)
+names_dbsm <- dimnames(dbsm)
 
 test_that("dimnames() works", {
   expect_equal(names_dgc, names_dbsm)

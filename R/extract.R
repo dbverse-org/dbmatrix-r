@@ -16,8 +16,11 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbIndex', j = 'missing'),
   function(x, i, ..., drop = FALSE) {
-    con = get_con(x)
-    dim = dim(x)
+    # get dbMatrix info
+    con <- get_con(x)
+    dim <- dim(x)
+
+    # check inputs
     .check_extract(x = x, i = i, j = NULL, dim = dim)
 
     if (is.numeric(i)) {
@@ -113,7 +116,9 @@ setMethod(
   signature(x = 'dbMatrix', i = 'missing', j = 'dbIndex'),
   function(x, j, ..., drop = FALSE) {
     con <- get_con(x)
-    dim = dim(x)
+    dim <- dim(x)
+
+    # check for dims
     .check_extract(x = x, i = NULL, j = j, dim = dim)
 
     if (is.numeric(j)) {
@@ -208,8 +213,11 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbIndex', j = 'dbIndex'),
   function(x, i, j, ..., drop = FALSE) {
-    con = get_con(x)
-    dim = dim(x)
+    # get dbMatrix info
+    con <- get_con(x)
+    dim <- dim(x)
+
+    # check for dims
     .check_extract(x = x, i = i, j = j, dim = dim)
 
     # Process i index (same logic as row-only subsetting)
@@ -363,8 +371,9 @@ setMethod(
       dplyr::inner_join(map_tbl_j, by = "j") |>
       dplyr::select(i = new_i, j = new_j, x)
 
-    x@dim_names[[1L]] = filter_i
-    x@dim_names[[2L]] = filter_j
+    # update dbMatrix attributes
+    x@dim_names[[1L]] <- filter_i
+    x@dim_names[[2L]] <- filter_j
     x@dims[1L] <- length(filter_i)
     x@dims[2L] <- length(filter_j)
     x@name <- NA_character_
@@ -378,12 +387,12 @@ setMethod(
 #' Can apply to both rows (dims = 1) and columns (dims = 2)
 #' @keywords internal
 #' @noRd
-get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
+get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
   # check that idx is 1 or 2
   if (dims != 1 && dims != 2) {
     stop("dims must be 1 (rows) or 2 (columns)")
   }
-  dims = as.integer(dims)
+  dims <- as.integer(dims)
 
   if (is.character(index)) {
     return(index)
@@ -404,10 +413,10 @@ get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
     # FIXME: If dbmatrix@x is logical support recycle_boolean_index
     # below only supports character indexing, no recycling
     is_logical <- index@value |> head(1) |> dplyr::pull(x) |> is.logical()
-    sub_names = dbM_dimnames[[dims]]
+    sub_names <- dbM_dimnames[[dims]]
     if (is_logical) {
       filtered_index <- index[] |>
-        dplyr::filter(x == TRUE)
+        dplyr::filter(x)
       if (dims == 1L || is(index, "dbDenseMatrix")) {
         #FIXME dbVector
         # a_rownames |>
@@ -439,7 +448,7 @@ get_dbM_sub_idx = function(index, dbM_dimnames, dims) {
     }
   }
 
-  sub_names = dbM_dimnames[[dims]]
+  sub_names <- dbM_dimnames[[dims]]
   return(sub_names[index])
 }
 
@@ -496,7 +505,7 @@ setMethod(
       by = c("i", "j"),
       suffix = c(".x", ".i")
     ) |>
-      dplyr::filter(x.i == TRUE) |>
+      dplyr::filter(x.i) |>
       dplyr::arrange(j, i)
 
     # Pull the result into memory as a vector
@@ -538,7 +547,7 @@ setMethod(
       tbl_i,
       by = c("i", "j")
     ) |>
-      dplyr::filter(x == TRUE) |>
+      dplyr::filter(x) |>
       dplyr::select(i, j)
 
     update_data <- rows_to_update |>

@@ -1,6 +1,6 @@
 #' @describeIn simulate_objects Simulate a duckdb connection dplyr tbl_Pool in memory
 #' @keywords internal
-sim_duckdb = function(
+sim_duckdb <- function(
   value = datasets::iris,
   name = 'test',
   con = NULL,
@@ -9,15 +9,15 @@ sim_duckdb = function(
   # setup in-memory db
   if (is.null(con)) {
     if (memory) {
-      drv = duckdb::duckdb(dbdir = ':memory:')
+      drv <- duckdb::duckdb(dbdir = ':memory:')
     } else {
       # create temporary temp.db file
-      temp_file = tempfile(fileext = '.duckdb')
-      drv = duckdb::duckdb(dbdir = temp_file)
+      temp_file <- tempfile(fileext = '.duckdb')
+      drv <- duckdb::duckdb(dbdir = temp_file)
     }
 
     # create connection
-    con = DBI::dbConnect(drv)
+    con <- DBI::dbConnect(drv)
   }
 
   # check to see if table already exists and if so remove it
@@ -43,11 +43,11 @@ sim_dgc <- function(num_rows = 50, num_cols = 50, n_vals = 50) {
   data <- matrix(0, nrow = num_rows, ncol = num_cols)
 
   # Set n random values to non-zero
-  non_zero_indices <- sample(1:(num_rows * num_cols), n_vals)
+  non_zero_indices <- sample.int((num_rows * num_cols), n_vals)
   data[non_zero_indices] <- rnorm(n_vals)
 
   # Create dumby sparse dgc matrix (column-major)
-  mat = as(data, "dgCMatrix")
+  mat <- as(data, "dgCMatrix")
 
   return(mat)
 }
@@ -83,7 +83,7 @@ sim_denseMat <- function(num_rows = 50, num_cols = 50) {
 #' sim_ijx_matrix()
 #'
 #' @keywords internal
-sim_ijx_matrix = function(
+sim_ijx_matrix <- function(
   mat_type = NULL,
   num_rows = 50,
   num_cols = 50,
@@ -110,20 +110,20 @@ sim_ijx_matrix = function(
   # setup dummy matrix data
   if (mat_type == 'sparse') {
     # Simulate dgcMatrix
-    mat = sim_dgc(num_rows = num_rows, num_cols = num_cols)
+    mat <- sim_dgc(num_rows = num_rows, num_cols = num_cols)
 
     # Create sparse ijx representation
-    ijx = Matrix::summary(mat)
+    ijx <- Matrix::summary(mat)
   } else {
     # dense matrix
     # Create dumby dataset
-    mat = matrix(rnorm(num_rows * num_cols), nrow = num_rows, ncol = num_cols)
+    mat <- matrix(rnorm(num_rows * num_cols), nrow = num_rows, ncol = num_cols)
 
     # hardcode dimnames for simulated data
     # row_names = as.factor(paste0("row", 1:num_rows))
     # col_names = as.factor(paste0("col", 1:num_cols))
-    row_idx = as.integer(1:num_rows)
-    col_idx = as.integer(1:num_cols)
+    row_idx <- as.integer(1:num_rows)
+    col_idx <- as.integer(1:num_cols)
 
     # set dimnames for matrix
     # rownames(mat) = row_names
@@ -143,7 +143,7 @@ sim_ijx_matrix = function(
 #' @describeIn simulate_objects Simulate a dbSparseMatrix in memory
 #' @description  Simulate a dbSparseMatrix in memory
 #' @export
-sim_dbSparseMatrix = function(
+sim_dbSparseMatrix <- function(
   num_rows = 50,
   num_cols = 50,
   seed_num = 42,
@@ -156,31 +156,31 @@ sim_dbSparseMatrix = function(
   }
 
   # simulate ijx matrix
-  ijx = sim_ijx_matrix(
+  ijx <- sim_ijx_matrix(
     mat_type = 'sparse',
     num_rows = num_rows,
     num_cols = num_cols,
     seed_num = seed_num
   )
 
-  ijx = ijx |> as.data.frame()
+  ijx <- ijx |> as.data.frame()
 
   # add ijx as table to new duckdb connection
-  data = sim_duckdb(value = ijx, name = name, memory = memory)
+  data <- sim_duckdb(value = ijx, name = name, memory = memory)
 
   # save connection
-  conn = dbplyr::remote_con(data)
+  conn <- dbplyr::remote_con(data)
 
   # setup dimnames
-  row_names = as.factor(paste0("row", 1:num_rows))
-  col_names = as.factor(paste0("col", 1:num_cols))
-  dim_names = list(row_names, col_names)
+  row_names <- as.factor(paste0("row", 1:num_rows))
+  col_names <- as.factor(paste0("col", 1:num_cols))
+  dim_names <- list(row_names, col_names)
 
   # setup dims
-  dim = c(as.integer(num_rows), as.integer(num_cols))
+  dim <- c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbSparseMatrix obj
-  res = dbMatrix(
+  res <- dbMatrix(
     value = data,
     con = conn,
     name = name,
@@ -198,7 +198,7 @@ sim_dbSparseMatrix = function(
 #' @describeIn simulate_objects Simulate a dbDenseMatrix in memory
 #' @description Simulate a dbDenseMatrix in memory.
 #' @export
-sim_dbDenseMatrix = function(
+sim_dbDenseMatrix <- function(
   num_rows = 50,
   num_cols = 50,
   seed_num = 42,
@@ -211,7 +211,7 @@ sim_dbDenseMatrix = function(
   }
 
   # simulate dense matrix
-  data = sim_ijx_matrix(
+  data <- sim_ijx_matrix(
     mat_type = 'dense',
     num_rows = num_rows,
     num_cols = num_cols,
@@ -219,23 +219,23 @@ sim_dbDenseMatrix = function(
   )
 
   # add dense matrix as table to duckdb database
-  data = sim_duckdb(value = data, name = name, memory = memory)
+  data <- sim_duckdb(value = data, name = name, memory = memory)
 
   # get connection
-  conn = dbplyr::remote_con(data)
+  conn <- dbplyr::remote_con(data)
 
   # setup dimnames
-  row_names = as.factor(paste0("row", 1:num_rows))
-  col_names = as.factor(paste0("col", 1:num_cols))
+  row_names <- as.factor(paste0("row", 1:num_rows))
+  col_names <- as.factor(paste0("col", 1:num_cols))
   # row_names = rownames(data)
   # col_names = colnames(data)
-  dim_names = list(row_names, col_names)
+  dim_names <- list(row_names, col_names)
 
   # setup dims
-  dim = c(as.integer(num_rows), as.integer(num_cols))
+  dim <- c(as.integer(num_rows), as.integer(num_cols))
 
   # create dbDenseMatrix object
-  res = dbMatrix(
+  res <- dbMatrix(
     value = data,
     con = conn,
     name = name,

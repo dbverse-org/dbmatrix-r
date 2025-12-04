@@ -55,7 +55,7 @@
   }
 
   # reserved name check
-  reserved_names = c(
+  reserved_names <- c(
     "intersect",
     "union",
     "except",

@@ -72,7 +72,7 @@ test_that("dbDenseMatrix %in% empty vector returns logical vector of FALSE value
 
   # Result should be logical vector of the same length as the matrix
   expect_equal(length(result), length(env$db_dense))
-  expect_true(all(!result))
+  expect_true(!any(result))
 })
 
 # Tests for ANY %in% dbMatrix

@@ -9,7 +9,7 @@
 # Math Ops Helpers ####
 
 #' @noRd
-ops_ordered_args_vect = function(dbm_narg, a, b) {
+ops_ordered_args_vect <- function(dbm_narg, a, b) {
   switch(
     dbm_narg,
     paste0('`(', a, ', ', b, '))'),
@@ -18,9 +18,9 @@ ops_ordered_args_vect = function(dbm_narg, a, b) {
 }
 
 #' @noRd
-arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
+arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
   # order matters
-  ordered_args = ops_ordered_args_vect(dbm_narg, 'x', 'num_vect')
+  ordered_args <- ops_ordered_args_vect(dbm_narg, 'x', 'num_vect')
 
   # helper functions
   .skip_computation <- function(num_vect, generic_char) {
@@ -167,7 +167,7 @@ arith_call_dbm = function(dbm_narg, dbm, num_vect, generic_char) {
 }
 
 #' @noRd
-arith_call_dbm_vect_multi = function(
+arith_call_dbm_vect_multi <- function(
   dbm,
   num_vect,
   generic_char,
@@ -197,7 +197,7 @@ arith_call_dbm_vect_multi = function(
 #' @keywords internal
 #' @noRd
 .as_dbVector <- function(vector, con) {
-  ijx <- dplyr::tibble(i = 1:length(vector), j = 1, x = vector) |>
+  ijx <- dplyr::tibble(i = seq_along(vector), j = 1, x = vector) |>
     dplyr::copy_to(
       dest = con,
       name = unique_table_name('dbVector'),
@@ -211,7 +211,7 @@ arith_call_dbm_vect_multi = function(
     name = NA_character_,
     init = TRUE,
     dims = c(length(vector), 1L),
-    dim_names = list(paste0('row', 1:length(vector)), c('col1'))
+    dim_names = list(paste0('row', seq_along(vector)), c('col1'))
   )
 
   return(res)
@@ -381,9 +381,9 @@ arith_call_dbm_vect_multi = function(
 #' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
-  dbm = .castNumeric(e1)
+  dbm <- .castNumeric(e1)
 
-  num_vect = if (typeof(e2) != 'double') {
+  num_vect <- if (typeof(e2) != 'double') {
     as.numeric(e2)
   } else {
     e2
@@ -405,9 +405,9 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @rdname summary
 #' @export
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
-  dbm = .castNumeric(e2)
+  dbm <- .castNumeric(e2)
 
-  num_vect = if (typeof(e1) != 'double') {
+  num_vect <- if (typeof(e1) != 'double') {
     as.numeric(e1)
   } else {
     e1
@@ -432,7 +432,7 @@ setMethod(
   'Arith',
   signature(e1 = 'dbMatrix', e2 = 'dbMatrix'),
   function(e1, e2) {
-    generic_char = as.character(.Generic)
+    generic_char <- as.character(.Generic)
     dim1 <- dim(e1)
     dim2 <- dim(e2)
 
@@ -472,7 +472,7 @@ setMethod(
 
       # Perform full join operation on dbMatrix
       # TODO: avoid full join
-      build_call = glue::glue(
+      build_call <- glue::glue(
         "e1[] |>
          dplyr::full_join(e2[], by = c('i', 'j')) |>
          dplyr::mutate(x = `{generic_char}`(dplyr::coalesce(x.x, 0),
@@ -480,8 +480,8 @@ setMethod(
          dplyr::select(i, j, x) |>
          dplyr::arrange(i)"
       )
-      e1[] = eval(str2lang(build_call))
-      e1@name = NA_character_
+      e1[] <- eval(str2lang(build_call))
+      e1@name <- NA_character_
       return(e1)
     }
   }
@@ -498,15 +498,15 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   op <- as.character(.Generic)
 
   if (is.na(e2) && op == "==") {
-    build_call = glue::glue('e1[] |> dplyr::mutate(x = is.na(x))')
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = is.na(x))')
   } else if (is.na(e2) && op == "!=") {
-    build_call = glue::glue('e1[] |> dplyr::mutate(x = !is.na(x))')
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = !is.na(x))')
   } else {
-    build_call = glue::glue('e1[] |> dplyr::mutate(x = `', op, '`(x, e2))')
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = `', op, '`(x, e2))')
   }
 
-  e1[] = eval(str2lang(build_call))
-  e1@name = NA_character_
+  e1[] <- eval(str2lang(build_call))
+  e1@name <- NA_character_
   return(e1)
 })
 
@@ -518,14 +518,14 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @rdname summary
 #' @export
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
-  build_call = glue::glue(
+  build_call <- glue::glue(
     'e2[] |> dplyr::mutate(x = `',
     as.character(.Generic),
     '`(e1, x))'
   )
 
-  e2[] = eval(str2lang(build_call))
-  e2@name = NA_character_
+  e2[] <- eval(str2lang(build_call))
+  e2@name <- NA_character_
   e2
 })
 
@@ -541,7 +541,7 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
     stopf('non-conformable matrix dimensions')
   }
 
-  build_call = glue::glue(
+  build_call <- glue::glue(
     "
     e1[] |>
     dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
@@ -552,8 +552,8 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
     "
   )
 
-  e1[] = eval(str2lang(build_call))
-  e1@name = NA_character_
+  e1[] <- eval(str2lang(build_call))
+  e1@name <- NA_character_
   e1
 })
 
@@ -803,7 +803,7 @@ setMethod(
   'colSums',
   signature(x = 'dbSparseMatrix'),
   function(x, ..., memory = FALSE) {
-    x = .castNumeric(x)
+    x <- .castNumeric(x)
 
     num_col <- ncol(x)
 
@@ -827,7 +827,7 @@ setMethod(
     )
 
     # calc colsum for nonzero values in ijx
-    colSum = x[] |>
+    colSum <- x[] |>
       dplyr::group_by(j) |>
       dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
       dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
@@ -1652,7 +1652,7 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @concept transform
 #' @export
 setMethod('Math', signature(x = 'dbMatrix'), function(x) {
-  build_call = glue::glue(
+  build_call <- glue::glue(
     "x[] |>
      dplyr::mutate(x = `",
     as.character(.Generic),
@@ -1719,7 +1719,7 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
     # warning("coercing argument of type 'double' to logical")
   }
 
-  build_call = glue::glue(
+  build_call <- glue::glue(
     "x[] |>
      dplyr::summarise(res := `",
     as.character(.Generic),
@@ -1812,7 +1812,7 @@ ncol.dbMatrix <- function(x) {
 #' @concept matrix_props
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
-  if (any(is.na(x@dims))) {
+  if (anyNA(x@dims)) {
     return(c(nrow(x), ncol(x)))
   } else {
     res <- x@dims

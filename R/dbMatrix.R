@@ -12,22 +12,22 @@ setMethod(
   signature(.Object = 'dbMatrix'),
   function(.Object, dim_names, dims, ...) {
     # call dbMatrix initialize
-    .Object = methods::callNextMethod(.Object, ...)
+    .Object <- methods::callNextMethod(.Object, ...)
 
     # matrix specific data input #
     # -------------------------- #
     if (!missing(dim_names)) {
-      .Object@dim_names = dim_names
+      .Object@dim_names <- dim_names
     }
     if (!missing(dims)) {
-      .Object@dims = dims
+      .Object@dims <- dims
     }
 
     # default values if no input provided #
     # ----------------------------------- #
     if (is.null(.Object@value)) {
-      .Object@dims = c(0L, 0L)
-      .Object@dim_names = list(NULL, NULL)
+      .Object@dims <- c(0L, 0L)
+      .Object@dim_names <- list(NULL, NULL)
     }
     # tbl_name = dbplyr::remote_name(.Object[])
     # .Object@name = ifelse(is.null(tbl_name), NA_character_, tbl_name)
@@ -84,7 +84,7 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
 
   # get matrix i and j to print
   suppress_rows <- FALSE # flag for whether rows are being suppressed
-  
+
   # Determine column indices to show (first 10)
   if (dim_col > 10L) {
     filter_j <- seq_len(10L)
@@ -231,7 +231,7 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 
   # get matrix i and j to print
   suppress_rows <- FALSE # flag for whether rows are being suppressed
-  
+
   # Determine column indices to show (first 10)
   if (dim_col > 10L) {
     filter_j <- seq_len(10L)
@@ -479,7 +479,13 @@ dbMatrix <- function(
         )
       }
     } else if (inherits(value, "matrix") | inherits(value, "Matrix")) {
-      return(as.dbMatrix(value, con = con, name = name, overwrite = overwrite, ...))
+      return(as.dbMatrix(
+        value,
+        con = con,
+        name = name,
+        overwrite = overwrite,
+        ...
+      ))
     } else {
       stopf('Invalid "value" provided. See ?dbMatrix for help.')
     }
@@ -733,7 +739,7 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
     # Calculate memory limits
     limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3)
     est_final_size <- as.numeric(n_rows) * as.numeric(n_cols) * 8
-    
+
     # Intermediate df is ~16 bytes per element (4+4+8)
     # Use 24 to be safe and account for vectors
     est_intermediate_size <- as.numeric(n_rows) * as.numeric(n_cols) * 24
@@ -741,57 +747,58 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
 
     # Pre-allocate dense matrix with zeros
     mat <- matrix(0, nrow = n_rows, ncol = n_cols)
-    
+
     if (est_peak_memory < limit) {
       if (getOption("dbMatrix.verbose", default = TRUE)) {
         cli::cli_alert_info("Using fast in-memory conversion.")
       }
-      
+
       # Get all data
       con <- dbplyr::remote_con(x[])
       sql <- dbplyr::sql_render(x[])
       dat <- DBI::dbGetQuery(con, sql)
-      
+
       if (nrow(dat) > 0) {
         # Fill matrix
         idx <- (as.integer(dat$j) - 1L) * as.numeric(n_rows) + as.integer(dat$i)
         mat[idx] <- dat$x
       }
-      
     } else {
       if (getOption("dbMatrix.verbose", default = TRUE)) {
-        cli::cli_alert_info("Using chunked streaming conversion to save memory.")
+        cli::cli_alert_info(
+          "Using chunked streaming conversion to save memory."
+        )
       }
 
       # Stream triplets in chunks to avoid memory spike
       chunk_size <- 1e6
       offset <- 0
-  
+
       # Get the base query
       con <- dbplyr::remote_con(x[])
       base_sql <- dbplyr::sql_render(x[])
-  
-      while (TRUE) {
+
+      repeat {
         # Order by j, i for cache locality when filling
         sql <- glue::glue(
           "SELECT i, j, x FROM ({base_sql}) q ORDER BY j, i LIMIT {chunk_size} OFFSET {offset}"
         )
-  
+
         chunk <- DBI::dbGetQuery(con, sql)
-  
+
         if (nrow(chunk) == 0) {
           break
         }
-  
+
         # Fill matrix
         # Direct vector indexing is faster than cbind: (j-1)*nrow + i
         idx <- (as.integer(chunk$j) - 1L) *
           as.numeric(n_rows) +
           as.integer(chunk$i)
         mat[idx] <- chunk$x
-  
+
         offset <- offset + chunk_size
-  
+
         # Safety break for infinite loops (shouldn't happen)
         if (nrow(chunk) < chunk_size) break
       }
@@ -947,8 +954,8 @@ as_ijx <- function(x) {
     ijx <- as(x, "TsparseMatrix")
     df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
   } else if (is(x, "matrix") | is(x, "dgeMatrix")) {
-    row_indices <- rep(1:nrow(x), times = ncol(x))
-    col_indices <- rep(1:ncol(x), each = nrow(x))
+    row_indices <- rep(seq_len(nrow(x)), times = ncol(x))
+    col_indices <- rep(seq_len(ncol(x)), each = nrow(x))
     values <- as.vector(x)
     df <- data.table::data.table(
       i = row_indices,
@@ -1313,7 +1320,7 @@ get_MM_dim <- function(mtx_file_path) {
   }
 
   header <- character(0)
-  while (TRUE) {
+  repeat {
     line <- readLines(con, n = 1)
     if (length(line) == 0 || !startsWith(line, "%")) {
       break
@@ -1372,13 +1379,13 @@ get_MM_dimnames <- function(
     stop("Column index must be an integer.")
   }
 
-  dims = get_MM_dim(mtx_file_path)
+  dims <- get_MM_dim(mtx_file_path)
 
   # Read row and column name files using data.table fread
   rowname_file <- data.table::fread(mtx_rowname_file_path, header = FALSE)
-  dim_rownames = dim(rowname_file)
+  dim_rownames <- dim(rowname_file)
   colname_file <- data.table::fread(mtx_colname_file_path, header = FALSE)
-  dim_colnames = dim(colname_file)
+  dim_colnames <- dim(colname_file)
 
   # check dimname and column indices
   if (mtx_rowname_col_idx > dim_rownames[2]) {
@@ -1394,8 +1401,8 @@ get_MM_dimnames <- function(
   }
 
   # Extract row and column names
-  rownames = rowname_file[, ..mtx_rowname_col_idx][[1]]
-  colnames = colname_file[, ..mtx_colname_col_idx][[1]]
+  rownames <- rowname_file[, ..mtx_rowname_col_idx][[1]]
+  colnames <- colname_file[, ..mtx_colname_col_idx][[1]]
 
   # Make unique
   # Note: first replicates will be labeled --1, second --2, and so on...
@@ -1419,7 +1426,7 @@ get_MM_dimnames <- function(
     )
   }
 
-  dimnames = list(rownames, colnames)
+  dimnames <- list(rownames, colnames)
 
   return(dimnames)
 }

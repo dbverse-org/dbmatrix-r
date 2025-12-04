@@ -83,7 +83,7 @@ setMethod(
   'dimnames<-',
   signature(x = 'dbMatrix', value = 'list'),
   function(x, value) {
-    x@dim_names = value
+    x@dim_names <- value
     x
   }
 )
@@ -100,7 +100,7 @@ setMethod(
 .write_dimnames <- function(x, name) {
   con <- dbplyr::remote_con(x@value)
   .check_con(con)
-  dimnames = dimnames(x)
+  dimnames <- dimnames(x)
 
   if (!inherits(x, 'dbMatrix')) {
     stopf('x must be a dbMatrix object')
@@ -123,10 +123,10 @@ setMethod(
     })
   }
 
-  rownames_dt = data.table::data.table(
+  rownames_dt <- data.table::data.table(
     rownames = dimnames[[1]] |> as.character()
   )
-  colnames_dt = data.table::data.table(
+  colnames_dt <- data.table::data.table(
     colnames = dimnames[[2]] |> as.character()
   )
 

@@ -1,7 +1,7 @@
 test_that("compute() works for dbMatrix", {
   # Load package
   devtools::load_all()
-  
+
   # Setup
   con <- DBI::dbConnect(duckdb::duckdb())
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE))

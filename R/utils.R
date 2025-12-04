@@ -8,7 +8,7 @@ NULL
 #' @param sep how to join elements of string (default is one space)
 #' @keywords internal
 #' @noRd
-wrap_msg = function(..., sep = ' ') {
+wrap_msg <- function(..., sep = ' ') {
   message(wrap_txt(..., sep = sep))
 }
 
@@ -19,10 +19,10 @@ wrap_msg = function(..., sep = ' ') {
 #' @param errWidth default = FALSE. Set strWidth to be compatible with error printout
 #' @keywords internal
 #' @noRd
-wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
-  custom_width = ifelse(is.null(match.call()$strWidth), yes = FALSE, no = TRUE)
+wrap_txt <- function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
+  custom_width <- ifelse(is.null(match.call()$strWidth), yes = FALSE, no = TRUE)
   if (!isTRUE(custom_width)) {
-    if (isTRUE(errWidth)) strWidth = getOption('width') - 6
+    if (isTRUE(errWidth)) strWidth <- getOption('width') - 6
   }
 
   cat(..., sep = sep) |>
@@ -37,7 +37,7 @@ wrap_txt = function(..., sep = ' ', strWidth = 100, errWidth = FALSE) {
 
 
 # Custom stop function
-stopf = function(...) {
+stopf <- function(...) {
   wrap_txt('dbMatrix: ', ..., errWidth = TRUE) |>
     stop(call. = FALSE)
 }
@@ -46,7 +46,7 @@ stopf = function(...) {
 # From a vector, generate a string with the pattern 'item1', 'item2'
 #' @keywords internal
 #' @noRd
-vector_to_string = function(x) {
+vector_to_string <- function(x) {
   toString(sprintf("'%s'", x))
 }
 
@@ -56,7 +56,7 @@ vector_to_string = function(x) {
 #' @param fill fill character
 #' @param digits default = 5. If numeric, round to this number of digits
 #' @keywords internal
-print_array = function(
+print_array <- function(
   i = NULL,
   j = NULL,
   x = NULL,
@@ -66,17 +66,17 @@ print_array = function(
   fill = '.',
   digits = 5L
 ) {
-  total_len = prod(dims)
+  total_len <- prod(dims)
 
   # pre-generate filler values
   if (class == "dense") {
-    n_digits = getOption('dbMatrix.digits', default = 7)
-    a_vals = rep(format(round(0, n_digits), nsmall = n_digits), total_len)
+    n_digits <- getOption('dbMatrix.digits', default = 7)
+    a_vals <- rep(format(round(0, n_digits), nsmall = n_digits), total_len)
   } else {
-    a_vals = rep('.', total_len)
+    a_vals <- rep('.', total_len)
   }
 
-  ijx_nargs = sum(!is.null(i), !is.null(j), !is.null(x))
+  ijx_nargs <- sum(!is.null(i), !is.null(j), !is.null(x))
   if (ijx_nargs < 3 && ijx_nargs > 1) {
     stopf('All values for i, j, and x must be given when printing')
   }
@@ -106,7 +106,7 @@ print_array = function(
 #' @keywords internal
 #' @noRd
 #' @return integer position in array vector the i and j map to
-ij_array_map = function(i, j, dims) {
+ij_array_map <- function(i, j, dims) {
   # arrays map vector values first by row then by col
   (j - 1) * dims[1] + i
 }

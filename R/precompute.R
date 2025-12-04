@@ -21,7 +21,9 @@
   }
 
   if (!file.exists(db_path)) {
-    cli::cli_alert_warning("Option 'dbMatrix.precomp_db' is set but file not found: {db_path}")
+    cli::cli_alert_warning(
+      "Option 'dbMatrix.precomp_db' is set but file not found: {db_path}"
+    )
     return(FALSE)
   }
 
@@ -33,7 +35,10 @@
 
   tryCatch(
     {
-      DBI::dbExecute(con, glue::glue("ATTACH '{db_path}' AS dbmatrix_precomp (READ_ONLY)"))
+      DBI::dbExecute(
+        con,
+        glue::glue("ATTACH '{db_path}' AS dbmatrix_precomp (READ_ONLY)")
+      )
       return(TRUE)
     },
     error = function(e) {
@@ -51,31 +56,36 @@
 
   # 2. Search for tables in ALL catalogs
   query <- "SELECT table_catalog, table_schema, table_name FROM information_schema.tables WHERE table_name LIKE 'precomp_%'"
-  
+
   tables <- tryCatch(
     DBI::dbGetQuery(con, query),
     error = function(e) NULL
   )
-  
+
   if (is.null(tables) || nrow(tables) == 0) {
     return(NULL)
   }
 
-  tables$full_name <- paste(tables$table_catalog, tables$table_schema, tables$table_name, sep = ".")
+  tables$full_name <- paste(
+    tables$table_catalog,
+    tables$table_schema,
+    tables$table_name,
+    sep = "."
+  )
 
   # 3. Parse dimensions and find best fit
   # table_name format: precomp_ROWSxCOLS
   dims_str <- gsub("precomp_", "", tables$table_name)
   dims_list <- strsplit(dims_str, "x")
 
-  valid_fmt <- sapply(dims_list, length) == 2
+  valid_fmt <- lengths(dims_list) == 2
   if (!any(valid_fmt)) {
     return(NULL)
   }
 
   candidates <- tables[valid_fmt, ]
   dims_list <- dims_list[valid_fmt]
-  
+
   # Use numeric to handle large numbers
   dim_matrix <- do.call(rbind, lapply(dims_list, function(x) as.numeric(x)))
 
@@ -98,7 +108,9 @@
     {
       cols <- DBI::dbGetQuery(con, glue::glue("DESCRIBE {best_table}"))
       if (!all(c("i", "j") %in% cols$column_name)) {
-        cli::cli_alert_warning("Found candidate table '{best_table}' but it lacks 'i' or 'j' columns. Skipping.")
+        cli::cli_alert_warning(
+          "Found candidate table '{best_table}' but it lacks 'i' or 'j' columns. Skipping."
+        )
         return(NULL)
       }
     },
@@ -117,12 +129,17 @@
   precompute_name <- .find_precompute_table(con, n_rows, n_cols)
 
   if (is.null(precompute_name)) {
-    cli::cli_alert_info("Computing new dense COO table with {n_rows} rows and {n_cols} columns...")
+    cli::cli_alert_info(
+      "Computing new dense COO table with {n_rows} rows and {n_cols} columns..."
+    )
     return(precompute(conn = con, m = n_rows, n = n_cols))
   }
 
   # Parse dimensions from name
-  precomp_dim <- regmatches(precompute_name, regexpr("\\d+x\\d+", precompute_name))
+  precomp_dim <- regmatches(
+    precompute_name,
+    regexpr("\\d+x\\d+", precompute_name)
+  )
   dims_parts <- strsplit(precomp_dim, "x")[[1]]
   dims <- list(
     rows = bit64::as.integer64(dims_parts[1]),
@@ -135,12 +152,16 @@
   } else if (n_rows <= dims$cols & n_cols <= dims$rows) {
     # Transpose case
     new_name <- glue::glue("precomp_{dims$cols}x{dims$rows}")
-    sql <- glue::glue("CREATE OR REPLACE TEMPORARY VIEW {new_name} AS SELECT j AS i, i AS j FROM {precompute_name}")
+    sql <- glue::glue(
+      "CREATE OR REPLACE TEMPORARY VIEW {new_name} AS SELECT j AS i, i AS j FROM {precompute_name}"
+    )
     invisible(DBI::dbExecute(con, sql))
     return(dplyr::tbl(con, new_name))
   } else {
     # Create new
-    cli::cli_alert_info("Computing new dense COO table with {n_rows} rows and {n_cols} columns...")
+    cli::cli_alert_info(
+      "Computing new dense COO table with {n_rows} rows and {n_cols} columns..."
+    )
     return(precompute(conn = con, m = n_rows, n = n_cols))
   }
 }
@@ -189,11 +210,16 @@ precompute <- function(conn, m, n, verbose = FALSE) {
 
   # Use BIGINT if needed
   int32_limit <- bit64::as.integer64(2147483647)
-  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) "BIGINT" else "INT"
+  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) {
+    "BIGINT"
+  } else {
+    "INT"
+  }
 
   # Generate grid using parquet for efficient storage/compression
   # Note: implicit order by j,i for downstream operations
-  sql <- glue::glue("
+  sql <- glue::glue(
+    "
     COPY (
       SELECT
         CAST(((row_id.generate_series - 1) % {n_rows} + 1) AS {index_type}) AS i,
@@ -202,15 +228,26 @@ precompute <- function(conn, m, n, verbose = FALSE) {
       FROM generate_series(1, {total}) AS row_id
     )
     TO '{name}.parquet' (FORMAT PARQUET, ROW_GROUP_SIZE 1000000, COMPRESSION LZ4_RAW);
-  ")
+  "
+  )
   invisible(DBI::dbExecute(conn, sql))
 
   # Load back as table
-  invisible(DBI::dbExecute(conn, glue::glue("CREATE OR REPLACE TABLE {name} AS SELECT * FROM read_parquet('{name}.parquet');")))
+  invisible(DBI::dbExecute(
+    conn,
+    glue::glue(
+      "CREATE OR REPLACE TABLE {name} AS SELECT * FROM read_parquet('{name}.parquet');"
+    )
+  ))
   file.remove(paste0(name, ".parquet"))
 
   if (verbose) {
-    cat(glue::glue("Precomputed tbl '{name}' with {n_rows} rows and {n_cols} columns"), "\n")
+    cat(
+      glue::glue(
+        "Precomputed tbl '{name}' with {n_rows} rows and {n_cols} columns"
+      ),
+      "\n"
+    )
   }
 
   return(dplyr::tbl(conn, name))

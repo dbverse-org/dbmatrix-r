@@ -15,7 +15,7 @@
 #' @name dbMatrix-class
 #' @exportClass dbMatrix
 #' @export
-dbMatrix = setClass(
+dbMatrix <- setClass(
   Class = 'dbMatrix',
   contains = c('dbData', 'VIRTUAL'),
   slots = list(
@@ -38,7 +38,7 @@ dbMatrix = setClass(
 #'
 #' @name dbDenseMatrix-class
 #' @export
-dbDenseMatrix = setClass(
+dbDenseMatrix <- setClass(
   Class = "dbDenseMatrix",
   contains = "dbMatrix"
 )
@@ -50,7 +50,7 @@ dbDenseMatrix = setClass(
 #' Inherits from \link{dbMatrix}.
 #' @name dbSparseMatrix-class
 #' @export
-dbSparseMatrix = setClass(
+dbSparseMatrix <- setClass(
   Class = "dbSparseMatrix",
   contains = "dbMatrix"
 )

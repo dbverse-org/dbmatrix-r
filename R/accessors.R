@@ -10,7 +10,7 @@ get_tblName <- function(dbMatrix) {
     stopf("dbMatrix must be a dbData object")
   }
 
-  tblName = dbMatrix@name
+  tblName <- dbMatrix@name
 
   return(tblName)
 }
@@ -27,7 +27,7 @@ get_dbdir <- function(dbMatrix) {
     stopf("dbMatrix must be a dbData object")
   }
 
-  dbdir = dbMatrix@value[[1]]$con@driver@dbdir
+  dbdir <- dbMatrix@value[[1]]$con@driver@dbdir
 
   return(dbdir)
 }
