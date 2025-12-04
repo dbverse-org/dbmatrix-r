@@ -14,112 +14,135 @@
 
 #' @keywords internal
 #' @noRd
-#' @return string of precompute table name with largest product of dimensions
-.find_precompute_table <- function(con, n_rows, n_cols) {
-  tables <- DBI::dbListTables(con)
-  precompute_names <- tables[grep("^precomp_", tables)]
-
-  if (length(precompute_names) == 0) {
-    return(NULL)
+.attach_precomp_db <- function(con) {
+  db_path <- getOption("dbMatrix.precomp_db")
+  if (is.null(db_path)) {
+    return(FALSE)
   }
 
-  # find name with largest product of dimensions
-  dimensions <- strsplit(gsub("precomp_", "", precompute_names), "x")
-  # Convert list to matrix for vectorized operations
-  dim_matrix <- do.call(rbind, lapply(dimensions, as.integer))
-
-  # Create logical mask for valid dimensions
-  valid_dims <- dim_matrix[, 1] <= n_rows & dim_matrix[, 2] <= n_cols
-
-  # If no valid dimensions found, return NULL
-  if (!any(valid_dims)) {
-    return(NULL)
+  if (!file.exists(db_path)) {
+    cli::cli_alert_warning("Option 'dbMatrix.precomp_db' is set but file not found: {db_path}")
+    return(FALSE)
   }
 
-  # Calculate Manhattan distance for valid dimensions only
-  valid_matrix <- dim_matrix[valid_dims, , drop = FALSE]
-  distances <- abs(valid_matrix[, 1] - n_rows) +
-    abs(valid_matrix[, 2] - n_cols)
+  # Check if already attached
+  dbs <- DBI::dbGetQuery(con, "PRAGMA database_list")
+  if ("dbmatrix_precomp" %in% dbs$name) {
+    return(TRUE)
+  }
 
-  # Find index of minimum distance
-  min_idx <- which.min(distances)
-  res <- paste0(
-    'precomp_',
-    valid_matrix[min_idx, ][1],
-    'x',
-    valid_matrix[min_idx, ][2]
+  tryCatch(
+    {
+      DBI::dbExecute(con, glue::glue("ATTACH '{db_path}' AS dbmatrix_precomp (READ_ONLY)"))
+      return(TRUE)
+    },
+    error = function(e) {
+      cli::cli_alert_warning("Failed to attach precomputed DB: {e$message}")
+      return(FALSE)
+    }
   )
-
-  # Return table name
-  return(res)
 }
 
+#' @keywords internal
+#' @noRd
+.find_precompute_table <- function(con, n_rows, n_cols) {
+  # 1. Try to attach external DB if configured
+  .attach_precomp_db(con)
+
+  # 2. Search for tables in ALL catalogs
+  query <- "SELECT table_catalog, table_schema, table_name FROM information_schema.tables WHERE table_name LIKE 'precomp_%'"
+  
+  tables <- tryCatch(
+    DBI::dbGetQuery(con, query),
+    error = function(e) NULL
+  )
+  
+  if (is.null(tables) || nrow(tables) == 0) {
+    return(NULL)
+  }
+
+  tables$full_name <- paste(tables$table_catalog, tables$table_schema, tables$table_name, sep = ".")
+
+  # 3. Parse dimensions and find best fit
+  # table_name format: precomp_ROWSxCOLS
+  dims_str <- gsub("precomp_", "", tables$table_name)
+  dims_list <- strsplit(dims_str, "x")
+
+  valid_fmt <- sapply(dims_list, length) == 2
+  if (!any(valid_fmt)) {
+    return(NULL)
+  }
+
+  candidates <- tables[valid_fmt, ]
+  dims_list <- dims_list[valid_fmt]
+  
+  # Use numeric to handle large numbers
+  dim_matrix <- do.call(rbind, lapply(dims_list, function(x) as.numeric(x)))
+
+  # 4. Filter: Must be >= requested dimensions
+  valid_mask <- dim_matrix[, 1] >= n_rows & dim_matrix[, 2] >= n_cols
+
+  if (!any(valid_mask)) {
+    return(NULL)
+  }
+
+  # 5. Select Best Fit (Manhattan distance)
+  valid_matrix <- dim_matrix[valid_mask, , drop = FALSE]
+  valid_candidates <- candidates[valid_mask, ]
+
+  distances <- abs(valid_matrix[, 1] - n_rows) + abs(valid_matrix[, 2] - n_cols)
+  best_table <- valid_candidates$full_name[which.min(distances)]
+
+  # 6. Validate Structure
+  tryCatch(
+    {
+      cols <- DBI::dbGetQuery(con, glue::glue("DESCRIBE {best_table}"))
+      if (!all(c("i", "j") %in% cols$column_name)) {
+        cli::cli_alert_warning("Found candidate table '{best_table}' but it lacks 'i' or 'j' columns. Skipping.")
+        return(NULL)
+      }
+    },
+    error = function(e) NULL
+  )
+
+  return(best_table)
+}
 
 #' @description
 #' This function will create a dense COO table if one does not already exist
-#' or if the existing table is not large enough for dbMatrix operations.
+#' or if the existing table is not large enough.
 #' @keywords internal
 #' @noRd
-#' @return A [`tbl`] object representing the precomputed dense table
 .initialize_precompute_matrix <- function(con, n_rows, n_cols) {
-  # helper functions ----------------------------------------------------------
-  .can_use_existing_matrix <- function(n_rows, n_cols, dims) {
-    n_rows <= dims$rows & n_cols <= dims$cols
-  }
-
-  .can_use_transposed_matrix <- function(n_rows, n_cols, dims) {
-    n_rows <= dims$cols & n_cols <= dims$rows
-  }
-
-  .create_new_precompute <- function(con, n_rows, n_cols) {
-    cli::cli_alert_info(c(
-      "Computing new dense COO table with {n_rows} rows and {n_cols} columns..."
-      #"\n See {.help .initialize_precompute_matrix} for details.\n"
-    ))
-    precompute(conn = con, m = n_rows, n = n_cols)
-  }
-
-  .create_transposed_matrix <- function(con, precompute_name, dims) {
-    new_precompute_name <- glue::glue("precomp_{dims$cols}x{dims$rows}")
-    sql <- glue::glue(
-      "
-        CREATE OR REPLACE TEMPORARY VIEW {new_precompute_name} AS
-        SELECT j AS i, i AS j FROM {precompute_name}
-    "
-    )
-    invisible(DBI::dbExecute(con, sql))
-    dplyr::tbl(con, new_precompute_name)
-  }
-
-  .parse_dimensions <- function(precompute_name) {
-    precomp_dim <- regmatches(
-      precompute_name,
-      regexpr("\\d+x\\d+", precompute_name)
-    )
-    dims <- strsplit(precomp_dim, "x")[[1]]
-    list(
-      rows = bit64::as.integer64(dims[1]),
-      cols = bit64::as.integer64(dims[2])
-    )
-  }
-
-  # main function --------------------------------------------------------------
   precompute_name <- .find_precompute_table(con, n_rows, n_cols)
 
   if (is.null(precompute_name)) {
-    res <- .create_new_precompute(con, n_rows, n_cols)
-  } else {
-    dims <- .parse_dimensions(precompute_name)
-    if (.can_use_existing_matrix(n_rows, n_cols, dims)) {
-      res <- dplyr::tbl(con, precompute_name)
-    } else if (.can_use_transposed_matrix(n_rows, n_cols, dims)) {
-      res <- .create_transposed_matrix(con, precompute_name, dims)
-    } else {
-      res <- .create_new_precompute(con, n_rows, n_cols)
-    }
+    cli::cli_alert_info("Computing new dense COO table with {n_rows} rows and {n_cols} columns...")
+    return(precompute(conn = con, m = n_rows, n = n_cols))
   }
 
-  return(res)
+  # Parse dimensions from name
+  precomp_dim <- regmatches(precompute_name, regexpr("\\d+x\\d+", precompute_name))
+  dims_parts <- strsplit(precomp_dim, "x")[[1]]
+  dims <- list(
+    rows = bit64::as.integer64(dims_parts[1]),
+    cols = bit64::as.integer64(dims_parts[2])
+  )
+
+  # Check if we can use existing or need transpose
+  if (n_rows <= dims$rows & n_cols <= dims$cols) {
+    return(dplyr::tbl(con, precompute_name))
+  } else if (n_rows <= dims$cols & n_cols <= dims$rows) {
+    # Transpose case
+    new_name <- glue::glue("precomp_{dims$cols}x{dims$rows}")
+    sql <- glue::glue("CREATE OR REPLACE TEMPORARY VIEW {new_name} AS SELECT j AS i, i AS j FROM {precompute_name}")
+    invisible(DBI::dbExecute(con, sql))
+    return(dplyr::tbl(con, new_name))
+  } else {
+    # Create new
+    cli::cli_alert_info("Computing new dense COO table with {n_rows} rows and {n_cols} columns...")
+    return(precompute(conn = con, m = n_rows, n = n_cols))
+  }
 }
 
 #' Compute a dense COO table in a database connection
@@ -153,70 +176,42 @@
 #' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' precompute(con = con , m = 100, n = 100)
 precompute <- function(conn, m, n, verbose = FALSE) {
-  # input validation
   .check_con(conn = conn)
 
   if (!(is.numeric(m)) || !(is.numeric(n))) {
     stop("m and n must be integers or numerics")
   }
 
-  # to prevent R-duckDB integer passing errors and permit >int32 indices
-  n_rows = bit64::as.integer64(m)
-  n_cols = bit64::as.integer64(n)
-  total = n_rows * n_cols
-
-  # Note: this name pattern is parsed in .toDbDense(), do not modify
+  n_rows <- bit64::as.integer64(m)
+  n_cols <- bit64::as.integer64(n)
+  total <- n_rows * n_cols
   name <- paste0("precomp_", n_rows, "x", n_cols)
 
-  # check if we need BIGINT based on INT32 limit
-  int32_limit <- bit64::as.integer64(2147483647) # 2^31 - 1
-  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) {
-    "BIGINT"
-  } else {
-    "INT"
-  }
+  # Use BIGINT if needed
+  int32_limit <- bit64::as.integer64(2147483647)
+  index_type <- if (n_rows > int32_limit | n_cols > int32_limit) "BIGINT" else "INT"
 
+  # Generate grid using parquet for efficient storage/compression
   # Note: implicit order by j,i for downstream operations
-  # TODO: row-major order
-  sql <- glue::glue(
-    "
-  COPY (
-    SELECT
-      CAST(((row_id.generate_series - 1) % {n_rows} + 1) AS {index_type}) AS i,
-      CAST(FLOOR((row_id.generate_series - 1) / {n_rows}) + 1 AS {index_type}) AS j,
-      row_id.generate_series - 1 AS idx -- Add row_id as idx directly
-    FROM generate_series(1, {total}) AS row_id
-  )
-  TO '{name}.parquet' (
-    FORMAT PARQUET,
-    ROW_GROUP_SIZE 1000000,
-    COMPRESSION LZ4_RAW
-  );
-  "
-  )
+  sql <- glue::glue("
+    COPY (
+      SELECT
+        CAST(((row_id.generate_series - 1) % {n_rows} + 1) AS {index_type}) AS i,
+        CAST(FLOOR((row_id.generate_series - 1) / {n_rows}) + 1 AS {index_type}) AS j,
+        row_id.generate_series - 1 AS idx
+      FROM generate_series(1, {total}) AS row_id
+    )
+    TO '{name}.parquet' (FORMAT PARQUET, ROW_GROUP_SIZE 1000000, COMPRESSION LZ4_RAW);
+  ")
   invisible(DBI::dbExecute(conn, sql))
 
-  sql <- glue::glue(
-    "
-    CREATE OR REPLACE TABLE {name} AS
-    SELECT * FROM read_parquet('{name}.parquet');
-  "
-  )
-  invisible(DBI::dbExecute(conn, sql))
-  file.remove(paste0(name, '.parquet'))
-
-  key <- dplyr::tbl(conn, name)
-
-  # set global variable for precomputed matrix
-  options(dbMatrix.precomp = name)
+  # Load back as table
+  invisible(DBI::dbExecute(conn, glue::glue("CREATE OR REPLACE TABLE {name} AS SELECT * FROM read_parquet('{name}.parquet');")))
+  file.remove(paste0(name, ".parquet"))
 
   if (verbose) {
-    str <- glue::glue(
-      "Precomputed tbl '{name}' with
-                    {n_rows} rows and {n_cols} columns"
-    )
-    cat(str, "\n")
+    cat(glue::glue("Precomputed tbl '{name}' with {n_rows} rows and {n_cols} columns"), "\n")
   }
 
-  return(key)
+  return(dplyr::tbl(conn, name))
 }
