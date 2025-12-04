@@ -98,6 +98,11 @@ print_array <- function(
   }
 
   # print array
+  # Ensure max.print is large enough to show the entire preview array
+  # otherwise capture.output will truncate and cause NAs in the show method
+  op <- options(max.print = total_len + 1000L)
+  on.exit(options(op))
+
   array(a_vals, dims, dimnames = list(rownames, rep('', dims[2]))) |>
     print(quote = FALSE, right = TRUE)
 }
