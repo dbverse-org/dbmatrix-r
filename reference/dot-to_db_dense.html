@@ -54,7 +54,7 @@ dbDenseMatrix."></head><body>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.to_db_dense</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">.to_db_dense</span><span class="op">(</span><span class="va">x</span>, chunk_size <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -63,6 +63,14 @@ dbDenseMatrix."></head><body>
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A <code><a href="dbSparseMatrix-class.html">dbSparseMatrix</a></code> object</p></dd>
+
+
+<dt id="arg-chunk-size">chunk_size<a class="anchor" aria-label="anchor" href="#arg-chunk-size"></a></dt>
+<dd><p>integer. Number of columns to process per chunk during densification.
+If NULL (default), the function first checks the global option <code>dbMatrix.chunk_size</code>.
+If that is also NULL, it calculates a chunk size such that the estimated memory usage
+of each chunk does not exceed <code>dbMatrix.max_mem_convert</code> (default 8GB).
+If the total size is within the limit, a single chunk is used.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -19,6 +19,22 @@ S4 class definitions for dbMatrix objects
   [`dbSparseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
   : S4 Class for dbSparseMatrix
 
+## Coercion
+
+Methods for coercing `dbMatrix` objects to other types
+
+- [`coerce-dbMatrix-dgCMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-dgCMatrix.md)
+  [`coerce-dbDenseMatrix-dgCMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-dgCMatrix.md)
+  [`coerce-dbSparseMatrix-dgCMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-dgCMatrix.md)
+  : Coerce dbMatrix to dgCMatrix
+- [`coerce-dbMatrix-matrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-matrix.md)
+  [`coerce-dbDenseMatrix-matrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-matrix.md)
+  [`coerce-dbSparseMatrix-matrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-matrix.md)
+  : Coerce dbMatrix to matrix
+- [`coerce-matrix-dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-matrix-dbMatrix.md)
+  [`coerce-dgCMatrix-dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/coerce-matrix-dbMatrix.md)
+  : Coerce matrix to dbMatrix
+
 ## Constructor
 
 Function for creating `dbMatrix` objects
@@ -26,7 +42,8 @@ Function for creating `dbMatrix` objects
 - [`as.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/as.dbMatrix.md)
   :
 
-  Convert `Matrix` to `dbMatrix`
+  Convert [`Matrix::Matrix`](https://rdrr.io/pkg/Matrix/man/Matrix.html)
+  to `dbMatrix`
 
 - [`as.matrix(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/as.matrix.dbMatrix.md)
   :
@@ -103,6 +120,9 @@ Methods for transforming `dbMatrix` objects
 - [`t(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/t-dbMatrix.md)
   : Matrix Transpose
 
+- [`compute(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/compute.dbMatrix.md)
+  : Force computation of a dbMatrix
+
 ## Matrix Properties
 
 Methods to retrieve basic properties of `dbMatrix` objects
@@ -137,3 +157,11 @@ Methods to retrieve basic properties of `dbMatrix` objects
 ## dbData objects
 
 Convenience methods for `dbData` objects
+
+## Package Options
+
+Global options for the dbMatrix package
+
+- [`dbMatrix_options`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_options.md)
+  [`dbMatrix-options`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_options.md)
+  : dbMatrix Package Global Options

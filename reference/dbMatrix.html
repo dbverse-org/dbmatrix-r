@@ -124,12 +124,12 @@ database. by default, no header is assumed. <code>(optional)</code></p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>This function reads in data into a pre-existing DuckDB database.
-Supported <code>value</code> data types:</p><ul><li><p><code><a href="https://rdrr.io/pkg/Matrix/man/dgCMatrix-class.html" class="external-link">Matrix::dgCMatrix</a></code> In-memory sparse matrix from the <code>Matrix</code> package</p></li>
+Supported <code>value</code> data types:</p><ul><li><p><code><a href="https://rdrr.io/pkg/Matrix/man/dgCMatrix-class.html" class="external-link">Matrix::dgCMatrix</a></code> In-memory sparse matrix from the <code><a href="https://rdrr.io/pkg/Matrix/man/Matrix.html" class="external-link">Matrix::Matrix</a></code> package</p></li>
 <li><p><code><a href="https://rdrr.io/pkg/Matrix/man/dgTMatrix-class.html" class="external-link">Matrix::dgTMatrix</a></code> In-memory triplet vector or COO matrix</p></li>
-<li><p><code>matrix</code> In-memory dense matrix from base R</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/Matrix/man/Matrix.html" class="external-link">matrix</a></code> In-memory dense matrix from base R</p></li>
 <li><p><code>.mtx</code> Path to <a href="https://math.nist.gov/MatrixMarket/formats.html" class="external-link">.mtx</a> file</p></li>
 <li><p><code>.csv</code> Path to .csv file</p></li>
-<li><p><code>tbl_duckdb_connection</code> Table in <code>duckdb</code> database in ijx format from
+<li><p><code>tbl_duckdb_connection</code> Table in <code><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb::duckdb</a></code> database in ijx format from
 existing <code>dbMatrix</code> object. <code>dims</code> and <code>dim_names</code> must be
 specified if <code>value</code> is <code>tbl_duckdb_connection</code>.</p></li>
 </ul></div>

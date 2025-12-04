@@ -13,11 +13,15 @@
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/Summary-dbMatrix-method.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/as.dbMatrix.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/as.matrix.dbMatrix.html</loc></url>
+<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-dgCMatrix.html</loc></url>
+<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/coerce-dbMatrix-matrix.html</loc></url>
+<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/coerce-matrix-dbMatrix.html</loc></url>
+<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/compute.dbMatrix.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html</loc></url>
-<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-options.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.html</loc></url>
+<url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_options.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dim-dbMatrix-method.html</loc></url>
 <url><loc>https://dbverse-org.github.io/dbmatrix-r/reference/dot-check_con.html</loc></url>

@@ -58,7 +58,6 @@ functions:
 ``` r
 mat <- matrix(1, nrow = 3, ncol = 3)
 dbmat <- as.dbMatrix(mat)
-#> ℹ Creating in-memory database connection...
 max(dbmat)
 #> [1] 1
 min(dbmat)
@@ -68,9 +67,7 @@ prod(dbmat)
 sum(dbmat)
 #> [1] 9
 any(dbmat > 0)
-#> Warning: coercing argument of type 'double' to logical
 #> [1] TRUE
 all(dbmat > 0)
-#> Warning: coercing argument of type 'double' to logical
 #> [1] TRUE
 ```

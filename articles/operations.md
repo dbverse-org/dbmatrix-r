@@ -388,5 +388,5 @@ sessionInfo()
     ##  [1] jsonlite_2.0.0       dplyr_1.1.4          compiler_4.5.2      
     ##  [4] tidyselect_1.2.1     blob_1.2.4           dbProject_0.0.0.9000
     ##  [7] jquerylib_0.1.4      systemfonts_1.3.1    textshaping_1.0.4   
-    ## [10] yaml_2.3.10         
+    ## [10] yaml_2.3.11         
     ##  [ reached 'max' / getOption("max.print") -- omitted 36 entries ]

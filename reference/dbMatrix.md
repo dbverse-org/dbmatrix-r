@@ -82,21 +82,24 @@ This function reads in data into a pre-existing DuckDB database.
 Supported `value` data types:
 
 - [`Matrix::dgCMatrix`](https://rdrr.io/pkg/Matrix/man/dgCMatrix-class.html)
-  In-memory sparse matrix from the `Matrix` package
+  In-memory sparse matrix from the
+  [`Matrix::Matrix`](https://rdrr.io/pkg/Matrix/man/Matrix.html) package
 
 - [`Matrix::dgTMatrix`](https://rdrr.io/pkg/Matrix/man/dgTMatrix-class.html)
   In-memory triplet vector or COO matrix
 
-- `matrix` In-memory dense matrix from base R
+- [`matrix`](https://rdrr.io/pkg/Matrix/man/Matrix.html) In-memory dense
+  matrix from base R
 
 - `.mtx` Path to [.mtx](https://math.nist.gov/MatrixMarket/formats.html)
   file
 
 - `.csv` Path to .csv file
 
-- `tbl_duckdb_connection` Table in `duckdb` database in ijx format from
-  existing `dbMatrix` object. `dims` and `dim_names` must be specified
-  if `value` is `tbl_duckdb_connection`.
+- `tbl_duckdb_connection` Table in
+  [`duckdb::duckdb`](https://r.duckdb.org/reference/duckdb.html)
+  database in ijx format from existing `dbMatrix` object. `dims` and
+  `dim_names` must be specified if `value` is `tbl_duckdb_connection`.
 
 ## Examples
 

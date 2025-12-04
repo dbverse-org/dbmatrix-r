@@ -27,7 +27,7 @@ dbMatrix(
 
 - `dim_names`:
 
-  row 1 and col 2 names
+  row (1) and col (2) names
 
 - `dims`:
 

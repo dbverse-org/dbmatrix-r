@@ -83,7 +83,7 @@ Note: Addition or subtraction with non-zero addends on a
 
 ``` r
 dbsm + 1
-#> ℹ Computing new dense COO table with 634 rows and 624 columns...
+#> ℹ Performing on-the-fly densification (cold path). See ?dbMatrix_options for details.
 #> 634 x 624  dbMatrix of class "dbDenseMatrix"
 #> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
 #>                                                                                
@@ -188,18 +188,18 @@ sessionInfo()
 #>  [1] bit_4.6.0             Matrix_1.7-4          jsonlite_2.0.0       
 #>  [4] dplyr_1.1.4           compiler_4.5.2        tidyselect_1.2.1     
 #>  [7] blob_1.2.4            dbProject_0.0.0.9000  jquerylib_0.1.4      
-#> [10] systemfonts_1.3.1     textshaping_1.0.4     yaml_2.3.10          
+#> [10] systemfonts_1.3.1     textshaping_1.0.4     yaml_2.3.11          
 #> [13] fastmap_1.2.0         lattice_0.22-7        R6_2.6.1             
 #> [16] generics_0.1.4        knitr_1.50            tibble_3.3.0         
 #> [19] desc_1.4.3            MatrixGenerics_1.22.0 DBI_1.2.3            
 #> [22] bslib_0.9.0           pillar_1.11.1         rlang_1.1.6          
 #> [25] cachem_1.1.0          xfun_0.54             fs_1.6.6             
 #> [28] sass_0.4.10           bit64_4.6.0-1         cli_3.6.5            
-#> [31] pkgdown_2.2.0         withr_3.0.2           magrittr_2.0.4       
+#> [31] withr_3.0.2           pkgdown_2.2.0         magrittr_2.0.4       
 #> [34] digest_0.6.39         grid_4.5.2            dbplyr_2.5.1         
 #> [37] lifecycle_1.0.4       vctrs_0.6.5           evaluate_1.0.5       
 #> [40] glue_1.8.0            data.table_1.17.8     duckdb_1.4.2         
-#> [43] ragg_1.5.0            purrr_1.2.0           rmarkdown_2.30       
+#> [43] ragg_1.5.0            rmarkdown_2.30        purrr_1.2.0          
 #> [46] matrixStats_1.5.0     tools_4.5.2           pkgconfig_2.0.3      
 #> [49] htmltools_0.5.8.1
 ```

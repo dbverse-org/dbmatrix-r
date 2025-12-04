@@ -107,7 +107,6 @@ element of the `dbMatrix` object.
 ``` r
 mat <- matrix(1, nrow = 3, ncol = 3)
 dbmat <- as.dbMatrix(mat)
-#> ℹ Creating in-memory database connection...
 log(dbmat)
 #> 3 x 3  dbMatrix of class "dbDenseMatrix"
 #> [[ Colnames: 'col1', 'col2', 'col3' ]]
