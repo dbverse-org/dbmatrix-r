@@ -479,25 +479,7 @@ dbMatrix <- function(
         )
       }
     } else if (inherits(value, "matrix") | inherits(value, "Matrix")) {
-      # convert dense matrix to triplet vector ijx format
-      if (inherits(value, "dgTMatrix")) {
-        # Convert to 1-based index
-        ijx <- data.frame(i = value@i + 1L, j = value@j + 1L, x = value@x)
-      } else {
-        ijx <- as_ijx(value)
-      }
-
-      # write ijx to db
-      data <- dplyr::copy_to(
-        dest = con,
-        name = name,
-        df = ijx,
-        overwrite = overwrite,
-        ...
-      )
-
-      dims <- dim(value)
-      dim_names <- list(rownames(value), colnames(value))
+      return(as.dbMatrix(value, con = con, name = name, overwrite = overwrite, ...))
     } else {
       stopf('Invalid "value" provided. See ?dbMatrix for help.')
     }
