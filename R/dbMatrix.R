@@ -84,16 +84,23 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
 
   # get matrix i and j to print
   suppress_rows <- FALSE # flag for whether rows are being suppressed
-  if (dim_col - 10L > 0L) {
-    p_coln <- c(head(col_names, 10L))
+  
+  # Determine column indices to show (first 10)
+  if (dim_col > 10L) {
+    filter_j <- seq_len(10L)
+    p_coln <- col_names[filter_j]
   } else {
+    filter_j <- seq_len(dim_col)
     p_coln <- col_names
   }
-  p_coln <- head(col_names, 10L)
-  if (dim_row - 6L > 0L) {
-    p_rown <- c(head(row_names, 3L), tail(row_names, 3L))
+
+  # Determine row indices to show (head 3, tail 3 if large)
+  if (dim_row > 6L) {
+    filter_i <- c(seq_len(3L), seq(from = dim_row - 2L, to = dim_row))
+    p_rown <- row_names[filter_i]
     suppress_rows <- TRUE
   } else {
+    filter_i <- seq_len(dim_row)
     p_rown <- row_names
   }
 
@@ -121,12 +128,8 @@ setMethod("show", signature("dbDenseMatrix"), function(object) {
   }
 
   # ij indices for printing
-  a_i <- sapply(preview_tbl$i, function(i_idx) {
-    which(row_names[i_idx] == p_rown)
-  })
-  a_j <- sapply(preview_tbl$j, function(j_idx) {
-    which(col_names[j_idx] == p_coln)
-  })
+  a_i <- match(preview_tbl$i, filter_i)
+  a_j <- match(preview_tbl$j, filter_j)
 
   if (length(a_i) == 0L) {
     a_i <- NULL
@@ -197,16 +200,6 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
   dim_row <- dims[1]
   dim_col <- dims[2]
 
-  # catch large dbMatrix objects #
-  # ----------------------------- #
-  # if (is.na(object@name) & prod(dims) > 1e6) {
-  #   cat(dim_row, 'x', dim_col, ' Large dbMatrix of class "dbSparseMatrix"\n')
-  #   cli::cli_alert_info('Use dbMatrix::compute() to save and preview dbMatrix')
-  #   # schema <- object[] |> arrow::to_arrow() |> arrow::schema() |> capture.output()
-  #   # cat(schema)
-  #   return()
-  # }
-
   # print class and dims #
   # -------------------- #
 
@@ -238,16 +231,23 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 
   # get matrix i and j to print
   suppress_rows <- FALSE # flag for whether rows are being suppressed
-  if (dim_col - 10L > 0L) {
-    p_coln <- c(head(col_names, 10L))
+  
+  # Determine column indices to show (first 10)
+  if (dim_col > 10L) {
+    filter_j <- seq_len(10L)
+    p_coln <- col_names[filter_j]
   } else {
+    filter_j <- seq_len(dim_col)
     p_coln <- col_names
   }
-  p_coln <- head(col_names, 10L)
-  if (dim_row - 6L > 0L) {
-    p_rown <- c(head(row_names, 3L), tail(row_names, 3L))
+
+  # Determine row indices to show (head 3, tail 3 if large)
+  if (dim_row > 6L) {
+    filter_i <- c(seq_len(3L), seq(from = dim_row - 2L, to = dim_row))
+    p_rown <- row_names[filter_i]
     suppress_rows <- TRUE
   } else {
+    filter_i <- seq_len(dim_row)
     p_rown <- row_names
   }
 
@@ -275,12 +275,8 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
   }
 
   # ij indices for printing
-  a_i <- sapply(preview_tbl$i, function(i_idx) {
-    which(row_names[i_idx] == p_rown)
-  })
-  a_j <- sapply(preview_tbl$j, function(j_idx) {
-    which(col_names[j_idx] == p_coln)
-  })
+  a_i <- match(preview_tbl$i, filter_i)
+  a_j <- match(preview_tbl$j, filter_j)
 
   if (length(a_i) == 0L) {
     a_i <- NULL
