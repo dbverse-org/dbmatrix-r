@@ -37,7 +37,9 @@ setMethod(
           glue::glue("({seq_along(i)}, {as.integer(i)})"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, i)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_i, i)"
+        )
         map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -52,7 +54,7 @@ setMethod(
 
       filter_i <- x@dim_names[[1]][i]
     } else {
-      filter_i = get_dbM_sub_idx(
+      filter_i <- get_dbM_sub_idx(
         index = i,
         dbM_dimnames = x@dim_names,
         dims = 1
@@ -65,7 +67,9 @@ setMethod(
           glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)"
+        )
         req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -80,7 +84,10 @@ setMethod(
 
       # Use UNNEST to create dimension mapping inline
       safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+      dim_names_sql <- glue::glue_collapse(
+        glue::glue("'{safe_dim_names}'"),
+        sep = ", "
+      )
 
       dim_mapping_sql <- glue::glue(
         "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
@@ -135,7 +142,9 @@ setMethod(
           glue::glue("({seq_along(j)}, {as.integer(j)})"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, j)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_j, j)"
+        )
         map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -150,7 +159,7 @@ setMethod(
 
       filter_j <- x@dim_names[[2]][j]
     } else {
-      filter_j = get_dbM_sub_idx(
+      filter_j <- get_dbM_sub_idx(
         index = j,
         dbM_dimnames = x@dim_names,
         dims = 2
@@ -163,7 +172,9 @@ setMethod(
           glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)"
+        )
         req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -178,7 +189,10 @@ setMethod(
 
       # Use UNNEST to create dimension mapping inline
       safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+      dim_names_sql <- glue::glue_collapse(
+        glue::glue("'{safe_dim_names}'"),
+        sep = ", "
+      )
 
       dim_mapping_sql <- glue::glue(
         "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
@@ -235,7 +249,9 @@ setMethod(
           glue::glue("({seq_along(i)}, {as.integer(i)})"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, i)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_i, i)"
+        )
         map_tbl_i <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -250,7 +266,7 @@ setMethod(
 
       filter_i <- x@dim_names[[1]][i]
     } else {
-      filter_i = get_dbM_sub_idx(
+      filter_i <- get_dbM_sub_idx(
         index = i,
         dbM_dimnames = x@dim_names,
         dims = 1
@@ -263,7 +279,9 @@ setMethod(
           glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)"
+        )
         req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -278,7 +296,10 @@ setMethod(
 
       # Use UNNEST to create dimension mapping inline
       safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+      dim_names_sql <- glue::glue_collapse(
+        glue::glue("'{safe_dim_names}'"),
+        sep = ", "
+      )
 
       dim_mapping_sql <- glue::glue(
         "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
@@ -308,7 +329,9 @@ setMethod(
           glue::glue("({seq_along(j)}, {as.integer(j)})"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, j)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_j, j)"
+        )
         map_tbl_j <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -323,7 +346,7 @@ setMethod(
 
       filter_j <- x@dim_names[[2]][j]
     } else {
-      filter_j = get_dbM_sub_idx(
+      filter_j <- get_dbM_sub_idx(
         index = j,
         dbM_dimnames = x@dim_names,
         dims = 2
@@ -336,7 +359,9 @@ setMethod(
           glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
           sep = ", "
         )
-        sql <- glue::glue("SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)")
+        sql <- glue::glue(
+          "SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)"
+        )
         req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
@@ -351,7 +376,10 @@ setMethod(
 
       # Use UNNEST to create dimension mapping inline
       safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(glue::glue("'{safe_dim_names}'"), sep = ", ")
+      dim_names_sql <- glue::glue_collapse(
+        glue::glue("'{safe_dim_names}'"),
+        sep = ", "
+      )
 
       dim_mapping_sql <- glue::glue(
         "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
