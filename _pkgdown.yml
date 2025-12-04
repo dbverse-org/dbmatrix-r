@@ -27,6 +27,7 @@ reference:
     contents:
       - coerce-dbMatrix-dgCMatrix
       - coerce-dbMatrix-matrix
+      - coerce-matrix-dbMatrix
 
   - title: "Constructor"
     desc: "Function for creating `dbMatrix` objects"

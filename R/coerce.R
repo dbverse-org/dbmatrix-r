@@ -48,3 +48,20 @@ setAs("dbSparseMatrix", "dgCMatrix", function(from) {
   .check_mem_limit(from)
   as.matrix(from, sparse = TRUE)
 })
+
+#' @title Coerce matrix to dbMatrix
+#' @name coerce-matrix-dbMatrix
+#' @description
+#' Coercion methods to convert in-memory `matrix` objects to `dbMatrix` objects.
+#' Creates a new in-memory DuckDB connection.
+setAs("matrix", "dbMatrix", function(from) {
+  con <- DBI::dbConnect(duckdb::duckdb())
+  as.dbMatrix(from, con = con)
+})
+
+#' @rdname coerce-matrix-dbMatrix
+#' @name coerce-dgCMatrix-dbMatrix
+setAs("dgCMatrix", "dbMatrix", function(from) {
+  con <- DBI::dbConnect(duckdb::duckdb())
+  as.dbMatrix(from, con = con)
+})
