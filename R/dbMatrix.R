@@ -799,6 +799,8 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = FALSE) {
 
     if (names) {
       dimnames(mat) <- dim_names
+    } else {
+      dimnames(mat) <- NULL
     }
     return(mat)
   }
