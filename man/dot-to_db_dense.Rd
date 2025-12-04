@@ -4,10 +4,16 @@
 \alias{.to_db_dense}
 \title{Convert a dbSparseMatrix to dbDenseMatrix}
 \usage{
-.to_db_dense(x)
+.to_db_dense(x, chunk_size = NULL)
 }
 \arguments{
 \item{x}{A \code{\link{dbSparseMatrix}} object}
+
+\item{chunk_size}{integer. Number of columns to process per chunk during densification.
+If NULL (default), the function first checks the global option \code{dbMatrix.chunk_size}.
+If that is also NULL, it calculates a chunk size such that the estimated memory usage
+of each chunk does not exceed \code{dbMatrix.max_mem_convert} (default 8GB).
+If the total size is within the limit, a single chunk is used.}
 }
 \value{
 A \code{\link{dbDenseMatrix}} object

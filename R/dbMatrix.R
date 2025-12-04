@@ -519,56 +519,126 @@ dbMatrix <- function(
 #' @description Internal function to convert a [`dbSparseMatrix`] to
 #' [`dbDenseMatrix`].
 #' @param x A [`dbSparseMatrix`] object
+#' @param chunk_size integer. Number of columns to process per chunk during densification.
+#' If NULL (default), the function first checks the global option `dbMatrix.chunk_size`.
+#' If that is also NULL, it calculates a chunk size such that the estimated memory usage
+#' of each chunk does not exceed `dbMatrix.max_mem_convert` (default 8GB).
+#' If the total size is within the limit, a single chunk is used.
 #' @return A [`dbDenseMatrix`] object
 #' @keywords internal
 #' @examples
 #' dbsm <- sim_dbSparseMatrix(10, 10)
 #' dbdm <- toDbDense(dbsm)
-.to_db_dense <- function(x) {
-  # input validation
+.to_db_dense <- function(x, chunk_size = NULL) {
   if (!inherits(x, "dbSparseMatrix")) {
     stopf("Input must be a dbSparseMatrix object")
   }
 
   info <- .get_dbMatrix_info(x)
-  precomp <- .initialize_precompute_matrix(info$con, info$n_rows, info$n_cols)
-  name <- unique_table_name(prefix = "tmp_dbDenseMatrix")
+  con <- info$con
+  n_cols <- as.integer(info$n_cols)[1]
+  n_rows <- as.integer(info$n_rows)[1]
+  verbose <- getOption("dbMatrix.verbose", default = TRUE)
 
-  # .add_idx <- function(x) {
-  #   x[] <- x[] |>
-  #     dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
-  # }
+  # 1. Hot Path: Use Precomputed Table
+  precomp_name <- .find_precompute_table(con, n_rows, n_cols)
+  if (!is.null(precomp_name)) {
+    if (verbose) {
+      cli::cli_alert_info(
+        "Using precomputed table '{precomp_name}' for densification."
+      )
+    }
 
-  # add idx to sparse
-  x[] <- x[] |>
-    dplyr::mutate(idx = (j - 1) * info$n_rows + (i - 1))
+    precomp <- dplyr::tbl(con, precomp_name) |>
+      dplyr::filter(i <= !!n_rows, j <= !!n_cols)
 
-  # join by idx
-  data <- precomp |>
-    dplyr::left_join(x[], by = "idx", suffix = c("", ".dbsm")) |>
-    dplyr::transmute(i, j, x = dplyr::coalesce(x, 0))
+    x_tbl <- x[]
 
-  # compute
-  if (getOption("dbMatrix.dbdm_auto_compute", default = FALSE)) {
-    cli::cli_alert_info(c(
-      "Converting {.cls dbSparseMatrix} to {.cls dbDenseMatrix}...",
-      "\n See {.help dbMatrix.dbdm_auto_compute} for details."
-    ))
+    # Join logic: prefer 'idx' if available
+    if ("idx" %in% colnames(precomp)) {
+      x_tbl <- x_tbl |> dplyr::mutate(idx = (j - 1) * !!n_rows + (i - 1))
+      data <- precomp |>
+        dplyr::left_join(x_tbl, by = "idx", suffix = c("", ".dbsm"))
+    } else {
+      data <- precomp |>
+        dplyr::left_join(x_tbl, by = c("i", "j"), suffix = c("", ".dbsm"))
+    }
 
-    data <- data |>
-      dplyr::compute(temporary = FALSE, name = name)
+    val_col <- if ("x.dbsm" %in% colnames(data)) "x.dbsm" else "x"
+
+    res <- new(
+      "dbDenseMatrix",
+      value = data |>
+        dplyr::transmute(i, j, x = dplyr::coalesce(!!dplyr::sym(val_col), 0)),
+      name = unique_table_name(prefix = "tmp_dbDenseMatrix_hot"),
+      dims = info$dims,
+      dim_names = info$dim_names,
+      init = TRUE
+    )
+    return(res)
   }
 
-  res <- new(
+  # 2. Cold Path: JIT Densification
+  if (verbose) {
+    cli::cli_alert_info(
+      "Performing on-the-fly densification (cold path). See ?dbMatrix_options for details."
+    )
+  }
+
+  if (is.null(chunk_size)) {
+    chunk_size <- getOption("dbMatrix.chunk_size")
+    if (is.null(chunk_size)) {
+      limit <- getOption("dbMatrix.max_mem_convert", default = 8 * 1024^3)
+      chunk_size <- max(
+        1L,
+        min(floor(limit / (as.numeric(n_rows) * 8)), n_cols)
+      )
+    }
+  }
+
+  # Cap chunks to avoid parser limits
+  MAX_CHUNKS <- getOption("dbMatrix.max_chunks", default = 10000L)
+  if (ceiling(n_cols / chunk_size) > MAX_CHUNKS) {
+    chunk_size <- ceiling(n_cols / MAX_CHUNKS)
+    cli::cli_alert_warning(
+      "Adjusted chunk_size to {chunk_size} to limit query complexity."
+    )
+  }
+
+  col_starts <- seq(1, as.integer(n_cols), by = chunk_size)
+  base_sql <- dbplyr::sql_render(x[])
+
+  queries <- lapply(col_starts, function(start) {
+    end <- min(start + chunk_size - 1, n_cols)
+    grid_sql <- glue::glue(
+      "SELECT i, j FROM range(1, {n_rows} + 1) t1(i) CROSS JOIN range({start}, {end} + 1) t2(j)"
+    )
+    glue::glue(
+      "SELECT grid.i, grid.j, COALESCE(data.x, 0) as x FROM ({grid_sql}) grid LEFT JOIN ({base_sql}) data ON grid.i = data.i AND grid.j = data.j"
+    )
+  })
+
+  .combine_tree <- function(qs) {
+    if (length(qs) == 0) {
+      return(NULL)
+    }
+    if (length(qs) == 1) {
+      return(qs[[1]])
+    }
+    mid <- floor(length(qs) / 2)
+    glue::glue(
+      "({.combine_tree(qs[1:mid])}) UNION ALL ({.combine_tree(qs[(mid + 1):length(qs)])})"
+    )
+  }
+
+  new(
     "dbDenseMatrix",
-    value = data,
-    name = name, # note that this is a temporary table
+    value = dplyr::tbl(con, dplyr::sql(.combine_tree(queries))),
+    name = NA_character_,
     dims = info$dims,
     dim_names = info$dim_names,
     init = TRUE
   )
-
-  return(res)
 }
 
 #' @description
