@@ -215,9 +215,18 @@ the <code>data</code> directory of the package.</p>
 <pre><code><span><span class="co">## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span></code></pre>
 <pre><code><span><span class="co">##                                                                               </span></span>
 <span><span class="co">## Gna12    1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000 3.0000000</span></span>
+<span><span class="co">## Ccnd2            . 1.0000000 1.0000000         .         . 1.0000000         .</span></span>
+<span><span class="co">## Btbd17           . 1.0000000 1.0000000 1.0000000         .         . 2.0000000</span></span>
+<span><span class="co">## Sox9             .         .         .         .         . 2.0000000 1.0000000</span></span>
+<span><span class="co">## Sez6             . 1.0000000 4.0000000 3.0000000         . 8.0000000 1.0000000</span></span>
+<span><span class="co">## Serpinf1         .         .         .         . 3.0000000         . 1.0000000</span></span>
 <span><span class="co">##                                       </span></span>
 <span><span class="co">## Gna12    5.0000000 3.0000000         .</span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span></code></pre>
+<span><span class="co">## Ccnd2    1.0000000 1.0000000         .</span></span>
+<span><span class="co">## Btbd17           .         .         .</span></span>
+<span><span class="co">## Sox9             .         .         .</span></span>
+<span><span class="co">## Sez6     1.0000000 1.0000000 2.0000000</span></span>
+<span><span class="co">## Serpinf1         .         .         .</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="transpose">transpose<a class="anchor" aria-label="anchor" href="#transpose"></a>
@@ -228,14 +237,14 @@ the <code>data</code> directory of the package.</p>
 <pre><code><span><span class="co">## [[ Colnames 'Gna12', 'Ccnd2', 'Btbd17' ... suppressing 628 ...'Gm19935', '9630013A20Rik', '2900040C04Rik' ]]</span></span></code></pre>
 <pre><code><span><span class="co">##                                                                       </span></span>
 <span><span class="co">## AAAGGGATGTAGCAAG-1 1.0000000         .         .         .         . .</span></span>
-<span><span class="co">##                                                   </span></span>
-<span><span class="co">## AAAGGGATGTAGCAAG-1 1.0000000 .         .         .</span></span>
+<span><span class="co">## AAATGGCATGTCTTGT-1 2.0000000 1.0000000 1.0000000         . 1.0000000 .</span></span>
+<span><span class="co">## AAATGGTCAATGTGCC-1 1.0000000 1.0000000 1.0000000         . 4.0000000 .</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 624 columns and 618 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span>
-<span><span class="co">## NA</span></span>
-<span><span class="co">## NA</span></span></code></pre>
+<span><span class="co">## TTGTCGTTCAGTTACC-1 2.0000000 1.0000000         .         . 1.0000000 .</span></span>
+<span><span class="co">## TTGTGGCCCTGACAGT-1 3.0000000 1.0000000         .         .         . .</span></span>
+<span><span class="co">## TTGTTCAGTGTGCTAC-1 1.0000000         .         . 1.0000000 3.0000000 .</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colmeans">colMeans<a class="anchor" aria-label="anchor" href="#colmeans"></a>
@@ -347,14 +356,14 @@ Click to expand
 <pre><code><span><span class="co">## 50 x 50  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
 <pre><code><span><span class="co">##                                                                        </span></span>
 <span><span class="co">## row1   1.3709584  0.3219253  1.2009654 -0.0406985 -2.0009292 -1.0961562</span></span>
-<span><span class="co">##                                                  </span></span>
-<span><span class="co">## row1  -0.0046208  0.7241738  1.3349126 -1.3038212</span></span>
+<span><span class="co">## row2  -0.5646982 -0.7838389  1.0447511 -1.5515448  0.3337772  0.0490505</span></span>
+<span><span class="co">## row3   0.3631284  1.5757275 -1.0032086  1.1671695  1.1713251 -1.1984959</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span>
-<span><span class="co">## NA</span></span>
-<span><span class="co">## NA</span></span></code></pre>
+<span><span class="co">## row48  1.4441013 -1.4592140 -0.4331690  0.5864875 -0.0267175  0.8625634</span></span>
+<span><span class="co">## row49 -0.4314462  0.0799826  0.6968626  1.8152284  0.7036078  0.0973405</span></span>
+<span><span class="co">## row50  0.6556479  0.6532043 -1.0563684  0.1288214 -0.9713852 -1.6256167</span></span></code></pre>
 <div class="section level3">
 <h3 id="transpose-1">transpose<a class="anchor" aria-label="anchor" href="#transpose-1"></a>
 </h3>
@@ -364,14 +373,14 @@ Click to expand
 <pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
 <pre><code><span><span class="co">##                                                                        </span></span>
 <span><span class="co">## col1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245</span></span>
-<span><span class="co">##                                                  </span></span>
-<span><span class="co">## col1   1.5115220 -0.0946590  2.0184237 -0.0627141</span></span>
+<span><span class="co">## col2   0.3219253 -0.7838389  1.5757275  0.6428993  0.0897606  0.2765507</span></span>
+<span><span class="co">## col3   1.2009654  1.0447511 -1.0032086  1.8484819 -0.6667734  0.1055138</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 5 rows ]</span></span>
-<span><span class="co">## NA</span></span>
-<span><span class="co">## NA</span></span></code></pre>
+<span><span class="co">## col48  0.2165217 -0.1147498  0.0203381  0.8927903  1.4480841 -0.2520309</span></span>
+<span><span class="co">## col49  1.3275046 -0.6008358  0.0565069 -0.5310763 -0.0808988  0.1607556</span></span>
+<span><span class="co">## col50 -0.3898801 -0.0992633 -0.0279661 -0.0569889  0.5556590  0.9019238</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colmeans-1">colMeans<a class="anchor" aria-label="anchor" href="#colmeans-1"></a>
