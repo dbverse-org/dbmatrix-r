@@ -1,5 +1,82 @@
 # Changelog
 
+## dbMatrix 0.0.0.9125 (2025-12-04)
+
+### Bug fixes
+
+- Ensure as.matrix returns unnamed matrix when names=FALSE.
+
+- Update show methods to handle duplicate dimnames via index filtering.
+
+- Pkgdown errors.
+
+- Ensure rowVars/colVars preserve empty dimensions.
+
+- Make `compute` s3 and use CTAS instead.
+
+### Features
+
+- Optimize precompute with parquet and auto-attach existing tables.
+
+- Implement native ingestion for various Matrix classes via
+  `as.dbMatrix`.
+
+- Add coercion methods for `dbMatrix` to matrix/Matrix objects.
+
+- Add `.check_mem_limit` internal function.
+
+- Support `overwrite` arg in `compute.dbMatrix`.
+
+- `writeMM` method for dbMatrix objects.
+
+- Add `value_colName` support to dbMatrix_from_tbl for pre-aggregated
+  counts.
+
+### Chore
+
+- Update roxygen version.
+
+- Ignore benchmarks/ repo.
+
+- Update NAMESPACE with s3 exports.
+
+### Documentation
+
+- Tidy roxygen.
+
+- Tidy + update global options in dbMatrix.
+
+- Clean up roxygen comments & improve documentation formatting.
+
+### Code style
+
+- Tidy extract.R with `air` and `jarl`.
+
+- Tidy .R files with `air` and `jarl`.
+
+### Refactoring
+
+- Delegate dbMatrix construction to as.dbMatrix generic for native R
+  matrix ingestion.
+
+- Clean up Math Summary ops so to use subqueries and R zero inflation.
+
+### Performance
+
+- Optimize sparse –\> matrix conversion.
+
+- Improve mem safety of `as.matrix` for dense matrix conversions.
+
+- Use head/tail filter pushdown in show method for dbMatrix objects.
+
+- Improve `extract` by using `duckdb_register` for large indices.
+
+- Optimize arith helpers with lazy queries instead of generating views.
+
+### Testing
+
+- Add tests for `compute`.
+
 ## dbMatrix 0.0.0.9124 (2025-10-14)
 
 ### Breaking Changes
