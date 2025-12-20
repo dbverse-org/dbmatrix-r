@@ -372,7 +372,7 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 #' @concept dbMatrix
 #' @export
 #' @examples
-#' dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+#' dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 #' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' dbSparse <- dbMatrix(
 #'   value = dgc,

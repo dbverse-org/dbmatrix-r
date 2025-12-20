@@ -7,3 +7,5 @@
 ^pkgdown$
 ^\.github$
 .readthedocs.yaml
+^precomp_.*\.db$
+^benchmarks/.*\.duckdb$
