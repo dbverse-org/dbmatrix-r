@@ -547,21 +547,35 @@ dbMatrix <- function(
   verbose <- getOption("dbMatrix.verbose", default = TRUE)
 
   # 1. Hot Path: Use Precomputed Table
-  precomp_name <- .find_precompute_table(con, n_rows, n_cols)
-  if (!is.null(precomp_name)) {
+  precomp_result <- .find_precompute_table(con, n_rows, n_cols)
+  if (!is.null(precomp_result)) {
+    precomp_name <- precomp_result$name
+    use_transposed <- precomp_result$transposed
+
     if (verbose) {
-      cli::cli_alert_info(
+      msg <- if (use_transposed) {
+        "Using precomputed table '{precomp_name}' for densification (transposed)."
+      } else {
         "Using precomputed table '{precomp_name}' for densification."
-      )
+      }
+      cli::cli_alert_info(msg)
     }
 
-    precomp <- dplyr::tbl(con, precomp_name) |>
-      dplyr::filter(i <= !!n_rows, j <= !!n_cols)
+    precomp <- dplyr::tbl(con, precomp_name)
+
+    if (use_transposed) {
+      precomp <- precomp |>
+        dplyr::rename(i_orig = i, j_orig = j) |>
+        dplyr::rename(i = j_orig, j = i_orig) |>
+        dplyr::filter(i <= !!n_rows, j <= !!n_cols)
+    } else {
+      precomp <- precomp |>
+        dplyr::filter(i <= !!n_rows, j <= !!n_cols)
+    }
 
     x_tbl <- x[]
 
-    # Join logic: prefer 'idx' if available
-    if ("idx" %in% colnames(precomp)) {
+    if ("idx" %in% colnames(precomp) && !use_transposed) {
       x_tbl <- x_tbl |> dplyr::mutate(idx = (j - 1) * !!n_rows + (i - 1))
       data <- precomp |>
         dplyr::left_join(x_tbl, by = "idx", suffix = c("", ".dbsm"))

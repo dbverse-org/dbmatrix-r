@@ -51,10 +51,12 @@
 #' @keywords internal
 #' @noRd
 .find_precompute_table <- function(con, n_rows, n_cols) {
-  # 1. Try to attach external DB if configured
+  # Convert to numeric to avoid integer64 overflow in comparisons
+  n_rows <- as.numeric(n_rows)
+  n_cols <- as.numeric(n_cols)
+
   .attach_precomp_db(con)
 
-  # 2. Search for tables in ALL catalogs
   query <- "SELECT table_catalog, table_schema, table_name FROM information_schema.tables WHERE table_name LIKE 'precomp_%'"
 
   tables <- tryCatch(
@@ -73,8 +75,6 @@
     sep = "."
   )
 
-  # 3. Parse dimensions and find best fit
-  # table_name format: precomp_ROWSxCOLS
   dims_str <- gsub("precomp_", "", tables$table_name)
   dims_list <- strsplit(dims_str, "x")
 
@@ -85,25 +85,51 @@
 
   candidates <- tables[valid_fmt, ]
   dims_list <- dims_list[valid_fmt]
-
-  # Use numeric to handle large numbers
   dim_matrix <- do.call(rbind, lapply(dims_list, function(x) as.numeric(x)))
 
-  # 4. Filter: Must be >= requested dimensions
-  valid_mask <- dim_matrix[, 1] >= n_rows & dim_matrix[, 2] >= n_cols
+  # Check normal orientation
+  valid_normal <- dim_matrix[, 1] >= n_rows & dim_matrix[, 2] >= n_cols
+  # Check transposed orientation
+  valid_transposed <- dim_matrix[, 1] >= n_cols & dim_matrix[, 2] >= n_rows
 
-  if (!any(valid_mask)) {
+  if (!any(valid_normal) && !any(valid_transposed)) {
     return(NULL)
   }
 
-  # 5. Select Best Fit (Manhattan distance)
-  valid_matrix <- dim_matrix[valid_mask, , drop = FALSE]
-  valid_candidates <- candidates[valid_mask, ]
+  # Find best fit across both orientations
+  best_table <- NULL
+  best_dist <- Inf
+  transposed <- FALSE
 
-  distances <- abs(valid_matrix[, 1] - n_rows) + abs(valid_matrix[, 2] - n_cols)
-  best_table <- valid_candidates$full_name[which.min(distances)]
+  if (any(valid_normal)) {
+    m <- dim_matrix[valid_normal, , drop = FALSE]
+    c <- candidates[valid_normal, ]
+    d <- abs(m[, 1] - n_rows) + abs(m[, 2] - n_cols)
+    idx <- which.min(d)
+    if (d[idx] < best_dist) {
+      best_dist <- d[idx]
+      best_table <- c$full_name[idx]
+      transposed <- FALSE
+    }
+  }
 
-  # 6. Validate Structure
+  if (any(valid_transposed)) {
+    m <- dim_matrix[valid_transposed, , drop = FALSE]
+    c <- candidates[valid_transposed, ]
+    d <- abs(m[, 1] - n_cols) + abs(m[, 2] - n_rows)
+    idx <- which.min(d)
+    if (d[idx] < best_dist) {
+      best_dist <- d[idx]
+      best_table <- c$full_name[idx]
+      transposed <- TRUE
+    }
+  }
+
+  if (is.null(best_table)) {
+    return(NULL)
+  }
+
+  # Validate structure
   tryCatch(
     {
       cols <- DBI::dbGetQuery(con, glue::glue("DESCRIBE {best_table}"))
@@ -117,7 +143,7 @@
     error = function(e) NULL
   )
 
-  return(best_table)
+  list(name = best_table, transposed = transposed)
 }
 
 #' @description
@@ -126,44 +152,35 @@
 #' @keywords internal
 #' @noRd
 .initialize_precompute_matrix <- function(con, n_rows, n_cols) {
-  precompute_name <- .find_precompute_table(con, n_rows, n_cols)
+  precomp_result <- .find_precompute_table(con, n_rows, n_cols)
 
-  if (is.null(precompute_name)) {
+  if (is.null(precomp_result)) {
     cli::cli_alert_info(
       "Computing new dense COO table with {n_rows} rows and {n_cols} columns..."
     )
     return(precompute(conn = con, m = n_rows, n = n_cols))
   }
 
-  # Parse dimensions from name
-  precomp_dim <- regmatches(
-    precompute_name,
-    regexpr("\\d+x\\d+", precompute_name)
-  )
-  dims_parts <- strsplit(precomp_dim, "x")[[1]]
-  dims <- list(
-    rows = bit64::as.integer64(dims_parts[1]),
-    cols = bit64::as.integer64(dims_parts[2])
-  )
+  precompute_name <- precomp_result$name
+  use_transposed <- precomp_result$transposed
 
-  # Check if we can use existing or need transpose
-  if (n_rows <= dims$rows & n_cols <= dims$cols) {
-    return(dplyr::tbl(con, precompute_name))
-  } else if (n_rows <= dims$cols & n_cols <= dims$rows) {
-    # Transpose case
-    new_name <- glue::glue("precomp_{dims$cols}x{dims$rows}")
-    sql <- glue::glue(
-      "CREATE OR REPLACE TEMPORARY VIEW {new_name} AS SELECT j AS i, i AS j FROM {precompute_name}"
-    )
-    invisible(DBI::dbExecute(con, sql))
-    return(dplyr::tbl(con, new_name))
+  precomp <- dplyr::tbl(con, precompute_name)
+
+  # Convert to numeric for dplyr filter compatibility
+  nr <- as.numeric(n_rows)
+  nc <- as.numeric(n_cols)
+
+  if (use_transposed) {
+    precomp <- precomp |>
+      dplyr::rename(i_orig = i, j_orig = j) |>
+      dplyr::rename(i = j_orig, j = i_orig) |>
+      dplyr::filter(i <= !!nr, j <= !!nc)
   } else {
-    # Create new
-    cli::cli_alert_info(
-      "Computing new dense COO table with {n_rows} rows and {n_cols} columns..."
-    )
-    return(precompute(conn = con, m = n_rows, n = n_cols))
+    precomp <- precomp |>
+      dplyr::filter(i <= !!nr, j <= !!nc)
   }
+
+  return(precomp)
 }
 
 #' Compute a dense COO table in a database connection
@@ -194,8 +211,10 @@
 #' @keywords internal
 #' @concept dbMatrix
 #' @examples
+#' \dontrun{
 #' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' precompute(con = con , m = 100, n = 100)
+#' }
 precompute <- function(conn, m, n, verbose = FALSE) {
   .check_con(conn = conn)
 
