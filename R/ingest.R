@@ -117,15 +117,36 @@ as.dbMatrix.dgCMatrix <- function(
     skip_value_check = TRUE
   )
 
-  ijx <- as_ijx(x)
-
-  dplyr::copy_to(
-    dest = con,
-    name = name,
-    df = ijx,
-    overwrite = overwrite,
-    ...
+  # Extract directly from dgCMatrix format
+  # We need to construct 1-based (i, j, x) triplets for dbMatrix
+  n_nz <- length(x@x)
+  ncol_mat <- ncol(x)
+  
+  # Column indices: for each column j (1-based), repeat j for each entry in that column
+  # diff(@p) gives count of entries per column
+  j_idx <- rep.int(seq_len(ncol_mat), diff(x@p))
+  
+  # Row indices: @i is 0-based, convert to 1-based
+  i_idx <- x@i + 1L
+  
+  arrow_tbl <- arrow::arrow_table(
+    i = i_idx,
+    j = j_idx,
+    x = x@x
   )
+  
+  temp_arrow_name <- unique_table_name("__dbM_arrow_ingest")
+  
+  duckdb::duckdb_register_arrow(con, temp_arrow_name, arrow_tbl)
+  
+  tryCatch({
+    if (overwrite) {
+      DBI::dbExecute(con, glue::glue("DROP TABLE IF EXISTS \"{name}\""))
+    }
+    DBI::dbExecute(con, glue::glue("CREATE TABLE \"{name}\" AS SELECT * FROM \"{temp_arrow_name}\""))
+  }, finally = {
+    duckdb::duckdb_unregister_arrow(con, temp_arrow_name)
+  })
 
   new(
     "dbSparseMatrix",
@@ -157,15 +178,25 @@ as.dbMatrix.dgTMatrix <- function(
     skip_value_check = TRUE
   )
 
-  ijx <- data.frame(i = x@i + 1L, j = x@j + 1L, x = x@x)
-
-  dplyr::copy_to(
-    dest = con,
-    name = name,
-    df = ijx,
-    overwrite = overwrite,
-    ...
+  # dgTMatrix slots @i and @j are 0-based, convert to 1-based
+  arrow_tbl <- arrow::arrow_table(
+    i = x@i + 1L,
+    j = x@j + 1L,
+    x = x@x
   )
+  
+  temp_arrow_name <- unique_table_name("__dbM_arrow_ingest")
+  
+  duckdb::duckdb_register_arrow(con, temp_arrow_name, arrow_tbl)
+  
+  tryCatch({
+    if (overwrite) {
+      DBI::dbExecute(con, glue::glue("DROP TABLE IF EXISTS \"{name}\""))
+    }
+    DBI::dbExecute(con, glue::glue("CREATE TABLE \"{name}\" AS SELECT * FROM \"{temp_arrow_name}\""))
+  }, finally = {
+    duckdb::duckdb_unregister_arrow(con, temp_arrow_name)
+  })
 
   new(
     "dbSparseMatrix",
