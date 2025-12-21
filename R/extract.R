@@ -47,7 +47,7 @@ setMethod(
           i = as.integer(i),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
@@ -77,28 +77,25 @@ setMethod(
           rowname = filter_i,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[1]], 
+        prefix = "__dbM_extract_dim_map_i", 
+        col_name_in_db = "rowname"
       )
 
       map_tbl <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "rowname"
         ) |>
+        dplyr::rename(i = idx) |>
         dplyr::select(new_i, i)
     }
 
@@ -152,7 +149,7 @@ setMethod(
           j = as.integer(j),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
@@ -182,28 +179,25 @@ setMethod(
           colname = filter_j,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[2]], 
+        prefix = "__dbM_extract_dim_map_j", 
+        col_name_in_db = "colname"
       )
 
       map_tbl <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "colname"
         ) |>
+        dplyr::rename(j = idx) |>
         dplyr::select(new_j, j)
     }
 
@@ -259,7 +253,7 @@ setMethod(
           i = as.integer(i),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl_i <- dplyr::tbl(con, req_tbl_name)
       }
@@ -289,28 +283,25 @@ setMethod(
           rowname = filter_i,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[1]], 
+        prefix = "__dbM_extract_dim_map_i", 
+        col_name_in_db = "rowname"
       )
 
       map_tbl_i <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "rowname"
         ) |>
+        dplyr::rename(i = idx) |>
         dplyr::select(new_i, i)
     }
 
@@ -339,7 +330,7 @@ setMethod(
           j = as.integer(j),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl_j <- dplyr::tbl(con, req_tbl_name)
       }
@@ -369,28 +360,25 @@ setMethod(
           colname = filter_j,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[2]], 
+        prefix = "__dbM_extract_dim_map_j", 
+        col_name_in_db = "colname"
       )
 
       map_tbl_j <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(paste0("(", dim_mapping_sql, ")"))),
+          dim_map_tbl,
           by = "colname"
         ) |>
+        dplyr::rename(j = idx) |>
         dplyr::select(new_j, j)
     }
 
@@ -601,8 +589,38 @@ setMethod(
 )
 
 # dbDenseMatrix indexing methods ####
-# These methods enable dbVector logical indexing for dbMatrix objects
-# Critical for filterGiotto functionality in giottodb
+# These methods enable 1D dbMatrix logical indexing for dbMatrix objects
+
+#' Internal helper to store mapping table for subsetting
+#' Uses inline SQL for small N, registered virtual table (view) for large N
+#' Fallback to registered view ensures efficiency and clean database state
+#' @keywords internal
+#' @noRd
+store_mapping <- function(con, items, prefix, col_name_in_db) {
+  # Inline SQL
+  if (length(items) < 2000) {
+    safe_items <- gsub("'", "''", items)
+    items_sql <- glue::glue_collapse(glue::glue("'{safe_items}'"), sep = ", ")
+    
+    mapping_sql <- glue::glue(
+      "SELECT ROW_NUMBER() OVER () as idx, unnest as {col_name_in_db} 
+       FROM (SELECT UNNEST([{items_sql}]) as unnest)"
+    )
+    return(dplyr::tbl(con, dplyr::sql(glue::glue("({mapping_sql})"))))
+  } 
+  
+  # Registered virtual table
+  df <- data.frame(
+    idx = seq_along(items),
+    name = items,
+    stringsAsFactors = FALSE
+  )
+  colnames(df)[2] <- col_name_in_db
+  
+  tbl_name <- unique_table_name(prefix)
+  duckdb::duckdb_register(con, tbl_name, df, overwrite = TRUE)
+  return(dplyr::tbl(con, tbl_name))
+}
 
 #' @noRd
 #' @concept dbMatrix
