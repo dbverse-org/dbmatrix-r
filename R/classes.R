@@ -26,9 +26,41 @@ dbMatrix <- setClass(
   prototype = list(
     dim_names = list(NULL, NULL),
     dims = c(NA_integer_, NA_integer_),
-    init = FALSE
-  )
-)
+
+#' Ensure dim_names are non-NULL factors
+#' 
+#' Helper function that ensures dim_names are always non-NULL factors.
+#' If dim_names are NULL, creates "row1", "row2", ... and "col1", "col2", ...
+#' If dim_names are character, converts to factor for efficient indexing.
+#' 
+#' @param dim_names list of row and column names (can be NULL)
+#' @param dims integer vector of dimensions
+#' @return list of factor row and column names
+#' @keywords internal
+#' @noRd
+.ensure_dim_names <- function(dim_names, dims) {
+  # Ensure dim_names list exists
+
+  if (is.null(dim_names)) {
+    dim_names <- list(NULL, NULL)
+  }
+  
+  # Ensure row names
+  if (is.null(dim_names[[1]])) {
+    dim_names[[1]] <- as.factor(paste0("row", seq_len(dims[1])))
+  } else if (!is.factor(dim_names[[1]])) {
+    dim_names[[1]] <- as.factor(dim_names[[1]])
+  }
+  
+  # Ensure col names
+  if (is.null(dim_names[[2]])) {
+    dim_names[[2]] <- as.factor(paste0("col", seq_len(dims[2])))
+  } else if (!is.factor(dim_names[[2]])) {
+    dim_names[[2]] <- as.factor(dim_names[[2]])
+  }
+  
+  dim_names
+}
 
 #### dbDenseMatrix ####
 #' @title S4 Class for `dbDenseMatrix`

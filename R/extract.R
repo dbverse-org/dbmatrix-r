@@ -23,6 +23,17 @@ setMethod(
     # check inputs
     .check_extract(x = x, i = i, j = NULL, dim = dim)
 
+    # Convert character indices to integers for faster extraction
+    if (is.character(i)) {
+      int_idx <- match(i, x@dim_names[[1]])
+      if (anyNA(int_idx)) {
+        bad_names <- i[is.na(int_idx)]
+        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      i <- int_idx
+    }
+
     if (is.numeric(i)) {
       # Handle negative indices: convert to positive by excluding
       if (any(i < 0)) {
@@ -59,8 +70,8 @@ setMethod(
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_i <- x@dim_names[[1]][i]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -111,8 +122,9 @@ setMethod(
       dplyr::inner_join(map_tbl, by = "i") |>
       dplyr::select(i = new_i, j, x)
 
-    x@dim_names[[1L]] <- filter_i
-    x@dims[1L] <- length(filter_i)
+    # Preserve factor status for dim_names
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+    x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
     x@name <- NA_character_
 
     return(x)
@@ -132,6 +144,17 @@ setMethod(
 
     # check for dims
     .check_extract(x = x, i = NULL, j = j, dim = dim)
+
+    # Convert character indices to integers for faster extraction
+    if (is.character(j)) {
+      int_idx <- match(j, x@dim_names[[2]])
+      if (anyNA(int_idx)) {
+        bad_names <- j[is.na(int_idx)]
+        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      j <- int_idx
+    }
 
     if (is.numeric(j)) {
       # Handle negative indices: convert to positive by excluding
@@ -169,8 +192,8 @@ setMethod(
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_j <- x@dim_names[[2]][j]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_j <- x@dim_names[[2]][j]  # Returns NULL if dim_names[[2]] is NULL
     } else {
       filter_j <- get_dbM_sub_idx(
         index = j,
@@ -221,8 +244,9 @@ setMethod(
       dplyr::inner_join(map_tbl, by = "j") |>
       dplyr::select(i, j = new_j, x)
 
-    x@dim_names[[2L]] <- filter_j
-    x@dims[2L] <- length(filter_j)
+    # Preserve factor status for dim_names
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
     x@name <- NA_character_
 
     return(x)
@@ -243,6 +267,27 @@ setMethod(
 
     # check for dims
     .check_extract(x = x, i = i, j = j, dim = dim)
+
+    # Convert character indices to integers for faster extraction
+    if (is.character(i)) {
+      int_idx <- match(i, x@dim_names[[1]])
+      if (anyNA(int_idx)) {
+        bad_names <- i[is.na(int_idx)]
+        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      i <- int_idx
+    }
+    
+    if (is.character(j)) {
+      int_idx <- match(j, x@dim_names[[2]])
+      if (anyNA(int_idx)) {
+        bad_names <- j[is.na(int_idx)]
+        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      j <- int_idx
+    }
 
     # Process i index (same logic as row-only subsetting)
     if (is.numeric(i)) {
@@ -281,8 +326,8 @@ setMethod(
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl_i <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_i <- x@dim_names[[1]][i]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -419,11 +464,11 @@ setMethod(
       dplyr::inner_join(map_tbl_j, by = "j") |>
       dplyr::select(i = new_i, j = new_j, x)
 
-    # update dbMatrix attributes
-    x@dim_names[[1L]] <- filter_i
-    x@dim_names[[2L]] <- filter_j
-    x@dims[1L] <- length(filter_i)
-    x@dims[2L] <- length(filter_j)
+    # update dbMatrix attributes - preserve factor status
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
+    x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
     x@name <- NA_character_
 
     return(x)

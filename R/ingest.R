@@ -132,7 +132,7 @@ as.dbMatrix.dgCMatrix <- function(
     value = dplyr::tbl(con, name),
     name = name,
     dims = dim(x),
-    dim_names = dimnames(x),
+    dim_names = .ensure_dim_names(dimnames(x), dim(x)),
     init = TRUE
   )
 }
@@ -172,7 +172,7 @@ as.dbMatrix.dgTMatrix <- function(
     value = dplyr::tbl(con, name),
     name = name,
     dims = dim(x),
-    dim_names = dimnames(x),
+    dim_names = .ensure_dim_names(dimnames(x), dim(x)),
     init = TRUE
   )
 }

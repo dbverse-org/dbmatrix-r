@@ -1,11 +1,11 @@
 # names ####
-# TODO: add @value once setter is implemented, update to dbVector
+# TODO: add @value once setter is implemented, update to 1D dbMatrix
 #' The names of a dbMatrix Object
 #' @param x A dbMatrix object
 #' @concept matrix_props
-#' @return A character vector of the names of the dbVector object (1D matrices only)
+#' @return A character vector of the names of the 1D dbMatrix object (1D matrices only)
 setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
-  # Only dbVector objects (1-dimensional matrices) should have names
+  # Only 1D dbMatrix objects (1-dimensional matrices) should have names
   # Regular matrices should return NULL for names()
   if (!1 %in% x@dims) {
     return(NULL) # Regular matrices don't have names, return NULL instead of error
@@ -30,7 +30,7 @@ setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
 #' @concept matrix_props
 #' @export
 rownames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "row") {
-  x@dim_names[[1]]
+  as.character(x@dim_names[[1]])
 }
 
 #' @rdname matrix_props
@@ -53,7 +53,7 @@ rownames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "row") {
 #' @concept matrix_props
 #' @export
 colnames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "col") {
-  x@dim_names[[2]]
+  as.character(x@dim_names[[2]])
 }
 
 #' @rdname matrix_props
@@ -73,7 +73,10 @@ colnames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "col") {
 #' @concept matrix_props
 #' @export
 setMethod('dimnames', signature(x = 'dbMatrix'), function(x) {
-  x@dim_names
+  list(
+    as.character(x@dim_names[[1]]),
+    as.character(x@dim_names[[2]])
+  )
 })
 
 #' @rdname matrix_props
@@ -108,7 +111,10 @@ setMethod(
   if (is.na(x@name) & is.null(name)) {
     stopf('Name is empty. Use dbSave() to save the lazy dbMatrix object.')
   }
-  check_names <- c(paste0(name, "_rownames"), paste0(name, "_colnames"))
+  check_names <- c(
+    paste0("__", name, "_rownames"),
+    paste0("__", name, "_colnames")
+  )
   registered_names <- duckdb::duckdb_list_arrow(conn = con)
   names_to_unregister <- check_names[check_names %in% registered_names]
   names_to_remove <- check_names[check_names %in% DBI::dbListTables(con)]
@@ -133,7 +139,7 @@ setMethod(
   dplyr::copy_to(
     df = rownames_dt,
     dest = con,
-    name = paste0(name, "_temp_rownames"),
+    name = paste0("__", name, "_temp_rownames"),
     overwrite = TRUE
   ) |>
     invisible()
@@ -141,25 +147,25 @@ setMethod(
   dplyr::copy_to(
     df = colnames_dt,
     dest = con,
-    name = paste0(name, "_temp_colnames"),
+    name = paste0("__", name, "_temp_colnames"),
     overwrite = TRUE
   ) |>
     invisible()
 
-  # FIXME: compute in separate schema to hide from DBI::dbListTables()
-  dplyr::tbl(con, paste0(name, "_temp_rownames")) |>
+  # NOTE: Using __ prefix to distinguish from user tables
+  dplyr::tbl(con, paste0("__", name, "_temp_rownames")) |>
     dplyr::mutate(i = dplyr::row_number()) |>
-    dplyr::compute(temporary = FALSE, name = paste0(name, "_rownames")) |>
+    dplyr::compute(temporary = FALSE, name = paste0("__", name, "_rownames")) |>
     invisible()
 
-  dplyr::tbl(con, paste0(name, "_temp_colnames")) |>
+  dplyr::tbl(con, paste0("__", name, "_temp_colnames")) |>
     dplyr::mutate(j = dplyr::row_number()) |>
-    dplyr::compute(temporary = FALSE, name = paste0(name, "_colnames")) |>
+    dplyr::compute(temporary = FALSE, name = paste0("__", name, "_colnames")) |>
     invisible()
 
   # remove temporary tables
-  DBI::dbRemoveTable(con, paste0(name, "_temp_rownames"))
-  DBI::dbRemoveTable(con, paste0(name, "_temp_colnames"))
+  DBI::dbRemoveTable(con, paste0("__", name, "_temp_rownames"))
+  DBI::dbRemoveTable(con, paste0("__", name, "_temp_colnames"))
 }
 
 #' @keywords internal
