@@ -24,6 +24,14 @@ setMethod(
     .check_extract(x = x, i = i, j = NULL, dim = dim)
 
     if (is.numeric(i)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(i < 0)) {
+        if (any(i > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+      }
+      
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -126,6 +134,14 @@ setMethod(
     .check_extract(x = x, i = NULL, j = j, dim = dim)
 
     if (is.numeric(j)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(j < 0)) {
+        if (any(j > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+      }
+      
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -230,6 +246,14 @@ setMethod(
 
     # Process i index (same logic as row-only subsetting)
     if (is.numeric(i)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(i < 0)) {
+        if (any(i > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+      }
+      
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -307,6 +331,14 @@ setMethod(
 
     # Process j index (same logic as column-only subsetting)
     if (is.numeric(j)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(j < 0)) {
+        if (any(j > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+      }
+      
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -423,7 +455,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
 
     # check that dimensions has 1 in the [1] or [2] position
     if (sum(dimensions == 1) != 1) {
-      stop("dbDenseMatrix is not a dbVector")
+      stop("dbDenseMatrix is not a 1D dbMatrix")
     }
 
     # FIXME: If dbmatrix@x is logical support recycle_boolean_index
@@ -434,7 +466,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
       filtered_index <- index[] |>
         dplyr::filter(x)
       if (dims == 1L || is(index, "dbDenseMatrix")) {
-        #FIXME dbVector
+        #FIXME 1D dbMatrix
         # a_rownames |>
         #    dplyr::semi_join(filtered_index, by = "i")
         index <- filtered_index |>
@@ -460,7 +492,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
     if (all(index %in% dbM_dimnames[[dims]])) {
       return(index)
     } else {
-      stop("dbVector dimensions do not match dbMatrix dimensions")
+      stop("1D dbMatrix dimensions do not match dbMatrix dimensions")
     }
   }
 
@@ -471,7 +503,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
 #' @noRd
 #' @keywords internal
 recycle_boolean_index <- function(index, length) {
-  #FIXME: dbVector
+  #FIXME: 1D dbMatrix
   if (is.logical(index) && length(index) < length) {
     recycled <- rep_len(index, length)
     return(which(recycled))
@@ -629,9 +661,9 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbDenseMatrix', j = 'missing'),
   function(x, i, ..., drop = FALSE) {
-    # Check if i is a valid dbVector (1D matrix)
+    # Check if i is a valid 1D dbMatrix (1D matrix)
     if (!1 %in% dim(i)) {
-      stopf("dbDenseMatrix index must be a dbVector (have 1 in dimensions)")
+      stopf("dbDenseMatrix index must be a 1D dbMatrix (have 1 in dimensions)")
     }
 
     # Check dimensional compatibility - only row indexing supported
