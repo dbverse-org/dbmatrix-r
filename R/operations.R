@@ -658,40 +658,25 @@ setMethod(
 #' @concept summary
 #' @rdname row_col_sums
 #' @export
+#' @usage \S4method{rowSums}{dbDenseMatrix}(x, na.rm = FALSE, dims = 1, ..., memory = FALSE)
 setMethod(
   'rowSums',
   signature(x = 'dbDenseMatrix'),
-  function(x, ..., memory = FALSE) {
+  function(x, na.rm = FALSE, dims = 1, ..., memory = FALSE) {
     x <- .castNumeric(x)
+    n_rows <- nrow(x)
+    rn <- rownames(x)
 
-    # calculate rowSums
-    rowSum <- x[] |>
+    # calculate rowSums - collect with row indices
+    res_df <- x[] |>
       dplyr::group_by(i) |>
-      dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
-
-    if (memory) {
-      res <- rowSum |>
-        dplyr::collapse() |>
-        dplyr::pull(sum_x)
-
-      names(res) <- rownames(x)
-    } else {
-      rowSum <- rowSum |>
-        dplyr::mutate(j = 1) |>
-        dplyr::rename(x = sum_x) |>
-        dplyr::select(i, j, x) |>
-        dplyr::collapse()
-
-      res <- new(
-        Class = "dbDenseMatrix",
-        value = rowSum,
-        name = NA_character_, # for lazy queries
-        init = TRUE,
-        dims = c(nrow(x), 1L),
-        dim_names = list(rownames(x), c('col1'))
-      )
-    }
-
+      dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+      dplyr::collect()
+    
+    # Build result vector with correct ordering using i indices
+    res <- numeric(n_rows)
+    res[res_df$i] <- res_df$sum_x
+    names(res) <- rn
     return(res)
   }
 )
@@ -703,51 +688,19 @@ setMethod(
 setMethod(
   'rowSums',
   signature(x = 'dbSparseMatrix'),
-  function(x, ..., memory = FALSE) {
-    x <- .castNumeric(x)
+  function(x, ...) {
 
-    # add 0 to rowSum
+    x <- .castNumeric(x)
     num_row <- nrow(x)
 
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(i) |>
-        dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-        dplyr::collect()
-
-      res <- numeric(num_row)
-      res[res_sparse$i] <- res_sparse$sum_x
-      names(res) <- rownames(x)
-      return(res)
-    }
-
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as i FROM generate_series(1, {num_row})"
-      ))
-    )
-
-    # calc rowsum for nonzero values in ijx
-    rowSum <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(i) |>
       dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-      dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |> # fill missing i values
-      dplyr::mutate(x = dplyr::coalesce(sum_x, 0)) |>
-      dplyr::mutate(j = 1) |>
-      dplyr::select(i, j, x) |>
-      dplyr::collapse()
+      dplyr::collect()
 
-    res <- new(
-      Class = "dbDenseMatrix",
-      value = rowSum,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(nrow(x), 1L),
-      dim_names = list(rownames(x), c('col1'))
-    )
-
-    # show
+    res <- numeric(num_row)
+    res[res_sparse$i] <- res_sparse$sum_x
+    names(res) <- rownames(x)
     return(res)
   }
 )
@@ -758,39 +711,18 @@ setMethod(
 setMethod(
   'colSums',
   signature(x = 'dbDenseMatrix'),
-  function(x, ..., memory = FALSE) {
+  function(x, ...) {
     x <- .castNumeric(x)
 
     # calculate colSums
-    colSum <- x[] |>
+    res <- x[] |>
       dplyr::group_by(j) |>
-      dplyr::summarise(sum_x = sum(x, na.rm = TRUE))
+      dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
+      dplyr::collapse() |>
+      dplyr::arrange(j) |>
+      dplyr::pull(sum_x)
 
-    if (memory) {
-      res <- colSum |>
-        dplyr::collapse() |>
-        dplyr::arrange(j) |>
-        dplyr::pull(sum_x)
-
-      names(res) <- colnames(x)
-    } else {
-      colSum <- colSum |>
-        dplyr::select(i = j, sum_x) |>
-        dplyr::mutate(j = 1) |>
-        dplyr::rename(x = sum_x) |>
-        dplyr::select(i, j, x) |>
-        dplyr::collapse()
-
-      res <- new(
-        Class = "dbDenseMatrix",
-        value = colSum,
-        name = NA_character_, # for lazy queries
-        init = TRUE,
-        dims = c(ncol(x), 1L),
-        dim_names = list(colnames(x), c('col1'))
-      )
-    }
-
+    names(res) <- colnames(x)
     return(res)
   }
 )
@@ -802,51 +734,19 @@ setMethod(
 setMethod(
   'colSums',
   signature(x = 'dbSparseMatrix'),
-  function(x, ..., memory = FALSE) {
-    x <- .castNumeric(x)
+  function(x, ...) {
 
+    x <- .castNumeric(x)
     num_col <- ncol(x)
 
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(j) |>
-        dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-        dplyr::collect()
-
-      res <- numeric(num_col)
-      res[res_sparse$j] <- res_sparse$sum_x
-      names(res) <- colnames(x)
-      return(res)
-    }
-
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as j FROM generate_series(1, {num_col})"
-      ))
-    )
-
-    # calc colsum for nonzero values in ijx
-    colSum <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(j) |>
       dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
-      dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
-      dplyr::mutate(x = dplyr::coalesce(sum_x, 0)) |>
-      dplyr::select(i = j, x) |>
-      dplyr::mutate(j = 1) |>
-      dplyr::select(i, j, x) |>
-      dplyr::collapse()
+      dplyr::collect()
 
-    res <- new(
-      Class = "dbDenseMatrix",
-      value = colSum,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(ncol(x), 1L),
-      dim_names = list(colnames(x), c('col1'))
-    )
-
-    # show
+    res <- numeric(num_col)
+    res[res_sparse$j] <- res_sparse$sum_x
+    names(res) <- colnames(x)
     return(res)
   }
 )
@@ -859,31 +759,21 @@ setMethod(
 #' with the generic.
 #' @param dims Always 1 for [`dbMatrix`] queries. Included for compatibility with
 #' the generic.
-#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix.
-#' This is recommended for large computations. Set to TRUE to return the results
-#' as a vector.
 #' @concept summary
 #' @rdname row_col_means
 #' @export
 setMethod(
   'rowMeans',
   signature(x = 'dbMatrix'),
-  function(x, ..., memory = FALSE) {
+  function(x, ...) {
+
     x <- .castNumeric(x)
-
-    # calculate rowMeans
-    rowSums <- rowSums(x, memory = FALSE) # dbDenseMatrix
     n_cols <- ncol(x)
-    rowMeans <- rowSums
-    rowMeans[] <- rowMeans[] |> dplyr::mutate(x := x / n_cols)
-    if (memory) {
-      rowMeans <- rowMeans[] |>
-        dplyr::arrange(i) |>
-        dplyr::pull(x)
-      names(rowMeans) <- rownames(x)
-    }
 
-    return(rowMeans)
+    # Calculate rowMeans directly: sum(x) per row / n_cols
+    res <- rowSums(x) / n_cols
+    names(res) <- rownames(x)
+    return(res)
   }
 )
 
@@ -893,21 +783,15 @@ setMethod(
 setMethod(
   'colMeans',
   signature(x = 'dbMatrix'),
-  function(x, ..., memory = FALSE) {
+  function(x, ...) {
+
     x <- .castNumeric(x)
-
-    colSums <- colSums(x, memory = FALSE) # dbDenseMatrix
     n_rows <- nrow(x)
-    colMeans <- colSums
-    colMeans[] <- colMeans[] |> dplyr::mutate(x := x / n_rows)
-    if (memory) {
-      colMeans <- colMeans[] |>
-        dplyr::arrange(i) |>
-        dplyr::pull(x)
-      names(colMeans) <- colnames(x)
-    }
 
-    return(colMeans)
+    # Calculate colMeans directly: sum(x) per col / n_rows
+    res <- colSums(x) / n_rows
+    names(res) <- colnames(x)
+    return(res)
   }
 )
 
@@ -922,7 +806,6 @@ setMethod(
 #' @param center Always NULL for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
 #' @param ... Additional arguments (not used, but included for compatibility with the generic).
-#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix.
 #' @param useNames Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
 #' @concept summary
@@ -931,7 +814,7 @@ setMethod(
 setMethod(
   "colSds",
   signature(x = "dbDenseMatrix"),
-  function(x, ..., memory = FALSE, useNames = TRUE) {
+  function(x, ..., useNames = TRUE) {
     x <- .castNumeric(x)
     m <- nrow(x)
 
@@ -950,28 +833,12 @@ setMethod(
         }
       )
 
-    if (memory) {
-      res <- col_stats |>
-        dplyr::arrange(j) |>
-        dplyr::pull(sd_x)
-      if (useNames) {
-        names(res) <- colnames(x)
-      }
-      return(res)
+    res <- col_stats |>
+      dplyr::arrange(j) |>
+      dplyr::pull(sd_x)
+    if (useNames) {
+      names(res) <- colnames(x)
     }
-
-    colSd <- col_stats |>
-      dplyr::transmute(i = j, j = 1L, x = sd_x) |>
-      dplyr::collapse()
-
-    res <- new(
-      "dbDenseMatrix",
-      value = colSd,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(ncol(x), 1L),
-      dim_names = list(colnames(x), "col1")
-    )
     return(res)
   }
 )
@@ -983,81 +850,37 @@ setMethod(
 setMethod(
   "colSds",
   signature(x = "dbSparseMatrix"),
-  function(x, ..., memory = FALSE, useNames = TRUE) {
+  function(x, ..., useNames = TRUE) {
+
     x <- .castNumeric(x)
     m <- nrow(x)
     num_col <- ncol(x)
 
-    # Create temp table for all columns
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(j) |>
-        dplyr::summarise(
-          sum_x = sum(x, na.rm = TRUE),
-          sum_x2 = sum(x * x, na.rm = TRUE),
-          .groups = "drop"
-        ) |>
-        dplyr::collect()
-
-      # Initialize with 0 if m > 1, else NA
-      # sd(rep(0, m)) is 0 if m > 1
-      default_val <- if (m <= 1) NA_real_ else 0
-      res <- rep(default_val, num_col)
-
-      # Calculate sd for non-zeros
-      # Formula: sqrt((sum_x2 - (sum_x * sum_x) / m) / (m - 1))
-      if (m > 1) {
-        sds <- sqrt(
-          (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / m) /
-            (m - 1)
-        )
-        res[res_sparse$j] <- sds
-      }
-
-      if (useNames) {
-        names(res) <- colnames(x)
-      }
-      return(res)
-    }
-
-    # Create temp table for all columns
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as j FROM generate_series(1, {num_col})"
-      ))
-    )
-
-    col_stats <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(j) |>
       dplyr::summarise(
         sum_x = sum(x, na.rm = TRUE),
         sum_x2 = sum(x * x, na.rm = TRUE),
         .groups = "drop"
       ) |>
-      dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
-      dplyr::mutate(
-        sum_x = dplyr::coalesce(sum_x, 0),
-        sum_x2 = dplyr::coalesce(sum_x2, 0)
-      ) |>
-      dplyr::mutate(
-        sd_x = if (m <= 1) {
-          NA_real_
-        } else {
-          sqrt((sum_x2 - (sum_x * sum_x) / m) / (m - 1))
-        }
+      dplyr::collect()
+
+    # Initialize with 0 if m > 1, else NA
+    default_val <- if (m <= 1) NA_real_ else 0
+    res <- rep(default_val, num_col)
+
+    # Calculate sd for non-zeros
+    if (m > 1) {
+      sds <- sqrt(
+        (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / m) /
+          (m - 1)
       )
+      res[res_sparse$j] <- sds
+    }
 
-    colSd <- dplyr::transmute(col_stats, i = j, j = 1L, x = sd_x)
-
-    res <- new(
-      "dbDenseMatrix",
-      value = colSd,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(ncol(x), 1L),
-      dim_names = list(colnames(x), "col1")
-    )
+    if (useNames) {
+      names(res) <- colnames(x)
+    }
     return(res)
   }
 )
@@ -1069,16 +892,7 @@ setMethod(
 setMethod(
   "rowSds",
   signature(x = "dbDenseMatrix"),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
     x <- .castNumeric(x)
     k <- ncol(x)
 
@@ -1097,28 +911,12 @@ setMethod(
         }
       )
 
-    if (memory) {
-      res <- row_stats |>
-        dplyr::arrange(i) |>
-        dplyr::pull(sd_x)
-      if (useNames) {
-        names(res) <- rownames(x)
-      }
-      return(res)
+    res <- row_stats |>
+      dplyr::arrange(i) |>
+      dplyr::pull(sd_x)
+    if (useNames) {
+      names(res) <- rownames(x)
     }
-
-    rowSd <- row_stats |>
-      dplyr::transmute(i = i, j = 1L, x = sd_x) |>
-      dplyr::collapse()
-
-    res <- new(
-      "dbDenseMatrix",
-      value = rowSd,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(nrow(x), 1L),
-      dim_names = list(rownames(x), "col1")
-    )
     return(res)
   }
 )
@@ -1130,86 +928,35 @@ setMethod(
 setMethod(
   "rowSds",
   signature(x = "dbSparseMatrix"),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+
     x <- .castNumeric(x)
     k <- ncol(x)
     num_row <- nrow(x)
 
-    # Create temp table for all rows
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(i) |>
-        dplyr::summarise(
-          sum_x = sum(x, na.rm = na.rm),
-          sum_x2 = sum(x * x, na.rm = na.rm),
-          .groups = "drop"
-        ) |>
-        dplyr::collect()
-
-      default_val <- if (k <= 1) NA_real_ else 0
-      res <- rep(default_val, num_row)
-
-      if (k > 1) {
-        sds <- sqrt(
-          (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / k) /
-            (k - 1)
-        )
-        res[res_sparse$i] <- sds
-      }
-
-      if (useNames) {
-        names(res) <- rownames(x)
-      }
-      return(res)
-    }
-
-    # Create temp table for all rows
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as i FROM generate_series(1, {num_row})"
-      ))
-    )
-
-    row_stats <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(i) |>
       dplyr::summarise(
         sum_x = sum(x, na.rm = na.rm),
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
       ) |>
-      dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |>
-      dplyr::mutate(
-        sum_x = dplyr::coalesce(sum_x, 0),
-        sum_x2 = dplyr::coalesce(sum_x2, 0)
-      ) |>
-      dplyr::mutate(
-        sd_x = if (k <= 1) {
-          NA_real_
-        } else {
-          sqrt((sum_x2 - (sum_x * sum_x) / k) / (k - 1))
-        }
+      dplyr::collect()
+
+    default_val <- if (k <= 1) NA_real_ else 0
+    res <- rep(default_val, num_row)
+
+    if (k > 1) {
+      sds <- sqrt(
+        (res_sparse$sum_x2 - (res_sparse$sum_x * res_sparse$sum_x) / k) /
+          (k - 1)
       )
+      res[res_sparse$i] <- sds
+    }
 
-    rowSd <- dplyr::transmute(row_stats, i = i, j = 1L, x = sd_x)
-
-    res <- new(
-      "dbDenseMatrix",
-      value = rowSd,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(nrow(x), 1L),
-      dim_names = list(rownames(x), "col1")
-    )
+    if (useNames) {
+      names(res) <- rownames(x)
+    }
     return(res)
   }
 )

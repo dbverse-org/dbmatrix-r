@@ -5,25 +5,21 @@
 \alias{colMeans,dbMatrix-method}
 \title{Row (column) means for \code{\link{dbMatrix}} objects}
 \usage{
-\S4method{rowMeans}{dbMatrix}(x, ..., memory = FALSE)
+\S4method{rowMeans}{dbMatrix}(x, na.rm = FALSE, dims = 1, ...)
 
-\S4method{colMeans}{dbMatrix}(x, ..., memory = FALSE)
+\S4method{colMeans}{dbMatrix}(x, na.rm = FALSE, dims = 1, ...)
 }
 \arguments{
 \item{x}{An NxK matrix-like object, a numeric data frame, or an array-like
 object of two or more dimensions.}
-
-\item{...}{Additional arguments passed to specific methods.}
-
-\item{memory}{logical. If FALSE (default), results returned as dbDenseMatrix.
-This is recommended for large computations. Set to TRUE to return the results
-as a vector.}
 
 \item{na.rm}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}
 
 \item{dims}{Always 1 for \code{\link{dbMatrix}} queries. Included for compatibility with
 the generic.}
+
+\item{...}{Additional arguments passed to specific methods.}
 }
 \description{
 Calculates the mean for each row (column) of a matrix-like object.

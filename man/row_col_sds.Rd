@@ -7,9 +7,25 @@
 \alias{rowSds,dbSparseMatrix-method}
 \title{Row (column) standard deviations for \code{\link{dbMatrix}} objects}
 \usage{
-\S4method{colSds}{dbDenseMatrix}(x, ..., memory = FALSE, useNames = TRUE)
+\S4method{colSds}{dbDenseMatrix}(
+  x,
+  rows = NULL,
+  cols = NULL,
+  na.rm = FALSE,
+  center = NULL,
+  ...,
+  useNames = TRUE
+)
 
-\S4method{colSds}{dbSparseMatrix}(x, ..., memory = FALSE, useNames = TRUE)
+\S4method{colSds}{dbSparseMatrix}(
+  x,
+  rows = NULL,
+  cols = NULL,
+  na.rm = FALSE,
+  center = NULL,
+  ...,
+  useNames = TRUE
+)
 
 \S4method{rowSds}{dbDenseMatrix}(
   x,
@@ -18,7 +34,6 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -29,19 +44,11 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 }
 \arguments{
 \item{x}{A \code{\link{dbMatrix}} object.}
-
-\item{...}{Additional arguments (not used, but included for compatibility with the generic).}
-
-\item{memory}{logical. If FALSE (default), results returned as dbDenseMatrix.}
-
-\item{useNames}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
-with the generic.}
 
 \item{rows}{Always NULL for \code{\link{dbMatrix}} queries. TODO}
 
@@ -51,6 +58,11 @@ with the generic.}
 with the generic.}
 
 \item{center}{Always NULL for \code{\link{dbMatrix}} queries. Included for compatibility
+with the generic.}
+
+\item{...}{Additional arguments (not used, but included for compatibility with the generic).}
+
+\item{useNames}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}
 }
 \description{
