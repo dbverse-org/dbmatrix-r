@@ -48,7 +48,8 @@ In such cases, run this function again with a larger `n_rows` and
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
 con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
 precompute(con = con , m = 100, n = 100)
-#> Error in precompute(con = con, m = 100, n = 100): could not find function "precompute"
+} # }
 ```

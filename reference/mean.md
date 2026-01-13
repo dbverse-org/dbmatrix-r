@@ -1,4 +1,4 @@
-# Arithmetic Mean for `dbMatrix` objects
+# Arithmetic Mean for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) objects
 
 Generic function for the (trimmed) arithmetic mean.
 
@@ -16,7 +16,8 @@ mean(x, ...)
 
 - x:
 
-  `dbMatrix` object
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object
 
 - ...:
 

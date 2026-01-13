@@ -1,4 +1,4 @@
-# Row (column) variances for `dbMatrix` objects
+# Row (column) variances for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) objects
 
 Calculates the variance for each row (column) of a matrix-like object.
 
@@ -13,7 +13,6 @@ rowVars(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -25,7 +24,6 @@ rowVars(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -37,7 +35,6 @@ colVars(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -49,7 +46,6 @@ colVars(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 ```
@@ -58,40 +54,41 @@ colVars(
 
 - x:
 
-  A `dbMatrix` object.
+  A
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object.
 
 - rows:
 
-  Always NULL for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - cols:
 
-  Always NULL for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - na.rm:
 
-  Always TRUE for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always TRUE for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - center:
 
-  Always NULL for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - ...:
 
   Additional arguments (not used, but included for compatibility with
   the generic).
 
-- memory:
-
-  logical. If FALSE (default), results returned as dbDenseMatrix. This
-  is recommended for large computations. Set to TRUE to return the
-  results as a vector.
-
 - useNames:
 
-  Always TRUE for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always TRUE for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.

@@ -10,7 +10,6 @@ Input validation for data arg
 
 ## Arguments
 
-- x:
+- value:
 
-  A Matrix, [matrix](https://rdrr.io/r/base/matrix.html), or
-  tbl_duckdb_connection object
+  A `Matrix`, `matrix`, or `tbl_duckdb_connection` object

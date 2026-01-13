@@ -49,7 +49,7 @@ behavior of the dbMatrix package."></head><body>
 
     <div class="ref-description section level2">
     <p>The following global options can be modified to control the
-behavior of the <code>dbMatrix</code> package.</p>
+behavior of the <code><a href="dbMatrix.html">dbMatrix</a></code> package.</p>
     </div>
 
 
@@ -76,6 +76,11 @@ during implicit coercion.</p></li>
 <li><p><code>dbMatrix.precomp_db</code>: character. Path to an external DuckDB file containing
 precomputed table(s). If set, <code>dbMatrix</code> will automatically attach this
 database (read-only) and look for a suitable precomputed table to speed up densification.</p></li>
+<li><p><code>dbMatrix.allow_densify</code>: logical. If <code>FALSE</code> (default), automatic sparse-to-dense
+conversion is disabled. This prevents unexpected disk spilling and memory issues
+when operations would require densification (e.g., division by zero, scalar addition
+to sparse matrix). Set to <code>TRUE</code> to enable on-disk dense conversion. <strong>Warning</strong>:
+Dense conversion can cause massive disk usage for large matrices.</p></li>
 </ul></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

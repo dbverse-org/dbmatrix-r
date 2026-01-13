@@ -38,7 +38,8 @@ compute(
 
   default = TRUE. If TRUE, the rownames and colnames will be saved in
   the database. This allows full reconstruction of the dbMatrix object
-  using `dbMatrix::dbLoad()`.
+  using
+  [`dbProject::dbLoad()`](https://dbverse-org.github.io/dbproject-r/reference/dbLoad.html).
 
 - overwrite:
 

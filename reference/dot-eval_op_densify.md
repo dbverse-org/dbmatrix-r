@@ -5,7 +5,7 @@ Evaluate if a dbSparseMatrix should be densified
 ## Usage
 
 ``` r
-.eval_op_densify(generic_char, dbVector)
+.eval_op_densify(generic_char, vec_matrix)
 ```
 
 ## Arguments
@@ -14,7 +14,7 @@ Evaluate if a dbSparseMatrix should be densified
 
   A character string representing the operation to be performed.
 
-- dbVector:
+- vec_matrix:
 
   A `dbMatrix` object with 1D row or col.
 

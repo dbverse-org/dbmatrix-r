@@ -1,8 +1,10 @@
-# Math Operations for `dbMatrix` Objects
+# Math Operations for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) Objects
 
-Implements the `Math` `S4groupGeneric` functions for `dbMatrix` objects.
-This includes various mathematical operations such as logarithms,
-exponentials, trigonometric functions, and other transformations.
+Implements the `Math` `S4groupGeneric` functions for
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+objects. This includes various mathematical operations such as
+logarithms, exponentials, trigonometric functions, and other
+transformations.
 
 ## Usage
 
@@ -15,12 +17,15 @@ Math(x)
 
 - x:
 
-  A `dbMatrix` object.
+  A
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object.
 
 ## Value
 
-A `dbMatrix` object with the mathematical operation applied to each
-element.
+A
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object with the mathematical operation applied to each element.
 
 ## Details
 
@@ -52,8 +57,20 @@ This method provides implementations for the following Math functions:
   [`log2()`](https://rdrr.io/r/base/Log.html),
   [`log1p()`](https://rdrr.io/r/base/Log.html)
 
-- **Note: [`log1p()`](https://rdrr.io/r/base/Log.html) is not
-  supported**
+**DuckDB Log Function Mappings**:
+
+|            |                 |                          |
+|------------|-----------------|--------------------------|
+| R Function | DuckDB Function | Notes                    |
+| `log(x)`   | `LN(x)`         | Natural logarithm        |
+| `log10(x)` | `LOG10(x)`      | Base-10 logarithm        |
+| `log2(x)`  | `LOG2(x)`       | Base-2 logarithm         |
+| `log1p(x)` | `LN(x + 1)`     | log(1+x), computed as LN |
+
+**Sparsity-Preserving Log**: For `dbSparseMatrix` with pending
+operations, `log(x + 1)` operations preserve sparsity since
+`log(0 + 1) = 0`. The multiplicative component is applied first, then
+the log transformation is applied to sparse values only.
 
 *Trigonometric*:
 
@@ -100,7 +117,9 @@ This method provides implementations for the following Math functions:
   supported**
 
 The function applies the specified mathematical operation to each
-element of the `dbMatrix` object.
+element of the
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object.
 
 ## Examples
 

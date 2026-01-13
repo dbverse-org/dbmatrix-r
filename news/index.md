@@ -253,7 +253,7 @@
 ### Breaking changes
 
 - Rename dbMatrix constructor to
-  [`dbMatrix::dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html).
+  [`dbMatrix::dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md).
 
 ### Features
 

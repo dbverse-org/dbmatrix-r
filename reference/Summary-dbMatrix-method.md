@@ -1,4 +1,4 @@
-# Summary Methods for `dbMatrix` Objects
+# Summary Methods for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) Objects
 
 Implements the `S4groupGeneric` group generic functions for dbMatrix
 objects.

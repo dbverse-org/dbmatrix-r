@@ -13,4 +13,5 @@ dim(x)
 
 - x:
 
-  `dbMatrix` object
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object

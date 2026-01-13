@@ -40,7 +40,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Row (column) sums for <code>dbMatrix</code> objects</h1>
+      <h1>Row (column) sums for <code><a href="dbMatrix.html">dbMatrix</a></code> objects</h1>
       <small class="dont-index">Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/R/operations.R" class="external-link"><code>R/operations.R</code></a></small>
       <div class="d-none name"><code>row_col_sums.Rd</code></div>
     </div>
@@ -52,16 +52,16 @@
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S4 method for class 'dbDenseMatrix'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, memory <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, dims <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span>, memory <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'dbSparseMatrix'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, memory <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, dims <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'dbDenseMatrix'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, memory <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, dims <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S4 method for class 'dbSparseMatrix'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, memory <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="cn">FALSE</span>, dims <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,6 +73,16 @@
 object of two or more dimensions.</p></dd>
 
 
+<dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
+<dd><p>Always TRUE for <code><a href="dbMatrix.html">dbMatrix</a></code>. Included for compatibility
+with the generic.</p></dd>
+
+
+<dt id="arg-dims">dims<a class="anchor" aria-label="anchor" href="#arg-dims"></a></dt>
+<dd><p>Always 1 for <code><a href="dbMatrix.html">dbMatrix</a></code> queries. Included for compatibility with
+the generic.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments passed to specific methods.</p></dd>
 
@@ -80,16 +90,6 @@ object of two or more dimensions.</p></dd>
 <dt id="arg-memory">memory<a class="anchor" aria-label="anchor" href="#arg-memory"></a></dt>
 <dd><p>logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
 for large computations. Set to TRUE to return the results as a vector.</p></dd>
-
-
-<dt id="arg-na-rm">na.rm<a class="anchor" aria-label="anchor" href="#arg-na-rm"></a></dt>
-<dd><p>Always TRUE for <code>dbMatrix</code>. Included for compatibility
-with the generic.</p></dd>
-
-
-<dt id="arg-dims">dims<a class="anchor" aria-label="anchor" href="#arg-dims"></a></dt>
-<dd><p>Always 1 for <code>dbMatrix</code> queries. Included for compatibility with
-the generic.</p></dd>
 
 </dl></div>
 

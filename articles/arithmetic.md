@@ -16,32 +16,30 @@ dbMatrix objects. In addition, certain arithmetic operations between
 and reporting issues on the [Github
 page](https://github.com/dbverse-org/dbmatrix-r/).
 
-### Get test data
+### Create test data
 
-The test file is a `dgCMatrix`or compressed sparse column matrix
-representing a single cell gene expression matrix. The file is in the
-`data` directory of the package.
-
-Let’s load the .rds file and preview the object.
+Let’s create a simple sparse matrix for demonstration:
 
 ``` r
-dgc <- readRDS("../data/dgc.rds")
+# Create a sparse matrix
+set.seed(42)
+dgc <- Matrix::rsparsematrix(100, 50, density = 0.1, rand.x = function(n) rpois(n, 5) + 1)
+rownames(dgc) <- paste0("gene_", seq_len(100))
+colnames(dgc) <- paste0("cell_", seq_len(50))
 
 dplyr::glimpse(dgc)
 #> Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-#>   ..@ i       : int [1:170625] 0 6 10 17 21 22 25 31 33 35 ...
-#>   ..@ p       : int [1:625] 0 227 510 758 980 1293 1631 1976 2223 2434 ...
-#>   ..@ Dim     : int [1:2] 634 624
+#>   ..@ i       : int [1:500] 1 7 15 26 32 38 48 81 90 93 ...
+#>   ..@ p       : int [1:51] 0 12 22 33 38 46 54 66 80 89 ...
+#>   ..@ Dim     : int [1:2] 100 50
 #>   ..@ Dimnames:List of 2
-#>   .. ..$ : chr [1:634] "Gna12" "Ccnd2" "Btbd17" "Sox9" ...
-#>   .. ..$ : chr [1:624] "AAAGGGATGTAGCAAG-1" "AAATGGCATGTCTTGT-1" "AAATGGTCAATGTGCC-1" "AAATTAACGGGTAGCT-1" ...
-#>   ..@ x       : num [1:170625] 1 1 1 1 1 1 6 2 1 1 ...
+#>   .. ..$ : chr [1:100] "gene_1" "gene_2" "gene_3" "gene_4" ...
+#>   .. ..$ : chr [1:50] "cell_1" "cell_2" "cell_3" "cell_4" ...
+#>   ..@ x       : num [1:500] 4 7 5 7 3 8 4 5 4 7 ...
 #>   ..@ factors : list()
 ```
 
-The file contains 634 rows and 624 columns. The rows represent gene
-names and the columns represent cell names. The values are integers and
-represent the number of times a gene is detected in a cell. Like most
+The matrix contains 100 rows (genes) and 50 columns (cells). Like most
 single-cell RNA-seq data, the matrix is sparse.
 
 ### Create a dbMatrix object
@@ -52,26 +50,28 @@ Let’s create a `dbSparseMatrix` object from the above `dgc` object.
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm <- dbMatrix(value = dgc, 
-                 con = con, 
-                 name = 'visium', 
-                 class = "dbSparseMatrix",
-                 overwrite = TRUE)
+dbsm <- dbMatrix(
+  value = dgc,
+  con = con,
+  name = "test_matrix",
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
 # preview the object
 dbsm
-#> 634 x 624  dbMatrix of class "dbSparseMatrix"
-#> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
-#>                                                                          
-#> Gna12         1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000
-#> Ccnd2                 . 1.0000000 1.0000000         .         . 1.0000000
-#> Btbd17                . 1.0000000 1.0000000 1.0000000         .         .
+#> 100 x 50  dbMatrix of class "dbSparseMatrix"
+#> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
+#>                                                                         
+#> gene_1           .         .         . . .         . 5.0000000         .
+#> gene_2   4.0000000         .         . . .         .         .         .
+#> gene_3           . 7.0000000         . . . 8.0000000         . 3.0000000
 #> 
-#> ......suppressing 614 columns and 628 rows
+#> ......suppressing 40 columns and 94 rows
 #> 
-#> Gm19935               . 1.0000000         .         .         .         .
-#> 9630013A20Rik         .         .         .         .         .         .
-#> 2900040C04Rik 1.0000000         .         .         .         .         .
+#> gene_98          .         .         . . .         .         .         .
+#> gene_99          .         . 5.0000000 . .         .         .         .
+#> gene_100 7.0000000         .         . . .         .         .         .
 ```
 
 ### Scalar Arithmetic
@@ -84,32 +84,32 @@ Note: Addition or subtraction with non-zero addends on a
 ``` r
 dbsm + 1
 #> ℹ Performing on-the-fly densification (cold path). See ?dbMatrix_options for details.
-#> 634 x 624  dbMatrix of class "dbDenseMatrix"
-#> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
-#>                                                                                
-#> Gna12          2.0000000  3.0000000  2.0000000  2.0000000 10.0000000  2.0000000
-#> Ccnd2          1.0000000  2.0000000  2.0000000  1.0000000  1.0000000  2.0000000
-#> Btbd17         1.0000000  2.0000000  2.0000000  2.0000000  1.0000000  1.0000000
+#> 100 x 50  dbMatrix of class "dbDenseMatrix"
+#> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
+#>                                                                               
+#> gene_1   1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 6.0000000
+#> gene_2   5.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000
+#> gene_3   1.0000000 8.0000000 1.0000000 1.0000000 1.0000000 9.0000000 1.0000000
 #> 
-#> ......suppressing 614 columns and 628 rows
+#> ......suppressing 40 columns and 94 rows
 #> 
-#> Gm19935        1.0000000  2.0000000  1.0000000  1.0000000  1.0000000  1.0000000
-#> 9630013A20Rik  1.0000000  1.0000000  1.0000000  1.0000000  1.0000000  1.0000000
-#> 2900040C04Rik  2.0000000  1.0000000  1.0000000  1.0000000  1.0000000  1.0000000
+#> gene_98  1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000
+#> gene_99  1.0000000 1.0000000 6.0000000 1.0000000 1.0000000 1.0000000 1.0000000
+#> gene_100 8.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000 1.0000000
 
 dbsm * 100
-#> 634 x 624  dbMatrix of class "dbSparseMatrix"
-#> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
-#>                                                                          
-#> Gna12         100.0000000 200.0000000 100.0000000 100.0000000 900.0000000
-#> Ccnd2                   . 100.0000000 100.0000000           .           .
-#> Btbd17                  . 100.0000000 100.0000000 100.0000000           .
+#> 100 x 50  dbMatrix of class "dbSparseMatrix"
+#> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
+#>                                                                         
+#> gene_1             .           .           . . .           . 500.0000000
+#> gene_2   400.0000000           .           . . .           .           .
+#> gene_3             . 700.0000000           . . . 800.0000000           .
 #> 
-#> ......suppressing 614 columns and 628 rows
+#> ......suppressing 40 columns and 94 rows
 #> 
-#> Gm19935                 . 100.0000000           .           .           .
-#> 9630013A20Rik           .           .           .           .           .
-#> 2900040C04Rik 100.0000000           .           .           .           .
+#> gene_98            .           .           . . .           .           .
+#> gene_99            .           . 500.0000000 . .           .           .
+#> gene_100 700.0000000           .           . . .           .           .
 ```
 
 ### Matrix Arithmetic
@@ -119,18 +119,18 @@ are [conformable](https://en.wikipedia.org/wiki/Conformable_matrix).
 
 ``` r
 dbsm + dbsm
-#> 634 x 624  dbMatrix of class "dbSparseMatrix"
-#> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
-#>                                                                                
-#> Gna12          2.0000000  4.0000000  2.0000000  2.0000000 18.0000000  2.0000000
-#> Ccnd2                  .  2.0000000  2.0000000          .          .  2.0000000
-#> Btbd17                 .  2.0000000  2.0000000  2.0000000          .          .
+#> 100 x 50  dbMatrix of class "dbSparseMatrix"
+#> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
+#>                                                                               
+#> gene_1            .          .          . . .          . 10.0000000          .
+#> gene_2    8.0000000          .          . . .          .          .          .
+#> gene_3            . 14.0000000          . . . 16.0000000          .  6.0000000
 #> 
-#> ......suppressing 614 columns and 628 rows
+#> ......suppressing 40 columns and 94 rows
 #> 
-#> Gm19935                .  2.0000000          .          .          .          .
-#> 9630013A20Rik          .          .          .          .          .          .
-#> 2900040C04Rik  2.0000000          .          .          .          .          .
+#> gene_98           .          .          . . .          .          .          .
+#> gene_99           .          . 10.0000000 . .          .          .          .
+#> gene_100 14.0000000          .          . . .          .          .          .
 ```
 
 ### Matrix Multiplication
@@ -139,23 +139,29 @@ dbsm + dbsm
 
 ``` r
 dbsm * dbsm
-#> 634 x 624  dbMatrix of class "dbSparseMatrix"
-#> [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
-#>                                                                                
-#> Gna12          1.0000000  4.0000000  1.0000000  1.0000000 81.0000000  1.0000000
-#> Ccnd2                  .  1.0000000  1.0000000          .          .  1.0000000
-#> Btbd17                 .  1.0000000  1.0000000  1.0000000          .          .
+#> 100 x 50  dbMatrix of class "dbSparseMatrix"
+#> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
+#>                                                                               
+#> gene_1            .          .          . . .          . 25.0000000          .
+#> gene_2   16.0000000          .          . . .          .          .          .
+#> gene_3            . 49.0000000          . . . 64.0000000          .  9.0000000
 #> 
-#> ......suppressing 614 columns and 628 rows
+#> ......suppressing 40 columns and 94 rows
 #> 
-#> Gm19935                .  1.0000000          .          .          .          .
-#> 9630013A20Rik          .          .          .          .          .          .
-#> 2900040C04Rik  1.0000000          .          .          .          .          .
+#> gene_98           .          .          . . .          .          .          .
+#> gene_99           .          . 25.0000000 . .          .          .          .
+#> gene_100 49.0000000          .          . . .          .          .          .
 ```
 
 #### Matrix product
 
 TODO
+
+### Cleanup
+
+``` r
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
 
 ### Session Info
 
@@ -187,19 +193,21 @@ sessionInfo()
 #> loaded via a namespace (and not attached):
 #>  [1] bit_4.6.0             Matrix_1.7-4          jsonlite_2.0.0       
 #>  [4] dplyr_1.1.4           compiler_4.5.2        tidyselect_1.2.1     
-#>  [7] blob_1.2.4            dbProject_0.0.0.9000  jquerylib_0.1.4      
-#> [10] systemfonts_1.3.1     textshaping_1.0.4     yaml_2.3.11          
-#> [13] fastmap_1.2.0         lattice_0.22-7        R6_2.6.1             
-#> [16] generics_0.1.4        knitr_1.50            tibble_3.3.0         
-#> [19] desc_1.4.3            MatrixGenerics_1.22.0 DBI_1.2.3            
-#> [22] bslib_0.9.0           pillar_1.11.1         rlang_1.1.6          
-#> [25] cachem_1.1.0          xfun_0.54             fs_1.6.6             
-#> [28] sass_0.4.10           bit64_4.6.0-1         cli_3.6.5            
-#> [31] withr_3.0.2           pkgdown_2.2.0         magrittr_2.0.4       
-#> [34] digest_0.6.39         grid_4.5.2            dbplyr_2.5.1         
-#> [37] lifecycle_1.0.4       vctrs_0.6.5           evaluate_1.0.5       
-#> [40] glue_1.8.0            data.table_1.17.8     duckdb_1.4.2         
-#> [43] ragg_1.5.0            rmarkdown_2.30        purrr_1.2.0          
-#> [46] matrixStats_1.5.0     tools_4.5.2           pkgconfig_2.0.3      
-#> [49] htmltools_0.5.8.1
+#>  [7] Rcpp_1.1.1            blob_1.2.4            nanoarrow_0.7.0-2    
+#> [10] pins_1.4.1            assertthat_0.2.1      dbProject_0.0.0.9001 
+#> [13] jquerylib_0.1.4       arrow_22.0.0.1        systemfonts_1.3.1    
+#> [16] textshaping_1.0.4     yaml_2.3.12           fastmap_1.2.0        
+#> [19] lattice_0.22-7        R6_2.6.1              generics_0.1.4       
+#> [22] knitr_1.51            tibble_3.3.1          desc_1.4.3           
+#> [25] MatrixGenerics_1.22.0 DBI_1.2.3             bslib_0.9.0          
+#> [28] pillar_1.11.1         connections_0.2.1     rlang_1.1.7          
+#> [31] cachem_1.1.0          xfun_0.55             fs_1.6.6             
+#> [34] sass_0.4.10           bit64_4.6.0-1         cli_3.6.5            
+#> [37] withr_3.0.2           pkgdown_2.2.0         magrittr_2.0.4       
+#> [40] digest_0.6.39         grid_4.5.2            rscontract_0.1.2     
+#> [43] dbplyr_2.5.1          lifecycle_1.0.5       vctrs_0.6.5          
+#> [46] evaluate_1.0.5        glue_1.8.0            data.table_1.18.0    
+#> [49] duckdb_1.4.3          ragg_1.5.0            rmarkdown_2.30       
+#> [52] purrr_1.2.1           pkgconfig_2.0.3       matrixStats_1.5.0    
+#> [55] tools_4.5.2           htmltools_0.5.9
 ```

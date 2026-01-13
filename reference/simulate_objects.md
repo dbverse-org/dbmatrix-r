@@ -81,6 +81,7 @@ values to a non-zero value.
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
 sim_ijx_matrix()
-#> Error in sim_ijx_matrix(): could not find function "sim_ijx_matrix"
+} # }
 ```

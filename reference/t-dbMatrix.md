@@ -1,6 +1,8 @@
 # Matrix Transpose
 
-Given a `dbMatrix` `x`, `t` returns the transpose of `x`.
+Given a
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+`x`, `t` returns the transpose of `x`.
 
 ## Usage
 
@@ -13,8 +15,10 @@ t(x)
 
 - x:
 
-  `dbMatrix` object
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object
 
 ## Value
 
-`dbMatrix` object
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object

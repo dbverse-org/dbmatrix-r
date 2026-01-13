@@ -7,11 +7,13 @@ Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects
 ``` r
 rownames.dbMatrix(x, do.NULL = TRUE, prefix = "row")
 
-rownames.dbMatrix(x) <- value
+# S3 method for class 'dbMatrix'
+rownames(x) <- value
 
 colnames.dbMatrix(x, do.NULL = TRUE, prefix = "col")
 
-colnames.dbMatrix(x) <- value
+# S3 method for class 'dbMatrix'
+colnames(x) <- value
 
 # S4 method for class 'dbMatrix'
 dimnames(x)

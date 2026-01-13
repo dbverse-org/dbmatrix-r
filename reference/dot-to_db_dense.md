@@ -37,7 +37,8 @@ object
 ## Examples
 
 ``` r
+if (FALSE) { # \dontrun{
 dbsm <- sim_dbSparseMatrix(10, 10)
-dbdm <- toDbDense(dbsm)
-#> Error in toDbDense(dbsm): could not find function "toDbDense"
+dbdm <- .to_db_dense(dbsm)
+} # }
 ```

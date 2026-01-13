@@ -55,10 +55,10 @@
 
       <dl><dt>
 
-          <code><a href="dbMatrix-class.html">dbMatrix()</a></code>
+          <code><a href="dbMatrix.html">dbMatrix()</a></code>
 
         </dt>
-        <dd>S4 virtual class for <code>dbMatrix</code></dd>
+        <dd>S4 virtual class for dbMatrix</dd>
 
         <dt>
 
@@ -126,13 +126,6 @@
 
         </dt>
         <dd>Convert <code>dbMatrix</code> to in-memory matrix</dd>
-
-        <dt>
-
-          <code><a href="dbMatrix.html">dbMatrix()</a></code>
-
-        </dt>
-        <dd>Create a <code>dbSparseMatrix</code> or <code>dbDenseMatrix</code> object</dd>
 
         <dt>
 
@@ -210,6 +203,13 @@
 
         <dt>
 
+          <code><a href="is.na-dbMatrix-method.html">is.na(<i>&lt;dbMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Element-wise is.na for dbMatrix</dd>
+
+        <dt>
+
           <code><a href="percent-in.html">`%in%`(<i>&lt;dbDenseMatrix&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="percent-in.html">`%in%`(<i>&lt;ANY&gt;</i>,<i>&lt;dbDenseMatrix&gt;</i>)</a></code> <code><a href="percent-in.html">`%in%`(<i>&lt;dbSparseMatrix&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code>
 
         </dt>
@@ -228,6 +228,13 @@
 
         </dt>
         <dd>Force computation of a dbMatrix</dd>
+
+        <dt>
+
+          <code><a href="db_svd.html">db_svd()</a></code>
+
+        </dt>
+        <dd>Perform Streaming SVD on a dbMatrix</dd>
       </dl></div><div class="section level2">
       <h2 id="matrix-properties">Matrix Properties<a class="anchor" aria-label="anchor" href="#matrix-properties"></a></h2>
 
@@ -261,7 +268,7 @@
 
         <dt>
 
-          <code><a href="matrix_props.html">rownames.dbMatrix()</a></code> <code><a href="matrix_props.html">`rownames.dbMatrix&lt;-`()</a></code> <code><a href="matrix_props.html">colnames.dbMatrix()</a></code> <code><a href="matrix_props.html">`colnames.dbMatrix&lt;-`()</a></code> <code><a href="matrix_props.html">dimnames(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">`dimnames&lt;-`(<i>&lt;dbMatrix&gt;</i>,<i>&lt;list&gt;</i>)</a></code>
+          <code><a href="matrix_props.html">rownames.dbMatrix()</a></code> <code><a href="matrix_props.html">`rownames&lt;-`(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">colnames.dbMatrix()</a></code> <code><a href="matrix_props.html">`colnames&lt;-`(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">dimnames(<i>&lt;dbMatrix&gt;</i>)</a></code> <code><a href="matrix_props.html">`dimnames&lt;-`(<i>&lt;dbMatrix&gt;</i>,<i>&lt;list&gt;</i>)</a></code>
 
         </dt>
         <dd>Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects</dd>
@@ -289,7 +296,13 @@
 
 
 
-      <dl></dl></div><div class="section level2">
+      <dl><dt>
+
+          <code><a href="dbMatrix-methods.html">dbLoad(<i>&lt;DBIConnection&gt;</i>)</a></code> <code><a href="dbMatrix-methods.html">writeMM(<i>&lt;dbMatrix&gt;</i>)</a></code>
+
+        </dt>
+        <dd><div class="section"> <h3 id="dbdisconnect">dbDisconnect<a class="anchor" aria-label="anchor" href="#dbdisconnect"></a></h3> <p>#' @title dbDisconnect #' @rdname DBI #' @export setMethod('dbDisconnect', signature(x = 'dbMatrix'), function(x, ...) con &lt;- get_con(x) DBI::dbDisconnect(conn = con, shutdown = TRUE) )</p> </div></dd>
+      </dl></div><div class="section level2">
       <h2 id="package-options">Package Options<a class="anchor" aria-label="anchor" href="#package-options"></a></h2>
 
       <div class="section-desc"><p>Global options for the dbMatrix package</p></div>

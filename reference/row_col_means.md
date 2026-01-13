@@ -1,4 +1,4 @@
-# Row (column) means for `dbMatrix` objects
+# Row (column) means for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) objects
 
 Calculates the mean for each row (column) of a matrix-like object.
 
@@ -6,10 +6,10 @@ Calculates the mean for each row (column) of a matrix-like object.
 
 ``` r
 # S4 method for class 'dbMatrix'
-rowMeans(x, ..., memory = FALSE)
+rowMeans(x, na.rm = FALSE, dims = 1, ...)
 
 # S4 method for class 'dbMatrix'
-colMeans(x, ..., memory = FALSE)
+colMeans(x, na.rm = FALSE, dims = 1, ...)
 ```
 
 ## Arguments
@@ -19,22 +19,18 @@ colMeans(x, ..., memory = FALSE)
   An NxK matrix-like object, a numeric data frame, or an array-like
   object of two or more dimensions.
 
-- ...:
-
-  Additional arguments passed to specific methods.
-
-- memory:
-
-  logical. If FALSE (default), results returned as dbDenseMatrix. This
-  is recommended for large computations. Set to TRUE to return the
-  results as a vector.
-
 - na.rm:
 
-  Always TRUE for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always TRUE for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - dims:
 
-  Always 1 for `dbMatrix` queries. Included for compatibility with the
-  generic.
+  Always 1 for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
+
+- ...:
+
+  Additional arguments passed to specific methods.

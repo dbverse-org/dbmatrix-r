@@ -25,10 +25,8 @@ pak::pak("dbverse-org/dbmatrix-r")
 
 S4 class definitions for dbMatrix objects
 
-- [`dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.md)
-  :
-
-  S4 virtual class for `dbMatrix`
+- [`dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  : S4 virtual class for dbMatrix
 
 - [`dbDenseMatrix-class`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
   [`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
@@ -70,11 +68,6 @@ Function for creating `dbMatrix` objects
   :
 
   Convert `dbMatrix` to in-memory matrix
-
-- [`dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
-  :
-
-  Create a `dbSparseMatrix` or `dbDenseMatrix` object
 
 - [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md)
   : dbMatrix_from_tbl
@@ -133,6 +126,9 @@ Methods for transforming `dbMatrix` objects
 
   Math Operations for `dbMatrix` Objects
 
+- [`is.na(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/is.na-dbMatrix-method.md)
+  : Element-wise is.na for dbMatrix
+
 - [`` `%in%`( ``*`<dbDenseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
   [`` `%in%`( ``*`<ANY>`*`,`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
   [`` `%in%`( ``*`<dbSparseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
@@ -143,6 +139,9 @@ Methods for transforming `dbMatrix` objects
 
 - [`compute(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/compute.dbMatrix.md)
   : Force computation of a dbMatrix
+
+- [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  : Perform Streaming SVD on a dbMatrix
 
 ## Matrix Properties
 
@@ -161,9 +160,9 @@ Methods to retrieve basic properties of `dbMatrix` objects
   Length of a `dbMatrix` Object
 
 - [`rownames.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
-  [`` `rownames.dbMatrix<-`() ``](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`` `rownames<-`( ``*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
   [`colnames.dbMatrix()`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
-  [`` `colnames.dbMatrix<-`() ``](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
+  [`` `colnames<-`( ``*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
   [`dimnames(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
   [`` `dimnames<-`( ``*`<dbMatrix>`*`,`*`<list>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix_props.md)
   : Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects
@@ -178,6 +177,16 @@ Methods to retrieve basic properties of `dbMatrix` objects
 ## dbData objects
 
 Convenience methods for `dbData` objects
+
+- [`dbLoad(`*`<DBIConnection>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`writeMM(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  :
+
+  ### dbDisconnect
+
+  \#' @title dbDisconnect \#' @rdname DBI \#' @export
+  setMethod('dbDisconnect', signature(x = 'dbMatrix'), function(x, ...)
+  con \<- get_con(x) DBI::dbDisconnect(conn = con, shutdown = TRUE) )
 
 ## Package Options
 

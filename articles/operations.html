@@ -68,7 +68,7 @@
 
       <h1>Operations</h1>
             
-            <h4 data-toc-skip class="date">2025-12-04</h4>
+            <h4 data-toc-skip class="date">2026-01-13</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/vignettes/operations.Rmd" class="external-link"><code>vignettes/operations.Rmd</code></a></small>
       <div class="d-none name"><code>operations.Rmd</code></div>
@@ -179,150 +179,113 @@ matrix operations listed below with support for more coming soon.</p>
 <h2 id="dbsparse-matrix-operations">dbSparse Matrix Operations<a class="anchor" aria-label="anchor" href="#dbsparse-matrix-operations"></a>
 </h2>
 <div class="section level3">
-<h3 id="get-test-data">Get test data<a class="anchor" aria-label="anchor" href="#get-test-data"></a>
+<h3 id="create-test-data">Create test data<a class="anchor" aria-label="anchor" href="#create-test-data"></a>
 </h3>
-<p>The test file is a <code>dgCMatrix</code>or compressed sparse column
-matrix representing a single cell gene expression matrix. The file is in
-the <code>data</code> directory of the package.</p>
-<p>Let’s load the .rds file and preview the object.</p>
+<p>Let’s create a sparse matrix for demonstration:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dgc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="st">"../data/dgc.rds"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">dgc</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/rsparsematrix.html" class="external-link">rsparsematrix</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, density <span class="op">=</span> <span class="fl">0.1</span>, rand.x <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">5</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots</span></span>
-<span><span class="co">##   ..@ i       : int [1:170625] 0 6 10 17 21 22 25 31 33 35 ...</span></span>
-<span><span class="co">##   ..@ p       : int [1:625] 0 227 510 758 980 1293 1631 1976 2223 2434 ...</span></span>
-<span><span class="co">##   ..@ Dim     : int [1:2] 634 624</span></span>
+<span><span class="co">##   ..@ i       : int [1:500] 1 7 15 26 32 38 48 81 90 93 ...</span></span>
+<span><span class="co">##   ..@ p       : int [1:51] 0 12 22 33 38 46 54 66 80 89 ...</span></span>
+<span><span class="co">##   ..@ Dim     : int [1:2] 100 50</span></span>
 <span><span class="co">##   ..@ Dimnames:List of 2</span></span>
-<span><span class="co">##   .. ..$ : chr [1:634] "Gna12" "Ccnd2" "Btbd17" "Sox9" ...</span></span>
-<span><span class="co">##   .. ..$ : chr [1:624] "AAAGGGATGTAGCAAG-1" "AAATGGCATGTCTTGT-1" "AAATGGTCAATGTGCC-1" "AAATTAACGGGTAGCT-1" ...</span></span>
-<span><span class="co">##   ..@ x       : num [1:170625] 1 1 1 1 1 1 6 2 1 1 ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:100] "gene_1" "gene_2" "gene_3" "gene_4" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:50] "cell_1" "cell_2" "cell_3" "cell_4" ...</span></span>
+<span><span class="co">##   ..@ x       : num [1:500] 4 7 5 7 3 8 4 5 4 7 ...</span></span>
 <span><span class="co">##   ..@ factors : list()</span></span></code></pre>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># create dbSparseMatrix from the same dgc</span></span>
 <span><span class="va">con</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-class.html">dbMatrix</a></span><span class="op">(</span>value <span class="op">=</span> <span class="va">dgc</span>, </span>
-<span>                   con <span class="op">=</span> <span class="va">con</span>, </span>
-<span>                   name <span class="op">=</span> <span class="st">'visium'</span>, </span>
-<span>                   class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span>
-<span>                   overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">sparse</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dbMatrix.html">dbMatrix</a></span><span class="op">(</span></span>
+<span>  value <span class="op">=</span> <span class="va">dgc</span>,</span>
+<span>  con <span class="op">=</span> <span class="va">con</span>,</span>
+<span>  name <span class="op">=</span> <span class="st">"test_matrix"</span>,</span>
+<span>  class <span class="op">=</span> <span class="st">"dbSparseMatrix"</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># preview </span></span>
+<span><span class="co"># preview</span></span>
 <span><span class="co"># show function aims to emulate the show method for dgCMatrix</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 6 x 624  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                               </span></span>
-<span><span class="co">## Gna12    1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000 3.0000000</span></span>
-<span><span class="co">## Ccnd2            . 1.0000000 1.0000000         .         . 1.0000000         .</span></span>
-<span><span class="co">## Btbd17           . 1.0000000 1.0000000 1.0000000         .         . 2.0000000</span></span>
-<span><span class="co">## Sox9             .         .         .         .         . 2.0000000 1.0000000</span></span>
-<span><span class="co">## Sez6             . 1.0000000 4.0000000 3.0000000         . 8.0000000 1.0000000</span></span>
-<span><span class="co">## Serpinf1         .         .         .         . 3.0000000         . 1.0000000</span></span>
-<span><span class="co">##                                       </span></span>
-<span><span class="co">## Gna12    5.0000000 3.0000000         .</span></span>
-<span><span class="co">## Ccnd2    1.0000000 1.0000000         .</span></span>
-<span><span class="co">## Btbd17           .         .         .</span></span>
-<span><span class="co">## Sox9             .         .         .</span></span>
-<span><span class="co">## Sez6     1.0000000 1.0000000 2.0000000</span></span>
-<span><span class="co">## Serpinf1         .         .         .</span></span></code></pre>
+<pre><code><span><span class="co">## 6 x 50  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                   </span></span>
+<span><span class="co">## gene_1         .         . . . .         . 5.0000000         . . .</span></span>
+<span><span class="co">## gene_2 4.0000000         . . . .         .         .         . . .</span></span>
+<span><span class="co">## gene_3         . 7.0000000 . . . 8.0000000         . 3.0000000 . .</span></span>
+<span><span class="co">## gene_4         .         . . . .         .         .         . . .</span></span>
+<span><span class="co">## gene_5         .         . . . .         . 6.0000000 5.0000000 . .</span></span>
+<span><span class="co">## gene_6         .         . . . .         .         .         . . .</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="transpose">transpose<a class="anchor" aria-label="anchor" href="#transpose"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 624 x 634  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'Gna12', 'Ccnd2', 'Btbd17' ... suppressing 628 ...'Gm19935', '9630013A20Rik', '2900040C04Rik' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                       </span></span>
-<span><span class="co">## AAAGGGATGTAGCAAG-1 1.0000000         .         .         .         . .</span></span>
-<span><span class="co">## AAATGGCATGTCTTGT-1 2.0000000 1.0000000 1.0000000         . 1.0000000 .</span></span>
-<span><span class="co">## AAATGGTCAATGTGCC-1 1.0000000 1.0000000 1.0000000         . 4.0000000 .</span></span>
+<pre><code><span><span class="co">## 50 x 100  dbMatrix of class "dbSparseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## [[ Colnames 'gene_1', 'gene_2', 'gene_3' ... suppressing 94 ...'gene_98', 'gene_99', 'gene_100' ]]</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                            </span></span>
+<span><span class="co">## cell_1  . 4.0000000         . . .         .         . 7.0000000 .         .</span></span>
+<span><span class="co">## cell_2  .         . 7.0000000 . .         .         .         . . 7.0000000</span></span>
+<span><span class="co">## cell_3  .         .         . . .         .         .         . .         .</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 624 columns and 618 rows</span></span>
+<span><span class="co">## ......suppressing 90 columns and 44 rows</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## TTGTCGTTCAGTTACC-1 2.0000000 1.0000000         .         . 1.0000000 .</span></span>
-<span><span class="co">## TTGTGGCCCTGACAGT-1 3.0000000 1.0000000         .         .         . .</span></span>
-<span><span class="co">## TTGTTCAGTGTGCTAC-1 1.0000000         .         . 1.0000000 3.0000000 .</span></span></code></pre>
+<span><span class="co">## cell_48 .         .         . . .         . 8.0000000         . .         .</span></span>
+<span><span class="co">## cell_49 .         .         . . . 2.0000000         . 8.0000000 .         .</span></span>
+<span><span class="co">## cell_50 .         .         . . .         .         .         . .         .</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colmeans">colMeans<a class="anchor" aria-label="anchor" href="#colmeans"></a>
 </h3>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 624 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                             </span></span>
-<span><span class="co">## AAAGGGATGTAGCAAG-1 0.7413249</span></span>
-<span><span class="co">## AAATGGCATGTCTTGT-1 1.3296530</span></span>
-<span><span class="co">## AAATGGTCAATGTGCC-1 1.1435331</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 618 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## TTGTCGTTCAGTTACC-1 0.6624606</span></span>
-<span><span class="co">## TTGTGGCCCTGACAGT-1 0.6908517</span></span>
-<span><span class="co">## TTGTTCAGTGTGCTAC-1 0.7965300</span></span></code></pre>
+<pre><code><span><span class="co">##  cell_1  cell_2  cell_3  cell_4  cell_5  cell_6  cell_7  cell_8  cell_9 cell_10 </span></span>
+<span><span class="co">##    0.66    0.63    0.62    0.24    0.48    0.45    0.66    0.69    0.57    0.77 </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 40 entries ]</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colsums">colSums<a class="anchor" aria-label="anchor" href="#colsums"></a>
 </h3>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 624 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                               </span></span>
-<span><span class="co">## AAAGGGATGTAGCAAG-1 470.0000000</span></span>
-<span><span class="co">## AAATGGCATGTCTTGT-1 843.0000000</span></span>
-<span><span class="co">## AAATGGTCAATGTGCC-1 725.0000000</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 618 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## TTGTCGTTCAGTTACC-1 420.0000000</span></span>
-<span><span class="co">## TTGTGGCCCTGACAGT-1 438.0000000</span></span>
-<span><span class="co">## TTGTTCAGTGTGCTAC-1 505.0000000</span></span></code></pre>
+<pre><code><span><span class="co">##  cell_1  cell_2  cell_3  cell_4  cell_5  cell_6  cell_7  cell_8  cell_9 cell_10 </span></span>
+<span><span class="co">##      66      63      62      24      48      45      66      69      57      77 </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 40 entries ]</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowmeans">rowMeans<a class="anchor" aria-label="anchor" href="#rowmeans"></a>
 </h3>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 634 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                        </span></span>
-<span><span class="co">## Gna12         2.7179487</span></span>
-<span><span class="co">## Ccnd2         1.7323718</span></span>
-<span><span class="co">## Btbd17        0.5528846</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 628 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Gm19935       0.2083333</span></span>
-<span><span class="co">## 9630013A20Rik 0.1714744</span></span>
-<span><span class="co">## 2900040C04Rik 0.1554487</span></span></code></pre>
+<pre><code><span><span class="co">##  gene_1  gene_2  gene_3  gene_4  gene_5  gene_6  gene_7  gene_8  gene_9 gene_10 </span></span>
+<span><span class="co">##    0.50    0.20    0.68    0.08    0.32    0.24    0.58    0.76    0.88    0.62 </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 90 entries ]</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowsums">rowSums<a class="anchor" aria-label="anchor" href="#rowsums"></a>
 </h3>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 634 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                           </span></span>
-<span><span class="co">## Gna12         1696.0000000</span></span>
-<span><span class="co">## Ccnd2         1081.0000000</span></span>
-<span><span class="co">## Btbd17         345.0000000</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 628 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Gm19935        130.0000000</span></span>
-<span><span class="co">## 9630013A20Rik  107.0000000</span></span>
-<span><span class="co">## 2900040C04Rik   97.0000000</span></span></code></pre>
+<pre><code><span><span class="co">##  gene_1  gene_2  gene_3  gene_4  gene_5  gene_6  gene_7  gene_8  gene_9 gene_10 </span></span>
+<span><span class="co">##      25      10      34       4      16      12      29      38      44      31 </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 90 entries ]</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="dim">dim<a class="anchor" aria-label="anchor" href="#dim"></a>
 </h3>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">sparse</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 634 624</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 100  50</span></span></code></pre>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dgc</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 634 624</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 100  50</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="check-results-are-equivalent">Check results are equivalent<a class="anchor" aria-label="anchor" href="#check-results-are-equivalent"></a>
@@ -348,127 +311,119 @@ Click to expand
 <h2 id="dbdensematrix-operations">dbDenseMatrix Operations<a class="anchor" aria-label="anchor" href="#dbdensematrix-operations"></a>
 </h2>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># below is a convenience function to simulate a dbDenseMatrix</span></span>
-<span><span class="va">dense</span> <span class="op">=</span> <span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="../reference/simulate_objects.html">sim_dbDenseMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Create a dense matrix directly</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">10</span>, ncol <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"row_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">mat</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"col_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create dbDenseMatrix</span></span>
+<span><span class="va">con2</span> <span class="op">&lt;-</span> <span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbConnect.html" class="external-link">dbConnect</a></span><span class="op">(</span><span class="fu">duckdb</span><span class="fu">::</span><span class="fu"><a href="https://r.duckdb.org/reference/duckdb.html" class="external-link">duckdb</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">":memory:"</span><span class="op">)</span></span>
+<span><span class="va">dense</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dbMatrix.html">dbMatrix</a></span><span class="op">(</span></span>
+<span>  value <span class="op">=</span> <span class="va">mat</span>,</span>
+<span>  con <span class="op">=</span> <span class="va">con2</span>,</span>
+<span>  name <span class="op">=</span> <span class="st">"dense_matrix"</span>,</span>
+<span>  class <span class="op">=</span> <span class="st">"dbDenseMatrix"</span>,</span>
+<span>  overwrite <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># preview</span></span>
 <span><span class="va">dense</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 50  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                        </span></span>
-<span><span class="co">## row1   1.3709584  0.3219253  1.2009654 -0.0406985 -2.0009292 -1.0961562</span></span>
-<span><span class="co">## row2  -0.5646982 -0.7838389  1.0447511 -1.5515448  0.3337772  0.0490505</span></span>
-<span><span class="co">## row3   0.3631284  1.5757275 -1.0032086  1.1671695  1.1713251 -1.1984959</span></span>
+<pre><code><span><span class="co">## 10 x 10  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                         </span></span>
+<span><span class="co">## row_1   1.3709584  1.3048697 -0.3066386  0.4554501  0.2059986  0.3219253</span></span>
+<span><span class="co">## row_2  -0.5646982  2.2866454 -1.7813084  0.7048373 -0.3610573 -0.7838389</span></span>
+<span><span class="co">## row_3   0.3631284 -1.3888607 -0.1719174  1.0351035  0.7581632  1.5757275</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
+<span><span class="co">## ...... suppressing 4 rows ......</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## row48  1.4441013 -1.4592140 -0.4331690  0.5864875 -0.0267175  0.8625634</span></span>
-<span><span class="co">## row49 -0.4314462  0.0799826  0.6968626  1.8152284  0.7036078  0.0973405</span></span>
-<span><span class="co">## row50  0.6556479  0.6532043 -1.0563684  0.1288214 -0.9713852 -1.6256167</span></span></code></pre>
+<span><span class="co">## row_8  -0.0946590 -2.6564554 -1.7631631 -0.8509076  1.4441013  0.0898329</span></span>
+<span><span class="co">## row_9   2.0184237 -2.4404669  0.4600974 -2.4142076 -0.4314462 -2.9930901</span></span>
+<span><span class="co">## row_10 -0.0627141  1.3201133 -0.6399949  0.0361226  0.6556479  0.2848830</span></span></code></pre>
 <div class="section level3">
 <h3 id="transpose-1">transpose<a class="anchor" aria-label="anchor" href="#transpose-1"></a>
 </h3>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 50  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
-<pre><code><span><span class="co">## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]</span></span></code></pre>
-<pre><code><span><span class="co">##                                                                        </span></span>
-<span><span class="co">## col1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245</span></span>
-<span><span class="co">## col2   0.3219253 -0.7838389  1.5757275  0.6428993  0.0897606  0.2765507</span></span>
-<span><span class="co">## col3   1.2009654  1.0447511 -1.0032086  1.8484819 -0.6667734  0.1055138</span></span>
+<pre><code><span><span class="co">## 10 x 10  dbMatrix of class "dbDenseMatrix"</span></span></code></pre>
+<pre><code><span><span class="co">## [[ Colnames 'row_1', 'row_2', 'row_3' ... suppressing 4 ...'row_8', 'row_9', 'row_10' ]]</span></span></code></pre>
+<pre><code><span><span class="co">##                                                                         </span></span>
+<span><span class="co">## col_1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245</span></span>
+<span><span class="co">## col_2   1.3048697  2.2866454 -1.3888607 -0.2787888 -0.1333213  0.6359504</span></span>
+<span><span class="co">## col_3  -0.3066386 -1.7813084 -0.1719174  1.2146747  1.8951935 -0.4304691</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## ......suppressing 40 columns and 44 rows</span></span>
+<span><span class="co">## ...... suppressing 4 rows ......</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## col48  0.2165217 -0.1147498  0.0203381  0.8927903  1.4480841 -0.2520309</span></span>
-<span><span class="co">## col49  1.3275046 -0.6008358  0.0565069 -0.5310763 -0.0808988  0.1607556</span></span>
-<span><span class="co">## col50 -0.3898801 -0.0992633 -0.0279661 -0.0569889  0.5556590  0.9019238</span></span></code></pre>
+<span><span class="co">## col_8  -1.0431189 -0.0901864  0.6235182 -0.9535234 -0.5428288  0.5809965</span></span>
+<span><span class="co">## col_9   1.5127070  0.2579214  0.0884402 -0.1208965 -1.1943289  0.6119969</span></span>
+<span><span class="co">## col_10  1.3921164 -0.4761739  0.6503486  1.3911105 -1.1107889 -0.8607926</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colmeans-1">colMeans<a class="anchor" aria-label="anchor" href="#colmeans-1"></a>
 </h3>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                 </span></span>
-<span><span class="co">## col1  -0.0356718</span></span>
-<span><span class="co">## col2   0.1007014</span></span>
-<span><span class="co">## col3  -0.1512511</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 44 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## col48  0.0178273</span></span>
-<span><span class="co">## col49  0.2073369</span></span>
-<span><span class="co">## col50 -0.1635492</span></span></code></pre>
+<pre><code><span><span class="co">##       col_1       col_2       col_3       col_4       col_5       col_6 </span></span>
+<span><span class="co">##  0.54729677 -0.16345673 -0.17807953 -0.36390406 -0.02021535  0.01839391 </span></span>
+<span><span class="co">##       col_7       col_8       col_9      col_10 </span></span>
+<span><span class="co">##  0.53907680 -0.21787537  0.25110630 -0.08719458</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="colsums-1">colSums<a class="anchor" aria-label="anchor" href="#colsums-1"></a>
 </h3>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                 </span></span>
-<span><span class="co">## col1  -1.7835891</span></span>
-<span><span class="co">## col2   5.0350707</span></span>
-<span><span class="co">## col3  -7.5625544</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 44 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## col48  0.8913639</span></span>
-<span><span class="co">## col49 10.3668441</span></span>
-<span><span class="co">## col50 -8.1774605</span></span></code></pre>
+<pre><code><span><span class="co">##      col_1      col_2      col_3      col_4      col_5      col_6      col_7 </span></span>
+<span><span class="co">##  5.4729677 -1.6345673 -1.7807953 -3.6390406 -0.2021535  0.1839391  5.3907680 </span></span>
+<span><span class="co">##      col_8      col_9     col_10 </span></span>
+<span><span class="co">## -2.1787537  2.5110630 -0.8719458</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowmeans-1">rowMeans<a class="anchor" aria-label="anchor" href="#rowmeans-1"></a>
 </h3>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                 </span></span>
-<span><span class="co">## row1   0.0536436</span></span>
-<span><span class="co">## row2   0.0024946</span></span>
-<span><span class="co">## row3   0.0313340</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 44 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## row48 -0.1010421</span></span>
-<span><span class="co">## row49  0.0592996</span></span>
-<span><span class="co">## row50  0.0215431</span></span></code></pre>
+<pre><code><span><span class="co">##       row_1       row_2       row_3       row_4       row_5       row_6 </span></span>
+<span><span class="co">##  0.48470333 -0.06226284  0.41154753  0.25924440 -0.21826635  0.07264603 </span></span>
+<span><span class="co">##       row_7       row_8       row_9      row_10 </span></span>
+<span><span class="co">## -0.01914153 -0.39709480 -0.47524086  0.26901325</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="rowsums-1">rowSums<a class="anchor" aria-label="anchor" href="#rowsums-1"></a>
 </h3>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## 50 x 1 dbMatrix of class "dbDenseMatrix"</span></span>
-<span><span class="co">##                 </span></span>
-<span><span class="co">## row1   2.6821819</span></span>
-<span><span class="co">## row2   0.1247321</span></span>
-<span><span class="co">## row3   1.5667017</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ...suppressing 44 elements</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## row48 -5.0521070</span></span>
-<span><span class="co">## row49  2.9649814</span></span>
-<span><span class="co">## row50  1.0771549</span></span></code></pre>
+<pre><code><span><span class="co">##      row_1      row_2      row_3      row_4      row_5      row_6      row_7 </span></span>
+<span><span class="co">##  4.8470333 -0.6226284  4.1154753  2.5924440 -2.1826635  0.7264603 -0.1914153 </span></span>
+<span><span class="co">##      row_8      row_9     row_10 </span></span>
+<span><span class="co">## -3.9709480 -4.7524086  2.6901325</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="mean">mean<a class="anchor" aria-label="anchor" href="#mean"></a>
 </h3>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">dbMatrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] -0.009673541</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 0.03251482</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="dim-1">dim<a class="anchor" aria-label="anchor" href="#dim-1"></a>
 </h3>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dense</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 50 50</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 10 10</span></span></code></pre>
 </div>
+</div>
+<div class="section level2">
+<h2 id="cleanup">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup"></a>
+</h2>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu">DBI</span><span class="fu">::</span><span class="fu"><a href="https://dbi.r-dbi.org/reference/dbDisconnect.html" class="external-link">dbDisconnect</a></span><span class="op">(</span><span class="va">con2</span>, shutdown <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">## Platform: x86_64-pc-linux-gnu</span></span>
@@ -495,11 +450,10 @@ Click to expand
 <span><span class="co">## [1] Matrix_1.7-4        dbMatrix_0.0.0.9125</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
-<span><span class="co">##  [1] jsonlite_2.0.0       dplyr_1.1.4          compiler_4.5.2      </span></span>
-<span><span class="co">##  [4] tidyselect_1.2.1     blob_1.2.4           dbProject_0.0.0.9000</span></span>
-<span><span class="co">##  [7] jquerylib_0.1.4      systemfonts_1.3.1    textshaping_1.0.4   </span></span>
-<span><span class="co">## [10] yaml_2.3.11         </span></span>
-<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 36 entries ]</span></span></code></pre>
+<span><span class="co">##  [1] bit_4.6.0         jsonlite_2.0.0    dplyr_1.1.4       compiler_4.5.2   </span></span>
+<span><span class="co">##  [5] tidyselect_1.2.1  Rcpp_1.1.1        blob_1.2.4        nanoarrow_0.7.0-2</span></span>
+<span><span class="co">##  [9] pins_1.4.1        assertthat_0.2.1 </span></span>
+<span><span class="co">##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

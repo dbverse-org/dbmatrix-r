@@ -44,14 +44,14 @@ logarithms, exponentials, trigonometric functions, and other transformations."><
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Math Operations for <code>dbMatrix</code> Objects</h1>
+      <h1>Math Operations for <code><a href="dbMatrix.html">dbMatrix</a></code> Objects</h1>
       <small class="dont-index">Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/R/operations.R" class="external-link"><code>R/operations.R</code></a></small>
       <div class="d-none name"><code>Math-dbMatrix-method.Rd</code></div>
     </div>
 
     <div class="ref-description section level2">
     <p>Implements the <code>Math</code> <code>S4groupGeneric</code> functions
-for <code>dbMatrix</code> objects. This includes various mathematical operations such as
+for <code><a href="dbMatrix.html">dbMatrix</a></code> objects. This includes various mathematical operations such as
 logarithms, exponentials, trigonometric functions, and other transformations.</p>
     </div>
 
@@ -66,12 +66,12 @@ logarithms, exponentials, trigonometric functions, and other transformations.</p
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A <code>dbMatrix</code> object.</p></dd>
+<dd><p>A <code><a href="dbMatrix.html">dbMatrix</a></code> object.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code>dbMatrix</code> object with the mathematical operation applied to each element.</p>
+    <p>A <code><a href="dbMatrix.html">dbMatrix</a></code> object with the mathematical operation applied to each element.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -80,8 +80,11 @@ logarithms, exponentials, trigonometric functions, and other transformations.</p
 </ul><p><em>Cumulative operations</em>:</p><ul><li><p><code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummax()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cummin()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumprod()</a></code>, <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumsum()</a></code></p></li>
 <li><p><strong>Note: <code><a href="https://rdrr.io/r/base/cumsum.html" class="external-link">cumprod()</a></code> is not supported</strong></p></li>
 </ul><p><em>Logarithmic</em>:</p><ul><li><p><code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log()</a></code>, <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10()</a></code>, <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2()</a></code>, <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log1p()</a></code></p></li>
-<li><p><strong>Note: <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log1p()</a></code> is not supported</strong></p></li>
-</ul><p><em>Trigonometric</em>:</p><ul><li><p><code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">tan()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">acos()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">asin()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">atan()</a></code></p></li>
+</ul><p><strong>DuckDB Log Function Mappings</strong>:</p><table class="table table"><tr><td>R Function</td><td>DuckDB Function</td><td>Notes</td></tr><tr><td><code>log(x)</code></td><td><code>LN(x)</code></td><td>Natural logarithm</td></tr><tr><td><code>log10(x)</code></td><td><code>LOG10(x)</code></td><td>Base-10 logarithm</td></tr><tr><td><code>log2(x)</code></td><td><code>LOG2(x)</code></td><td>Base-2 logarithm</td></tr><tr><td><code>log1p(x)</code></td><td><code>LN(x + 1)</code></td><td>log(1+x), computed as LN</td></tr></table><p><strong>Sparsity-Preserving Log</strong>:
+For <code>dbSparseMatrix</code> with pending operations, <code>log(x + 1)</code> operations preserve sparsity
+since <code>log(0 + 1) = 0</code>. The multiplicative component is applied first,
+then the log transformation is applied to sparse values only.</p>
+<p><em>Trigonometric</em>:</p><ul><li><p><code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">tan()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">acos()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">asin()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">atan()</a></code></p></li>
 <li><p><code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">cosh()</a></code>, <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">sinh()</a></code>, <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">tanh()</a></code>, <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">acosh()</a></code>, <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">asinh()</a></code>, <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">atanh()</a></code></p></li>
 <li><p><code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sinpi()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">tanpi()</a></code></p></li>
 <li><p><strong>Note: <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">acosh()</a></code> <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">asinh()</a></code> <code><a href="https://rdrr.io/r/base/Hyperbolic.html" class="external-link">atanh()</a></code> are not supported</strong></p></li>
@@ -90,7 +93,7 @@ logarithms, exponentials, trigonometric functions, and other transformations.</p
 </ul><p><em>Special functions</em>:</p><ul><li><p><code><a href="https://rdrr.io/r/base/Special.html" class="external-link">gamma()</a></code>, <code><a href="https://rdrr.io/r/base/Special.html" class="external-link">lgamma()</a></code>, <code><a href="https://rdrr.io/r/base/Special.html" class="external-link">digamma()</a></code>, <code><a href="https://rdrr.io/r/base/Special.html" class="external-link">trigamma()</a></code></p></li>
 <li><p><strong>Note: <code><a href="https://rdrr.io/r/base/Special.html" class="external-link">digamma()</a></code> <code><a href="https://rdrr.io/r/base/Special.html" class="external-link">trigamma()</a></code> are not supported</strong></p></li>
 </ul><p>The function applies the specified mathematical operation to each element
-of the <code>dbMatrix</code> object.</p>
+of the <code><a href="dbMatrix.html">dbMatrix</a></code> object.</p>
     </div>
 
     <div class="section level2">

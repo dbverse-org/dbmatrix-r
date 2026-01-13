@@ -1,4 +1,4 @@
-# Row (column) standard deviations for `dbMatrix` objects
+# Row (column) standard deviations for [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md) objects
 
 Calculates the standard deviation for each row (column) of a matrix-like
 object.
@@ -7,10 +7,26 @@ object.
 
 ``` r
 # S4 method for class 'dbDenseMatrix'
-colSds(x, ..., memory = FALSE, useNames = TRUE)
+colSds(
+  x,
+  rows = NULL,
+  cols = NULL,
+  na.rm = FALSE,
+  center = NULL,
+  ...,
+  useNames = TRUE
+)
 
 # S4 method for class 'dbSparseMatrix'
-colSds(x, ..., memory = FALSE, useNames = TRUE)
+colSds(
+  x,
+  rows = NULL,
+  cols = NULL,
+  na.rm = FALSE,
+  center = NULL,
+  ...,
+  useNames = TRUE
+)
 
 # S4 method for class 'dbDenseMatrix'
 rowSds(
@@ -20,7 +36,6 @@ rowSds(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -32,7 +47,6 @@ rowSds(
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 ```
@@ -41,36 +55,41 @@ rowSds(
 
 - x:
 
-  A `dbMatrix` object.
+  A
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  object.
+
+- rows:
+
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. TODO
+
+- cols:
+
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. TODO
+
+- na.rm:
+
+  Always TRUE for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
+
+- center:
+
+  Always NULL for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.
 
 - ...:
 
   Additional arguments (not used, but included for compatibility with
   the generic).
 
-- memory:
-
-  logical. If FALSE (default), results returned as dbDenseMatrix.
-
 - useNames:
 
-  Always TRUE for `dbMatrix` queries. Included for compatibility with
-  the generic.
-
-- rows:
-
-  Always NULL for `dbMatrix` queries. TODO
-
-- cols:
-
-  Always NULL for `dbMatrix` queries. TODO
-
-- na.rm:
-
-  Always TRUE for `dbMatrix` queries. Included for compatibility with
-  the generic.
-
-- center:
-
-  Always NULL for `dbMatrix` queries. Included for compatibility with
-  the generic.
+  Always TRUE for
+  [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+  queries. Included for compatibility with the generic.

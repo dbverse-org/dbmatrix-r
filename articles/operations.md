@@ -38,63 +38,57 @@ operations listed below with support for more coming soon.
 
 ## dbSparse Matrix Operations
 
-### Get test data
+### Create test data
 
-The test file is a `dgCMatrix`or compressed sparse column matrix
-representing a single cell gene expression matrix. The file is in the
-`data` directory of the package.
-
-Let’s load the .rds file and preview the object.
+Let’s create a sparse matrix for demonstration:
 
 ``` r
-dgc <- readRDS("../data/dgc.rds")
+set.seed(42)
+dgc <- Matrix::rsparsematrix(100, 50, density = 0.1, rand.x = function(n) rpois(n, 5) + 1)
+rownames(dgc) <- paste0("gene_", seq_len(100))
+colnames(dgc) <- paste0("cell_", seq_len(50))
 
 dplyr::glimpse(dgc)
 ```
 
     ## Formal class 'dgCMatrix' [package "Matrix"] with 6 slots
-    ##   ..@ i       : int [1:170625] 0 6 10 17 21 22 25 31 33 35 ...
-    ##   ..@ p       : int [1:625] 0 227 510 758 980 1293 1631 1976 2223 2434 ...
-    ##   ..@ Dim     : int [1:2] 634 624
+    ##   ..@ i       : int [1:500] 1 7 15 26 32 38 48 81 90 93 ...
+    ##   ..@ p       : int [1:51] 0 12 22 33 38 46 54 66 80 89 ...
+    ##   ..@ Dim     : int [1:2] 100 50
     ##   ..@ Dimnames:List of 2
-    ##   .. ..$ : chr [1:634] "Gna12" "Ccnd2" "Btbd17" "Sox9" ...
-    ##   .. ..$ : chr [1:624] "AAAGGGATGTAGCAAG-1" "AAATGGCATGTCTTGT-1" "AAATGGTCAATGTGCC-1" "AAATTAACGGGTAGCT-1" ...
-    ##   ..@ x       : num [1:170625] 1 1 1 1 1 1 6 2 1 1 ...
+    ##   .. ..$ : chr [1:100] "gene_1" "gene_2" "gene_3" "gene_4" ...
+    ##   .. ..$ : chr [1:50] "cell_1" "cell_2" "cell_3" "cell_4" ...
+    ##   ..@ x       : num [1:500] 4 7 5 7 3 8 4 5 4 7 ...
     ##   ..@ factors : list()
 
 ``` r
 # create dbSparseMatrix from the same dgc
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-sparse <- dbMatrix(value = dgc, 
-                   con = con, 
-                   name = 'visium', 
-                   class = "dbSparseMatrix",
-                   overwrite = TRUE)
+sparse <- dbMatrix(
+  value = dgc,
+  con = con,
+  name = "test_matrix",
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
-# preview 
+# preview
 # show function aims to emulate the show method for dgCMatrix
 head(sparse)
 ```
 
-    ## 6 x 624  dbMatrix of class "dbSparseMatrix"
+    ## 6 x 50  dbMatrix of class "dbSparseMatrix"
 
-    ## [[ Colnames 'AAAGGGATGTAGCAAG-1', 'AAATGGCATGTCTTGT-1', 'AAATGGTCAATGTGCC-1' ... suppressing 618 ...'TTGTCGTTCAGTTACC-1', 'TTGTGGCCCTGACAGT-1', 'TTGTTCAGTGTGCTAC-1' ]]
+    ## [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
 
-    ##                                                                               
-    ## Gna12    1.0000000 2.0000000 1.0000000 1.0000000 9.0000000 1.0000000 3.0000000
-    ## Ccnd2            . 1.0000000 1.0000000         .         . 1.0000000         .
-    ## Btbd17           . 1.0000000 1.0000000 1.0000000         .         . 2.0000000
-    ## Sox9             .         .         .         .         . 2.0000000 1.0000000
-    ## Sez6             . 1.0000000 4.0000000 3.0000000         . 8.0000000 1.0000000
-    ## Serpinf1         .         .         .         . 3.0000000         . 1.0000000
-    ##                                       
-    ## Gna12    5.0000000 3.0000000         .
-    ## Ccnd2    1.0000000 1.0000000         .
-    ## Btbd17           .         .         .
-    ## Sox9             .         .         .
-    ## Sez6     1.0000000 1.0000000 2.0000000
-    ## Serpinf1         .         .         .
+    ##                                                                   
+    ## gene_1         .         . . . .         . 5.0000000         . . .
+    ## gene_2 4.0000000         . . . .         .         .         . . .
+    ## gene_3         . 7.0000000 . . . 8.0000000         . 3.0000000 . .
+    ## gene_4         .         . . . .         .         .         . . .
+    ## gene_5         .         . . . .         . 6.0000000 5.0000000 . .
+    ## gene_6         .         . . . .         .         .         . . .
 
 ### transpose
 
@@ -102,20 +96,20 @@ head(sparse)
 dbMatrix::t(sparse)
 ```
 
-    ## 624 x 634  dbMatrix of class "dbSparseMatrix"
+    ## 50 x 100  dbMatrix of class "dbSparseMatrix"
 
-    ## [[ Colnames 'Gna12', 'Ccnd2', 'Btbd17' ... suppressing 628 ...'Gm19935', '9630013A20Rik', '2900040C04Rik' ]]
+    ## [[ Colnames 'gene_1', 'gene_2', 'gene_3' ... suppressing 94 ...'gene_98', 'gene_99', 'gene_100' ]]
 
-    ##                                                                       
-    ## AAAGGGATGTAGCAAG-1 1.0000000         .         .         .         . .
-    ## AAATGGCATGTCTTGT-1 2.0000000 1.0000000 1.0000000         . 1.0000000 .
-    ## AAATGGTCAATGTGCC-1 1.0000000 1.0000000 1.0000000         . 4.0000000 .
+    ##                                                                            
+    ## cell_1  . 4.0000000         . . .         .         . 7.0000000 .         .
+    ## cell_2  .         . 7.0000000 . .         .         .         . . 7.0000000
+    ## cell_3  .         .         . . .         .         .         . .         .
     ## 
-    ## ......suppressing 624 columns and 618 rows
+    ## ......suppressing 90 columns and 44 rows
     ## 
-    ## TTGTCGTTCAGTTACC-1 2.0000000 1.0000000         .         . 1.0000000 .
-    ## TTGTGGCCCTGACAGT-1 3.0000000 1.0000000         .         .         . .
-    ## TTGTTCAGTGTGCTAC-1 1.0000000         .         . 1.0000000 3.0000000 .
+    ## cell_48 .         .         . . .         . 8.0000000         . .         .
+    ## cell_49 .         .         . . . 2.0000000         . 8.0000000 .         .
+    ## cell_50 .         .         . . .         .         .         . .         .
 
 ### colMeans
 
@@ -123,17 +117,9 @@ dbMatrix::t(sparse)
 dbMatrix::colMeans(sparse)
 ```
 
-    ## 624 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                             
-    ## AAAGGGATGTAGCAAG-1 0.7413249
-    ## AAATGGCATGTCTTGT-1 1.3296530
-    ## AAATGGTCAATGTGCC-1 1.1435331
-    ## 
-    ## ...suppressing 618 elements
-    ## 
-    ## TTGTCGTTCAGTTACC-1 0.6624606
-    ## TTGTGGCCCTGACAGT-1 0.6908517
-    ## TTGTTCAGTGTGCTAC-1 0.7965300
+    ##  cell_1  cell_2  cell_3  cell_4  cell_5  cell_6  cell_7  cell_8  cell_9 cell_10 
+    ##    0.66    0.63    0.62    0.24    0.48    0.45    0.66    0.69    0.57    0.77 
+    ##  [ reached 'max' / getOption("max.print") -- omitted 40 entries ]
 
 ### colSums
 
@@ -141,17 +127,9 @@ dbMatrix::colMeans(sparse)
 dbMatrix::colSums(sparse)
 ```
 
-    ## 624 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                               
-    ## AAAGGGATGTAGCAAG-1 470.0000000
-    ## AAATGGCATGTCTTGT-1 843.0000000
-    ## AAATGGTCAATGTGCC-1 725.0000000
-    ## 
-    ## ...suppressing 618 elements
-    ## 
-    ## TTGTCGTTCAGTTACC-1 420.0000000
-    ## TTGTGGCCCTGACAGT-1 438.0000000
-    ## TTGTTCAGTGTGCTAC-1 505.0000000
+    ##  cell_1  cell_2  cell_3  cell_4  cell_5  cell_6  cell_7  cell_8  cell_9 cell_10 
+    ##      66      63      62      24      48      45      66      69      57      77 
+    ##  [ reached 'max' / getOption("max.print") -- omitted 40 entries ]
 
 ### rowMeans
 
@@ -159,17 +137,9 @@ dbMatrix::colSums(sparse)
 dbMatrix::rowMeans(sparse)
 ```
 
-    ## 634 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                        
-    ## Gna12         2.7179487
-    ## Ccnd2         1.7323718
-    ## Btbd17        0.5528846
-    ## 
-    ## ...suppressing 628 elements
-    ## 
-    ## Gm19935       0.2083333
-    ## 9630013A20Rik 0.1714744
-    ## 2900040C04Rik 0.1554487
+    ##  gene_1  gene_2  gene_3  gene_4  gene_5  gene_6  gene_7  gene_8  gene_9 gene_10 
+    ##    0.50    0.20    0.68    0.08    0.32    0.24    0.58    0.76    0.88    0.62 
+    ##  [ reached 'max' / getOption("max.print") -- omitted 90 entries ]
 
 ### rowSums
 
@@ -177,17 +147,9 @@ dbMatrix::rowMeans(sparse)
 dbMatrix::rowSums(sparse)
 ```
 
-    ## 634 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                           
-    ## Gna12         1696.0000000
-    ## Ccnd2         1081.0000000
-    ## Btbd17         345.0000000
-    ## 
-    ## ...suppressing 628 elements
-    ## 
-    ## Gm19935        130.0000000
-    ## 9630013A20Rik  107.0000000
-    ## 2900040C04Rik   97.0000000
+    ##  gene_1  gene_2  gene_3  gene_4  gene_5  gene_6  gene_7  gene_8  gene_9 gene_10 
+    ##      25      10      34       4      16      12      29      38      44      31 
+    ##  [ reached 'max' / getOption("max.print") -- omitted 90 entries ]
 
 ### dim
 
@@ -195,13 +157,13 @@ dbMatrix::rowSums(sparse)
 dim(sparse)
 ```
 
-    ## [1] 634 624
+    ## [1] 100  50
 
 ``` r
 dim(dgc)
 ```
 
-    ## [1] 634 624
+    ## [1] 100  50
 
 ### Check results are equivalent
 
@@ -234,25 +196,38 @@ Click to expand
 ## dbDenseMatrix Operations
 
 ``` r
-# below is a convenience function to simulate a dbDenseMatrix
-dense = dbMatrix::sim_dbDenseMatrix()
+# Create a dense matrix directly
+set.seed(42)
+mat <- matrix(rnorm(100), nrow = 10, ncol = 10)
+rownames(mat) <- paste0("row_", 1:10)
+colnames(mat) <- paste0("col_", 1:10)
+
+# Create dbDenseMatrix
+con2 <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+dense <- dbMatrix(
+  value = mat,
+  con = con2,
+  name = "dense_matrix",
+  class = "dbDenseMatrix",
+  overwrite = TRUE
+)
 
 # preview
 dense
 ```
 
-    ## 50 x 50  dbMatrix of class "dbDenseMatrix"
+    ## 10 x 10  dbMatrix of class "dbDenseMatrix"
 
-    ##                                                                        
-    ## row1   1.3709584  0.3219253  1.2009654 -0.0406985 -2.0009292 -1.0961562
-    ## row2  -0.5646982 -0.7838389  1.0447511 -1.5515448  0.3337772  0.0490505
-    ## row3   0.3631284  1.5757275 -1.0032086  1.1671695  1.1713251 -1.1984959
+    ##                                                                         
+    ## row_1   1.3709584  1.3048697 -0.3066386  0.4554501  0.2059986  0.3219253
+    ## row_2  -0.5646982  2.2866454 -1.7813084  0.7048373 -0.3610573 -0.7838389
+    ## row_3   0.3631284 -1.3888607 -0.1719174  1.0351035  0.7581632  1.5757275
     ## 
-    ## ......suppressing 40 columns and 44 rows
+    ## ...... suppressing 4 rows ......
     ## 
-    ## row48  1.4441013 -1.4592140 -0.4331690  0.5864875 -0.0267175  0.8625634
-    ## row49 -0.4314462  0.0799826  0.6968626  1.8152284  0.7036078  0.0973405
-    ## row50  0.6556479  0.6532043 -1.0563684  0.1288214 -0.9713852 -1.6256167
+    ## row_8  -0.0946590 -2.6564554 -1.7631631 -0.8509076  1.4441013  0.0898329
+    ## row_9   2.0184237 -2.4404669  0.4600974 -2.4142076 -0.4314462 -2.9930901
+    ## row_10 -0.0627141  1.3201133 -0.6399949  0.0361226  0.6556479  0.2848830
 
 ### transpose
 
@@ -260,20 +235,20 @@ dense
 dbMatrix::t(dense)
 ```
 
-    ## 50 x 50  dbMatrix of class "dbDenseMatrix"
+    ## 10 x 10  dbMatrix of class "dbDenseMatrix"
 
-    ## [[ Colnames 'row1', 'row2', 'row3' ... suppressing 44 ...'row48', 'row49', 'row50' ]]
+    ## [[ Colnames 'row_1', 'row_2', 'row_3' ... suppressing 4 ...'row_8', 'row_9', 'row_10' ]]
 
-    ##                                                                        
-    ## col1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245
-    ## col2   0.3219253 -0.7838389  1.5757275  0.6428993  0.0897606  0.2765507
-    ## col3   1.2009654  1.0447511 -1.0032086  1.8484819 -0.6667734  0.1055138
+    ##                                                                         
+    ## col_1   1.3709584 -0.5646982  0.3631284  0.6328626  0.4042683 -0.1061245
+    ## col_2   1.3048697  2.2866454 -1.3888607 -0.2787888 -0.1333213  0.6359504
+    ## col_3  -0.3066386 -1.7813084 -0.1719174  1.2146747  1.8951935 -0.4304691
     ## 
-    ## ......suppressing 40 columns and 44 rows
+    ## ...... suppressing 4 rows ......
     ## 
-    ## col48  0.2165217 -0.1147498  0.0203381  0.8927903  1.4480841 -0.2520309
-    ## col49  1.3275046 -0.6008358  0.0565069 -0.5310763 -0.0808988  0.1607556
-    ## col50 -0.3898801 -0.0992633 -0.0279661 -0.0569889  0.5556590  0.9019238
+    ## col_8  -1.0431189 -0.0901864  0.6235182 -0.9535234 -0.5428288  0.5809965
+    ## col_9   1.5127070  0.2579214  0.0884402 -0.1208965 -1.1943289  0.6119969
+    ## col_10  1.3921164 -0.4761739  0.6503486  1.3911105 -1.1107889 -0.8607926
 
 ### colMeans
 
@@ -281,17 +256,10 @@ dbMatrix::t(dense)
 dbMatrix::colMeans(dense)
 ```
 
-    ## 50 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                 
-    ## col1  -0.0356718
-    ## col2   0.1007014
-    ## col3  -0.1512511
-    ## 
-    ## ...suppressing 44 elements
-    ## 
-    ## col48  0.0178273
-    ## col49  0.2073369
-    ## col50 -0.1635492
+    ##       col_1       col_2       col_3       col_4       col_5       col_6 
+    ##  0.54729677 -0.16345673 -0.17807953 -0.36390406 -0.02021535  0.01839391 
+    ##       col_7       col_8       col_9      col_10 
+    ##  0.53907680 -0.21787537  0.25110630 -0.08719458
 
 ### colSums
 
@@ -299,17 +267,10 @@ dbMatrix::colMeans(dense)
 dbMatrix::colSums(dense)
 ```
 
-    ## 50 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                 
-    ## col1  -1.7835891
-    ## col2   5.0350707
-    ## col3  -7.5625544
-    ## 
-    ## ...suppressing 44 elements
-    ## 
-    ## col48  0.8913639
-    ## col49 10.3668441
-    ## col50 -8.1774605
+    ##      col_1      col_2      col_3      col_4      col_5      col_6      col_7 
+    ##  5.4729677 -1.6345673 -1.7807953 -3.6390406 -0.2021535  0.1839391  5.3907680 
+    ##      col_8      col_9     col_10 
+    ## -2.1787537  2.5110630 -0.8719458
 
 ### rowMeans
 
@@ -317,17 +278,10 @@ dbMatrix::colSums(dense)
 dbMatrix::rowMeans(dense)
 ```
 
-    ## 50 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                 
-    ## row1   0.0536436
-    ## row2   0.0024946
-    ## row3   0.0313340
-    ## 
-    ## ...suppressing 44 elements
-    ## 
-    ## row48 -0.1010421
-    ## row49  0.0592996
-    ## row50  0.0215431
+    ##       row_1       row_2       row_3       row_4       row_5       row_6 
+    ##  0.48470333 -0.06226284  0.41154753  0.25924440 -0.21826635  0.07264603 
+    ##       row_7       row_8       row_9      row_10 
+    ## -0.01914153 -0.39709480 -0.47524086  0.26901325
 
 ### rowSums
 
@@ -335,17 +289,10 @@ dbMatrix::rowMeans(dense)
 dbMatrix::rowSums(dense)
 ```
 
-    ## 50 x 1 dbMatrix of class "dbDenseMatrix"
-    ##                 
-    ## row1   2.6821819
-    ## row2   0.1247321
-    ## row3   1.5667017
-    ## 
-    ## ...suppressing 44 elements
-    ## 
-    ## row48 -5.0521070
-    ## row49  2.9649814
-    ## row50  1.0771549
+    ##      row_1      row_2      row_3      row_4      row_5      row_6      row_7 
+    ##  4.8470333 -0.6226284  4.1154753  2.5924440 -2.1826635  0.7264603 -0.1914153 
+    ##      row_8      row_9     row_10 
+    ## -3.9709480 -4.7524086  2.6901325
 
 ### mean
 
@@ -353,7 +300,7 @@ dbMatrix::rowSums(dense)
 dbMatrix::mean(dense)
 ```
 
-    ## [1] -0.009673541
+    ## [1] 0.03251482
 
 ### dim
 
@@ -361,7 +308,14 @@ dbMatrix::mean(dense)
 dim(dense)
 ```
 
-    ## [1] 50 50
+    ## [1] 10 10
+
+## Cleanup
+
+``` r
+DBI::dbDisconnect(con, shutdown = TRUE)
+DBI::dbDisconnect(con2, shutdown = TRUE)
+```
 
 ## Session Info
 
@@ -394,8 +348,7 @@ sessionInfo()
     ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9125
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] jsonlite_2.0.0       dplyr_1.1.4          compiler_4.5.2      
-    ##  [4] tidyselect_1.2.1     blob_1.2.4           dbProject_0.0.0.9000
-    ##  [7] jquerylib_0.1.4      systemfonts_1.3.1    textshaping_1.0.4   
-    ## [10] yaml_2.3.11         
-    ##  [ reached 'max' / getOption("max.print") -- omitted 36 entries ]
+    ##  [1] bit_4.6.0         jsonlite_2.0.0    dplyr_1.1.4       compiler_4.5.2   
+    ##  [5] tidyselect_1.2.1  Rcpp_1.1.1        blob_1.2.4        nanoarrow_0.7.0-2
+    ##  [9] pins_1.4.1        assertthat_0.2.1 
+    ##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]

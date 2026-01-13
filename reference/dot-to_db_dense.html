@@ -80,9 +80,10 @@ If the total size is within the limit, a single chunk is used.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_objects.html">sim_dbSparseMatrix</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dbdm</span> <span class="op">&lt;-</span> <span class="fu">toDbDense</span><span class="op">(</span><span class="va">dbsm</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in toDbDense(dbsm):</span> could not find function "toDbDense"</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">dbsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_objects.html">sim_dbSparseMatrix</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dbdm</span> <span class="op">&lt;-</span> <span class="fu">.to_db_dense</span><span class="op">(</span><span class="va">dbsm</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

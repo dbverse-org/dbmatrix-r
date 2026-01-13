@@ -17,5 +17,5 @@ names(x)
 
 ## Value
 
-A character vector of the names of the dbVector object (1D matrices
+A character vector of the names of the 1D dbMatrix object (1D matrices
 only)

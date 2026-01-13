@@ -1,10 +1,12 @@
-# Convert [`Matrix::Matrix`](https://rdrr.io/pkg/Matrix/man/Matrix.html) to `dbMatrix`
+# Convert [`Matrix::Matrix`](https://rdrr.io/pkg/Matrix/man/Matrix.html) to [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
 
 Converts in-memory [`matrix`](https://rdrr.io/r/base/matrix.html),
 [`Matrix::dgeMatrix`](https://rdrr.io/pkg/Matrix/man/dgeMatrix-class.html),
 or
 [`Matrix::dgCMatrix`](https://rdrr.io/pkg/Matrix/man/dgCMatrix-class.html)
-into a `dbMatrix` object.
+into a
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object.
 
 Generic function to convert in-memory objects to `dbMatrix` objects.
 

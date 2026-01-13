@@ -1,10 +1,29 @@
-# Create a `dbSparseMatrix` or `dbDenseMatrix` object
+# S4 virtual class for dbMatrix
+
+Representation of sparse and dense matrices in a database. Each object
+is used as a connection to a single table that exists within the
+database. Inherits from `dbData`.
 
 Create an S4 `dbMatrix` object in sparse or dense triplet vector format.
 
 ## Usage
 
 ``` r
+dbMatrix(
+  value,
+  class = NULL,
+  con = NULL,
+  overwrite = FALSE,
+  name = "dbMatrix",
+  dims = NULL,
+  dim_names = NULL,
+  mtx_rowname_file_path,
+  mtx_rowname_col_idx = 1,
+  mtx_colname_file_path,
+  mtx_colname_col_idx = 1,
+  ...
+)
+
 dbMatrix(
   value,
   class = NULL,
@@ -101,10 +120,24 @@ Supported `value` data types:
   database in ijx format from existing `dbMatrix` object. `dims` and
   `dim_names` must be specified if `value` is `tbl_duckdb_connection`.
 
+## Slots
+
+- `dim_names`:
+
+  row (1) and col (2) names
+
+- `dims`:
+
+  dimensions of the matrix
+
+- `init`:
+
+  logical. Whether the object is fully initialized
+
 ## Examples
 
 ``` r
-dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 dbSparse <- dbMatrix(
   value = dgc,
