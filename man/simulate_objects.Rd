@@ -75,7 +75,9 @@ a non-zero value.
 
 }}
 \examples{
+\dontrun{
 sim_ijx_matrix()
+}
 
 }
 \keyword{internal}

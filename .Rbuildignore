@@ -7,3 +7,10 @@
 ^pkgdown$
 ^\.github$
 .readthedocs.yaml
+^precomp_.*\.db$
+^benchmarks/.*\.duckdb$
+^GPL-3\.md$
+^LICENSE-text\.md$
+^benchmarks$
+^compile\.log$
+^tutorials$

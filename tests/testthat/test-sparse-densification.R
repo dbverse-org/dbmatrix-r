@@ -1,6 +1,6 @@
 rlang::local_options(lifecycle_verbosity = "quiet")
 
-dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 
 con1 <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
@@ -11,6 +11,10 @@ dbsm <- dbMatrix::dbMatrix(
   class = "dbSparseMatrix",
   overwrite = TRUE
 )
+
+# With ops system removed, these operations trigger densification immediately.
+# We must enable densification for these tests.
+options(dbMatrix.allow_densify = TRUE)
 
 test_that("sparse + non-zero scalar becomes dense", {
   res_dbsm <- dbsm + 1

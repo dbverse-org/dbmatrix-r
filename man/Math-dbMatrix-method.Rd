@@ -34,8 +34,21 @@ This method provides implementations for the following Math functions:
 \emph{Logarithmic}:
 \itemize{
 \item \code{log()}, \code{log10()}, \code{log2()}, \code{log1p()}
-\item \strong{Note: \code{log1p()} is not supported}
 }
+
+\strong{DuckDB Log Function Mappings}:\tabular{lll}{
+   R Function \tab DuckDB Function \tab Notes \cr
+   \code{log(x)} \tab \code{LN(x)} \tab Natural logarithm \cr
+   \code{log10(x)} \tab \code{LOG10(x)} \tab Base-10 logarithm \cr
+   \code{log2(x)} \tab \code{LOG2(x)} \tab Base-2 logarithm \cr
+   \code{log1p(x)} \tab \code{LN(x + 1)} \tab log(1+x), computed as LN \cr
+}
+
+
+\strong{Sparsity-Preserving Log}:
+For \code{dbSparseMatrix} with pending operations, \code{log(x + 1)} operations preserve sparsity
+since \code{log(0 + 1) = 0}. The multiplicative component is applied first,
+then the log transformation is applied to sparse values only.
 
 \emph{Trigonometric}:
 \itemize{

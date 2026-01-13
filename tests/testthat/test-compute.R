@@ -1,7 +1,4 @@
 test_that("compute() works for dbMatrix", {
-  # Load package
-  devtools::load_all()
-
   # Setup
   con <- DBI::dbConnect(duckdb::duckdb())
   on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
@@ -25,8 +22,8 @@ test_that("compute() works for dbMatrix", {
   expect_true(DBI::dbExistsTable(con, "my_computed_table"))
 
   # Check dimnames persistence
-  expect_true(DBI::dbExistsTable(con, "my_computed_table_rownames"))
-  expect_true(DBI::dbExistsTable(con, "my_computed_table_colnames"))
+  expect_true(DBI::dbExistsTable(con, "__my_computed_table_rownames"))
+  expect_true(DBI::dbExistsTable(con, "__my_computed_table_colnames"))
 
   # Test dbLoad reconstruction
   loaded_dbm <- dbLoad(con, "my_computed_table", class = "dbSparseMatrix")

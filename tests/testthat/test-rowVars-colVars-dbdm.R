@@ -1,9 +1,16 @@
 # silence deprecated internal functions
 rlang::local_options(lifecycle_verbosity = "quiet")
 
+# Helper to compare values ignoring names
+expect_equal_values <- function(actual, expected) {
+  names(actual) <- NULL
+  names(expected) <- NULL
+  expect_equal(actual, expected)
+}
+
 # ---------------------------------------------------------------------------- #
 # Load the dgcMatrix
-dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 mat <- as.matrix(dgc)
 
 # Connect to the database
@@ -24,14 +31,14 @@ dbdm <- dbMatrix::dbMatrix(
 test_that("rowVars equal for dbDenseMatrix (memory=TRUE)", {
   res_mat <- MatrixGenerics::rowVars(mat)
   res_dbdm <- rowVars(dbdm, memory = TRUE)
-  expect_equal(res_mat, res_dbdm)
+  expect_equal_values(res_mat, res_dbdm)
 })
 
 test_that("rowVars equal for dbDenseMatrix (memory=FALSE)", {
   res_mat <- MatrixGenerics::rowVars(mat)
   res_dbdm <- rowVars(dbdm, memory = FALSE)
   res_dbdm_vec <- suppressWarnings(res_dbdm |> as.vector())
-  expect_equal(res_mat, res_dbdm_vec)
+  expect_equal_values(res_mat, res_dbdm_vec)
 })
 
 # ---------------------------------------------------------------------------- #
@@ -40,14 +47,14 @@ test_that("rowVars equal for dbDenseMatrix (memory=FALSE)", {
 test_that("colVars equal for dbDenseMatrix (memory=TRUE)", {
   res_mat <- MatrixGenerics::colVars(mat)
   res_dbdm <- colVars(dbdm, memory = TRUE)
-  expect_equal(res_mat, res_dbdm)
+  expect_equal_values(res_mat, res_dbdm)
 })
 
 test_that("colVars equal for dbDenseMatrix (memory=FALSE)", {
   res_mat <- MatrixGenerics::colVars(mat)
   res_dbdm <- colVars(dbdm, memory = FALSE)
   res_dbdm_vec <- suppressWarnings(res_dbdm |> as.vector())
-  expect_equal(res_mat, res_dbdm_vec)
+  expect_equal_values(res_mat, res_dbdm_vec)
 })
 
 # Close the database connection

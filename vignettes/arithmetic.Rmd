@@ -12,6 +12,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+# Enable densification for vignette examples
+options(dbMatrix.allow_densify = TRUE)
 ```
 
 ```{r setup}
@@ -25,18 +27,20 @@ library(dbMatrix)
 
 **Note:** Some operations with zero values are not yet supported with dbMatrix objects. In addition, certain arithmetic operations between `dbMatrix` objects are also not yet supported. We welcome user feedback and reporting issues on the [Github page ](https://github.com/dbverse-org/dbmatrix-r/).
 
-### Get test data
-The test file is a `dgCMatrix`or compressed sparse column matrix representing a single cell gene expression matrix. The file is in the `data` directory of the package.
-
-Let's load the .rds file and preview the object.
+### Create test data
+Let's create a simple sparse matrix for demonstration:
 
 ```{r}
-dgc <- readRDS("../data/dgc.rds")
+# Create a sparse matrix
+set.seed(42)
+dgc <- Matrix::rsparsematrix(100, 50, density = 0.1, rand.x = function(n) rpois(n, 5) + 1)
+rownames(dgc) <- paste0("gene_", seq_len(100))
+colnames(dgc) <- paste0("cell_", seq_len(50))
 
 dplyr::glimpse(dgc)
 ```
 
-The file contains 634 rows and 624 columns. The rows represent gene names and the columns represent cell names. The values are integers and represent the number of times a gene is detected in a cell. Like most single-cell RNA-seq data, the matrix is sparse.
+The matrix contains 100 rows (genes) and 50 columns (cells). Like most single-cell RNA-seq data, the matrix is sparse.
 
 
 ### Create a dbMatrix object
@@ -45,11 +49,13 @@ Let's create a `dbSparseMatrix` object from the above `dgc` object.
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
-dbsm <- dbMatrix(value = dgc, 
-                 con = con, 
-                 name = 'visium', 
-                 class = "dbSparseMatrix",
-                 overwrite = TRUE)
+dbsm <- dbMatrix(
+  value = dgc,
+  con = con,
+  name = "test_matrix",
+  class = "dbSparseMatrix",
+  overwrite = TRUE
+)
 
 # preview the object
 dbsm
@@ -81,9 +87,12 @@ dbsm * dbsm
 #### Matrix product
 TODO
 
+### Cleanup
+```{r}
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
+
 ### Session Info
 ```{r}
 sessionInfo()
 ```
-
-

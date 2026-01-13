@@ -3,7 +3,7 @@ rlang::local_options(lifecycle_verbosity = "quiet")
 
 # ---------------------------------------------------------------------------- #
 # Load the RDS file in the 'data' folder
-dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 mat <- as.matrix(dgc + 1)
 
 con1 <- DBI::dbConnect(duckdb::duckdb(), ":memory:")

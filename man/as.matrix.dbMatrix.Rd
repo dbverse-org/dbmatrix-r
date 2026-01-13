@@ -4,7 +4,7 @@
 \alias{as.matrix.dbMatrix}
 \title{Convert \code{\link{dbMatrix}} to in-memory matrix}
 \usage{
-\method{as.matrix}{dbMatrix}(x, ..., sparse = FALSE, names = FALSE)
+\method{as.matrix}{dbMatrix}(x, ..., sparse = FALSE, names = TRUE)
 }
 \arguments{
 \item{x}{A \code{\link{dbMatrix}} object (dbSparseMatrix or dbDenseMatrix)}

@@ -23,7 +23,26 @@ setMethod(
     # check inputs
     .check_extract(x = x, i = i, j = NULL, dim = dim)
 
+    # Convert character indices to integers for faster extraction
+    if (is.character(i)) {
+      int_idx <- match(i, x@dim_names[[1]])
+      if (anyNA(int_idx)) {
+        bad_names <- i[is.na(int_idx)]
+        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      i <- int_idx
+    }
+
     if (is.numeric(i)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(i < 0)) {
+        if (any(i > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+      }
+      
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -47,12 +66,12 @@ setMethod(
           i = as.integer(i),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_i <- x@dim_names[[1]][i]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -77,28 +96,25 @@ setMethod(
           rowname = filter_i,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[1]], 
+        prefix = "__dbM_extract_dim_map_i", 
+        col_name_in_db = "rowname"
       )
 
       map_tbl <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "rowname"
         ) |>
+        dplyr::rename(i = idx) |>
         dplyr::select(new_i, i)
     }
 
@@ -106,8 +122,9 @@ setMethod(
       dplyr::inner_join(map_tbl, by = "i") |>
       dplyr::select(i = new_i, j, x)
 
-    x@dim_names[[1L]] <- filter_i
-    x@dims[1L] <- length(filter_i)
+    # Preserve factor status for dim_names
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+    x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
     x@name <- NA_character_
 
     return(x)
@@ -128,7 +145,26 @@ setMethod(
     # check for dims
     .check_extract(x = x, i = NULL, j = j, dim = dim)
 
+    # Convert character indices to integers for faster extraction
+    if (is.character(j)) {
+      int_idx <- match(j, x@dim_names[[2]])
+      if (anyNA(int_idx)) {
+        bad_names <- j[is.na(int_idx)]
+        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      j <- int_idx
+    }
+
     if (is.numeric(j)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(j < 0)) {
+        if (any(j > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+      }
+      
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -152,12 +188,12 @@ setMethod(
           j = as.integer(j),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_j <- x@dim_names[[2]][j]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_j <- x@dim_names[[2]][j]  # Returns NULL if dim_names[[2]] is NULL
     } else {
       filter_j <- get_dbM_sub_idx(
         index = j,
@@ -182,28 +218,25 @@ setMethod(
           colname = filter_j,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[2]], 
+        prefix = "__dbM_extract_dim_map_j", 
+        col_name_in_db = "colname"
       )
 
       map_tbl <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "colname"
         ) |>
+        dplyr::rename(j = idx) |>
         dplyr::select(new_j, j)
     }
 
@@ -211,8 +244,9 @@ setMethod(
       dplyr::inner_join(map_tbl, by = "j") |>
       dplyr::select(i, j = new_j, x)
 
-    x@dim_names[[2L]] <- filter_j
-    x@dims[2L] <- length(filter_j)
+    # Preserve factor status for dim_names
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
     x@name <- NA_character_
 
     return(x)
@@ -234,8 +268,37 @@ setMethod(
     # check for dims
     .check_extract(x = x, i = i, j = j, dim = dim)
 
+    # Convert character indices to integers for faster extraction
+    if (is.character(i)) {
+      int_idx <- match(i, x@dim_names[[1]])
+      if (anyNA(int_idx)) {
+        bad_names <- i[is.na(int_idx)]
+        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      i <- int_idx
+    }
+    
+    if (is.character(j)) {
+      int_idx <- match(j, x@dim_names[[2]])
+      if (anyNA(int_idx)) {
+        bad_names <- j[is.na(int_idx)]
+        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
+             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+      }
+      j <- int_idx
+    }
+
     # Process i index (same logic as row-only subsetting)
     if (is.numeric(i)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(i < 0)) {
+        if (any(i > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+      }
+      
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -259,12 +322,12 @@ setMethod(
           i = as.integer(i),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl_i <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_i <- x@dim_names[[1]][i]
+      # Handle NULL dim_names: keep NULL or subset existing names
+      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -289,33 +352,38 @@ setMethod(
           rowname = filter_i,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_i")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[1]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as i, unnest as rowname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[1]], 
+        prefix = "__dbM_extract_dim_map_i", 
+        col_name_in_db = "rowname"
       )
 
       map_tbl_i <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(glue::glue("({dim_mapping_sql})"))),
+          dim_map_tbl,
           by = "rowname"
         ) |>
+        dplyr::rename(i = idx) |>
         dplyr::select(new_i, i)
     }
 
     # Process j index (same logic as column-only subsetting)
     if (is.numeric(j)) {
+      # Handle negative indices: convert to positive by excluding
+      if (any(j < 0)) {
+        if (any(j > 0)) {
+          stop("Cannot mix positive and negative indices")
+        }
+        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+      }
+      
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -339,7 +407,7 @@ setMethod(
           j = as.integer(j),
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         map_tbl_j <- dplyr::tbl(con, req_tbl_name)
       }
@@ -369,28 +437,25 @@ setMethod(
           colname = filter_j,
           stringsAsFactors = FALSE
         )
-        req_tbl_name <- unique_table_name("subset_req_j")
+        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
         duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
-      # Use UNNEST to create dimension mapping inline
-      safe_dim_names <- gsub("'", "''", x@dim_names[[2]])
-      dim_names_sql <- glue::glue_collapse(
-        glue::glue("'{safe_dim_names}'"),
-        sep = ", "
-      )
-
-      dim_mapping_sql <- glue::glue(
-        "SELECT ROW_NUMBER() OVER () as j, unnest as colname 
-         FROM (SELECT UNNEST([{dim_names_sql}]) as unnest)"
+      # Use helper to create dimension mapping
+      dim_map_tbl <- store_mapping(
+        con = con, 
+        items = x@dim_names[[2]], 
+        prefix = "__dbM_extract_dim_map_j", 
+        col_name_in_db = "colname"
       )
 
       map_tbl_j <- req_tbl |>
         dplyr::inner_join(
-          dplyr::tbl(con, dplyr::sql(paste0("(", dim_mapping_sql, ")"))),
+          dim_map_tbl,
           by = "colname"
         ) |>
+        dplyr::rename(j = idx) |>
         dplyr::select(new_j, j)
     }
 
@@ -399,11 +464,11 @@ setMethod(
       dplyr::inner_join(map_tbl_j, by = "j") |>
       dplyr::select(i = new_i, j = new_j, x)
 
-    # update dbMatrix attributes
-    x@dim_names[[1L]] <- filter_i
-    x@dim_names[[2L]] <- filter_j
-    x@dims[1L] <- length(filter_i)
-    x@dims[2L] <- length(filter_j)
+    # update dbMatrix attributes - preserve factor status
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
+    x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
     x@name <- NA_character_
 
     return(x)
@@ -435,7 +500,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
 
     # check that dimensions has 1 in the [1] or [2] position
     if (sum(dimensions == 1) != 1) {
-      stop("dbDenseMatrix is not a dbVector")
+      stop("dbDenseMatrix is not a 1D dbMatrix")
     }
 
     # FIXME: If dbmatrix@x is logical support recycle_boolean_index
@@ -446,7 +511,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
       filtered_index <- index[] |>
         dplyr::filter(x)
       if (dims == 1L || is(index, "dbDenseMatrix")) {
-        #FIXME dbVector
+        #FIXME 1D dbMatrix
         # a_rownames |>
         #    dplyr::semi_join(filtered_index, by = "i")
         index <- filtered_index |>
@@ -472,7 +537,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
     if (all(index %in% dbM_dimnames[[dims]])) {
       return(index)
     } else {
-      stop("dbVector dimensions do not match dbMatrix dimensions")
+      stop("1D dbMatrix dimensions do not match dbMatrix dimensions")
     }
   }
 
@@ -483,7 +548,7 @@ get_dbM_sub_idx <- function(index, dbM_dimnames, dims) {
 #' @noRd
 #' @keywords internal
 recycle_boolean_index <- function(index, length) {
-  #FIXME: dbVector
+  #FIXME: 1D dbMatrix
   if (is.logical(index) && length(index) < length) {
     recycled <- rep_len(index, length)
     return(which(recycled))
@@ -601,8 +666,38 @@ setMethod(
 )
 
 # dbDenseMatrix indexing methods ####
-# These methods enable dbVector logical indexing for dbMatrix objects
-# Critical for filterGiotto functionality in giottodb
+# These methods enable 1D dbMatrix logical indexing for dbMatrix objects
+
+#' Internal helper to store mapping table for subsetting
+#' Uses inline SQL for small N, registered virtual table (view) for large N
+#' Fallback to registered view ensures efficiency and clean database state
+#' @keywords internal
+#' @noRd
+store_mapping <- function(con, items, prefix, col_name_in_db) {
+  # Inline SQL
+  if (length(items) < 2000) {
+    safe_items <- gsub("'", "''", items)
+    items_sql <- glue::glue_collapse(glue::glue("'{safe_items}'"), sep = ", ")
+    
+    mapping_sql <- glue::glue(
+      "SELECT ROW_NUMBER() OVER () as idx, unnest as {col_name_in_db} 
+       FROM (SELECT UNNEST([{items_sql}]) as unnest)"
+    )
+    return(dplyr::tbl(con, dplyr::sql(glue::glue("({mapping_sql})"))))
+  } 
+  
+  # Registered virtual table
+  df <- data.frame(
+    idx = seq_along(items),
+    name = items,
+    stringsAsFactors = FALSE
+  )
+  colnames(df)[2] <- col_name_in_db
+  
+  tbl_name <- unique_table_name(prefix)
+  duckdb::duckdb_register(con, tbl_name, df, overwrite = TRUE)
+  return(dplyr::tbl(con, tbl_name))
+}
 
 #' @noRd
 #' @concept dbMatrix
@@ -611,9 +706,9 @@ setMethod(
   '[',
   signature(x = 'dbMatrix', i = 'dbDenseMatrix', j = 'missing'),
   function(x, i, ..., drop = FALSE) {
-    # Check if i is a valid dbVector (1D matrix)
+    # Check if i is a valid 1D dbMatrix (1D matrix)
     if (!1 %in% dim(i)) {
-      stopf("dbDenseMatrix index must be a dbVector (have 1 in dimensions)")
+      stopf("dbDenseMatrix index must be a 1D dbMatrix (have 1 in dimensions)")
     }
 
     # Check dimensional compatibility - only row indexing supported

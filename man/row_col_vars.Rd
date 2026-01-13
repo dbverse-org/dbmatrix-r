@@ -14,7 +14,6 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -25,7 +24,6 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -36,7 +34,6 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 
@@ -47,7 +44,6 @@
   na.rm = TRUE,
   center = NULL,
   ...,
-  memory = FALSE,
   useNames = TRUE
 )
 }
@@ -67,9 +63,6 @@ with the generic.}
 with the generic.}
 
 \item{...}{Additional arguments (not used, but included for compatibility with the generic).}
-
-\item{memory}{logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
-for large computations. Set to TRUE to return the results as a vector.}
 
 \item{useNames}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}

@@ -1,0 +1,4 @@
+# Makevars for dbMatrix
+#
+# No special compiler flags required.
+# C++ code works in single-threaded mode.
