@@ -35,6 +35,7 @@ rownames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "row") {
 
 #' @rdname matrix_props
 #' @concept matrix_props
+#' @usage \method{rownames}{dbMatrix}(x) <- value
 #' @export
 `rownames<-.dbMatrix` <- function(x, value) {
   if (is.null(value)) {
@@ -58,6 +59,7 @@ colnames.dbMatrix <- function(x, do.NULL = TRUE, prefix = "col") {
 
 #' @rdname matrix_props
 #' @concept matrix_props
+#' @usage \method{colnames}{dbMatrix}(x) <- value
 #' @export
 `colnames<-.dbMatrix` <- function(x, value) {
   if (x@dims[2] != length(value)) {

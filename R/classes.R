@@ -4,7 +4,7 @@
 
 ### dbMatrix ####
 
-#' @title S4 virtual class for `dbMatrix`
+#' @title S4 virtual class for dbMatrix
 #' @description
 #' Representation of sparse and dense matrices in a database. Each object
 #' is used as a connection to a single table that exists within the database.
@@ -12,9 +12,10 @@
 #' @slot dim_names row (1) and col (2) names
 #' @slot dims dimensions of the matrix
 #' @slot init logical. Whether the object is fully initialized
-#' @name dbMatrix-class
+#' @rdname dbMatrix
+#' @aliases dbMatrix-class
 #' @exportClass dbMatrix
-#' @export
+#' @keywords internal
 dbMatrix <- setClass(
   Class = 'dbMatrix',
   contains = c('dbData', 'VIRTUAL'),
@@ -26,6 +27,9 @@ dbMatrix <- setClass(
   prototype = list(
     dim_names = list(NULL, NULL),
     dims = c(NA_integer_, NA_integer_),
+    init = FALSE
+  )
+)
 
 #' Ensure dim_names are non-NULL factors
 #' 
