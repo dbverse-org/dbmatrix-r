@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9125</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9126</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,59 @@
       <small>Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.0.0.9126" id="dbmatrix-0009126-2026-01-13">dbMatrix 0.0.0.9126 (2026-01-13)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009126-2026-01-13"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-0-0-9126">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-0-9126"></a></h3>
+<ul><li><p>Update pkgdown workflow to include additional R packages and refs.</p></li>
+<li><p>Prevent NAs in show method by handling max.print truncation.</p></li>
+<li><p>Handle negative and out-of-order indexing.</p></li>
+<li><p>Require explicit opt-in for sparse-to-dense conversion.</p></li>
+<li><p>Cast comparison operators to numeric for type safety.</p></li>
+<li><p>Use direct slot access in transpose method.</p></li>
+<li><p>Conditionally check overwrite for dbMatrix creation.</p></li>
+<li><p>Improve verbosity messages and remove redundant logging in dbMatrix functions.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="features-0-0-0-9126">Features<a class="anchor" aria-label="anchor" href="#features-0-0-0-9126"></a></h3>
+<ul><li><p>Support transposed precompute tables.</p></li>
+<li><p>Add streaming SVD for dbSparseMatrix including fallback to BPCells::svds() for LTM data.</p></li>
+<li><p>Add Math SQL translations for <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log1p()</a></code>, <code>ln()</code> and <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log()</a></code> functions.</p></li>
+<li><p>Add <code><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na()</a></code> method.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-0-0-0-9126">Performance<a class="anchor" aria-label="anchor" href="#performance-0-0-0-9126"></a></h3>
+<ul><li>Optimize dimname indexing with factors and <code><a href="https://rdrr.io/r/base/match.html" class="external-link">match()</a></code> (dimname-returning functions return characters as expected).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="refactoring-0-0-0-9126">Refactoring<a class="anchor" aria-label="anchor" href="#refactoring-0-0-0-9126"></a></h3>
+<ul><li><p>Use temp tables and inline SQL (small queries still use inline SQL; otherwise register a temp table to avoid large string parsing bottlenecks).</p></li>
+<li><p>Centralize internal type-check functions in <code>dbProject</code>.</p></li>
+<li><p>Simplify summary methods to always return vectors.</p></li>
+<li><p>Rename dbVector internals and add column-wise recycling.</p></li>
+<li><p>Improve <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code> and <code>compute()</code> for dbMatrix.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-0-0-9126">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-0-0-9126"></a></h3>
+<ul><li><p>Untrack docs/ folder.</p></li>
+<li><p>Consolidate class documentation and update vignettes.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="chore-0-0-0-9126">Chore<a class="anchor" aria-label="anchor" href="#chore-0-0-0-9126"></a></h3>
+<ul><li><p>Update build config and move package data to inst/extdata.</p></li>
+<li><p>Update package metadata and dependencies.</p></li>
+<li><p>Update roxygen.</p></li>
+<li><p>Update .gitignore to exclude compiled artifacts.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="code-style-0-0-0-9126">Code style<a class="anchor" aria-label="anchor" href="#code-style-0-0-0-9126"></a></h3>
+<ul><li>Reformat with air.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="testing-0-0-0-9126">Testing<a class="anchor" aria-label="anchor" href="#testing-0-0-0-9126"></a></h3>
+<ul><li>Tidy up tests and update to reflect recent code changes.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9125" id="dbmatrix-0009125-2025-12-04">dbMatrix 0.0.0.9125 (2025-12-04)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009125-2025-12-04"></a></h2>
 <div class="section level3">

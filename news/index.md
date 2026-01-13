@@ -1,5 +1,84 @@
 # Changelog
 
+## dbMatrix 0.0.0.9126 (2026-01-13)
+
+### Bug fixes
+
+- Update pkgdown workflow to include additional R packages and refs.
+
+- Prevent NAs in show method by handling max.print truncation.
+
+- Handle negative and out-of-order indexing.
+
+- Require explicit opt-in for sparse-to-dense conversion.
+
+- Cast comparison operators to numeric for type safety.
+
+- Use direct slot access in transpose method.
+
+- Conditionally check overwrite for dbMatrix creation.
+
+- Improve verbosity messages and remove redundant logging in dbMatrix
+  functions.
+
+### Features
+
+- Support transposed precompute tables.
+
+- Add streaming SVD for dbSparseMatrix including fallback to
+  BPCells::svds() for LTM data.
+
+- Add Math SQL translations for
+  [`log1p()`](https://rdrr.io/r/base/Log.html), `ln()` and
+  [`log()`](https://rdrr.io/r/base/Log.html) functions.
+
+- Add [`is.na()`](https://rdrr.io/r/base/NA.html) method.
+
+### Performance
+
+- Optimize dimname indexing with factors and
+  [`match()`](https://rdrr.io/r/base/match.html) (dimname-returning
+  functions return characters as expected).
+
+### Refactoring
+
+- Use temp tables and inline SQL (small queries still use inline SQL;
+  otherwise register a temp table to avoid large string parsing
+  bottlenecks).
+
+- Centralize internal type-check functions in `dbProject`.
+
+- Simplify summary methods to always return vectors.
+
+- Rename dbVector internals and add column-wise recycling.
+
+- Improve [`as.matrix()`](https://rdrr.io/r/base/matrix.html) and
+  `compute()` for dbMatrix.
+
+### Documentation
+
+- Untrack docs/ folder.
+
+- Consolidate class documentation and update vignettes.
+
+### Chore
+
+- Update build config and move package data to inst/extdata.
+
+- Update package metadata and dependencies.
+
+- Update roxygen.
+
+- Update .gitignore to exclude compiled artifacts.
+
+### Code style
+
+- Reformat with air.
+
+### Testing
+
+- Tidy up tests and update to reflect recent code changes.
+
 ## dbMatrix 0.0.0.9125 (2025-12-04)
 
 ### Bug fixes

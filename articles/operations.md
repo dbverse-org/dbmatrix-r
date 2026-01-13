@@ -345,7 +345,7 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9125
+    ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9126
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] bit_4.6.0         jsonlite_2.0.0    dplyr_1.1.4       compiler_4.5.2   

@@ -15,12 +15,12 @@ Source:
 [`DESCRIPTION`](https://github.com/dbverse-org/dbmatrix-r/blob/dev/DESCRIPTION)
 
 C. Ruiz E, George Chen J, Dries R (2026). *dbMatrix: dbMatrix*. R
-package version 0.0.0.9125, <https://github.com/dbverse-org/dbmatrix-r>.
+package version 0.0.0.9126, <https://github.com/dbverse-org/dbmatrix-r>.
 
     @Manual{,
       title = {dbMatrix: dbMatrix},
       author = {Edward {C. Ruiz} and Jiaji {George Chen} and Ruben Dries},
       year = {2026},
-      note = {R package version 0.0.0.9125},
+      note = {R package version 0.0.0.9126},
       url = {https://github.com/dbverse-org/dbmatrix-r},
     }
