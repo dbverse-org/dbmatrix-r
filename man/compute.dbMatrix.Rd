@@ -22,7 +22,7 @@
 
 \item{dimnames}{default = TRUE. If TRUE, the rownames and colnames will be
 saved in the database. This allows full reconstruction of the dbMatrix object
-using \link{\code{dbMatrix::dbLoad()}}.}
+using \code{\link[dbProject:dbLoad]{dbProject::dbLoad()}}.}
 
 \item{overwrite}{Logical. If TRUE, overwrite the table if it already exists.
 Default is FALSE.}
