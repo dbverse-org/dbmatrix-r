@@ -1,10 +1,13 @@
 # silence deprecated internal functions
 rlang::local_options(lifecycle_verbosity = "quiet")
 
+# Enable densification for tests
+options(dbMatrix.allow_densify = TRUE)
+
 # ---------------------------------------------------------------------------- #
 # Load the dgcMatrix
-dgc <- sim_dgc(5, 3, 10)
-dbsm <- as.dbMatrix(dgc)
+dbsm <- dbMatrix:::sim_dbSparseMatrix()
+dgc <- as(dbsm, "dgCMatrix")
 # ---------------------------------------------------------------------------- #
 
 # For table of expected results see `?.eval_op_densify`
@@ -35,7 +38,7 @@ test_that(" + Inf equal", {
 
 test_that(" + NaN equal", {
   res_dgc <- (dgc + NaN) |> as.matrix()
-  res_dbsm <- (dbsm + NaN) |> as.matrix(names = FALSE)
+  res_dbsm <- (dbsm + NaN) |> as.matrix()
   expect_equal(res_dgc, res_dbsm)
 })
 
@@ -119,7 +122,7 @@ test_that(" ^ 100 equal", {
 
 test_that(" ^ Inf equal", {
   res_dgc <- (dgc^Inf)
-  res_dbsm <- (dbsm^Inf) |> as.matrix(sparse = TRUE, names = FALSE)
+  res_dbsm <- (dbsm^Inf) |> as.matrix(sparse = TRUE)
   expect_equal(res_dgc, res_dbsm)
 })
 
@@ -149,7 +152,7 @@ test_that(" %% 100 equal", {
 
 test_that(" %% Inf equal", {
   res_dgc <- (dgc %% Inf)
-  res_dbsm <- (dbsm %% Inf) |> as.matrix(sparse = TRUE, names = FALSE)
+  res_dbsm <- (dbsm %% Inf) |> as.matrix(sparse = TRUE)
   expect_equal(res_dgc, res_dbsm)
 })
 

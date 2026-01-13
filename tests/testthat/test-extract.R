@@ -3,7 +3,7 @@ rlang::local_options(lifecycle_verbosity = "quiet")
 
 # ---------------------------------------------------------------------------- #
 # Load the RDS file in the 'data' folder
-dgc <- readRDS(system.file("data", "dgc.rds", package = "dbMatrix"))
+dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 
 con1 <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
@@ -96,5 +96,62 @@ dbsm_subset <- dbsm[boolean_row_index, boolean_col_index]
 dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
 
 test_that("boolean row/col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+# ---------------------------------------------------------------------------- #
+# Perform negative indexing
+
+dgc_subset <- dgc[-c(1:5), ]
+dbsm_subset <- dbsm[-c(1:5), ]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("negative row indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[, -c(1:5)]
+dbsm_subset <- dbsm[, -c(1:5)]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("negative col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[-c(1:5), -c(1:5)]
+dbsm_subset <- dbsm[-c(1:5), -c(1:5)]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("negative row/col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+# ---------------------------------------------------------------------------- #
+# Perform out-of-order indexing
+
+ooo_row_index <- c(10, 5, 1, 8, 3)
+ooo_col_index <- c(8, 2, 6, 1)
+
+dgc_subset <- dgc[ooo_row_index, ]
+dbsm_subset <- dbsm[ooo_row_index, ]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("out-of-order row indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[, ooo_col_index]
+dbsm_subset <- dbsm[, ooo_col_index]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("out-of-order col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[ooo_row_index, ooo_col_index]
+dbsm_subset <- dbsm[ooo_row_index, ooo_col_index]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("out-of-order row/col indexing works", {
   expect_equal(dgc_subset, dgc_db_subset)
 })

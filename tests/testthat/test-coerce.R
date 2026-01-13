@@ -4,16 +4,16 @@ test_that("as.matrix works for dbDenseMatrix", {
   dimnames(mat) <- list(paste0("r", 1:4), paste0("c", 1:3))
   dbm <- as.dbMatrix(mat)
 
-  # Test default (dense matrix) - defaults to names=FALSE
+  # Test default (dense matrix)
   res <- as.matrix(dbm)
   expect_true(is.matrix(res))
-  expect_equivalent(res, mat) # equivalent ignores attributes like dimnames
+  expect_equal(res, mat, ignore_attr = TRUE)
 
   # Test with names = FALSE
   res_no_names <- as.matrix(dbm, names = FALSE)
   expect_true(is.matrix(res_no_names))
   expect_null(dimnames(res_no_names))
-  expect_equivalent(res_no_names, mat)
+  expect_equal(res_no_names, mat, ignore_attr = TRUE)
 })
 
 test_that("as.matrix works for dbSparseMatrix", {
@@ -22,15 +22,15 @@ test_that("as.matrix works for dbSparseMatrix", {
   dimnames(dgc) <- list(paste0("r", 1:5), paste0("c", 1:5))
   dbsm <- as.dbMatrix(dgc)
 
-  # Test default (dense matrix) - defaults to names=FALSE
+  # Test default (dense matrix) - defaults to names=TRUE
   res <- as.matrix(dbsm)
   expect_true(is.matrix(res))
-  expect_equivalent(res, as.matrix(dgc))
+  expect_equal(res, as.matrix(dgc), ignore_attr = TRUE)
 
-  # Test sparse = TRUE (dgCMatrix) - defaults to names=FALSE
+  # Test sparse = TRUE (dgCMatrix) - defaults to names=TRUE
   res_sparse <- as.matrix(dbsm, sparse = TRUE)
   expect_s4_class(res_sparse, "dgCMatrix")
-  expect_equivalent(res_sparse, dgc)
+  expect_equal(res_sparse, dgc, ignore_attr = TRUE)
 
   # Test with names = FALSE
   res_no_names <- as.matrix(dbsm, names = FALSE)
@@ -45,7 +45,7 @@ test_that("as.vector works for dbDenseMatrix", {
 
   res_col <- as.vector(dbm_col)
   expect_true(is.vector(res_col))
-  expect_equivalent(res_col, as.vector(mat_col)) # as.vector strips names, dbMatrix keeps them
+  expect_equal(res_col, as.vector(mat_col), ignore_attr = TRUE)
   expect_equal(names(res_col), rownames(mat_col))
 
   # Setup 1D matrix (row vector)
@@ -55,7 +55,7 @@ test_that("as.vector works for dbDenseMatrix", {
 
   res_row <- as.vector(dbm_row)
   expect_true(is.vector(res_row))
-  expect_equivalent(res_row, as.vector(mat_row))
+  expect_equal(res_row, as.vector(mat_row), ignore_attr = TRUE)
   expect_equal(names(res_row), colnames(mat_row))
 
   # Fail for 2D matrix
@@ -71,10 +71,17 @@ test_that("setAs coercion works", {
   # as(x, "matrix")
   res_mat <- as(dbm, "matrix")
   expect_true(is.matrix(res_mat))
-  expect_equivalent(res_mat, mat)
+  expect_equal(res_mat, mat, ignore_attr = TRUE)
 
   # as(x, "dgCMatrix")
   res_dgc <- as(dbm, "dgCMatrix")
   expect_s4_class(res_dgc, "dgCMatrix")
-  expect_equivalent(as.matrix(res_dgc), mat)
+  expect_equal(as.matrix(res_dgc), mat, ignore_attr = TRUE)
+
+})
+
+test_that("setAs coercion works for simulated tbl-backed dbSparseMatrix", {
+  dbsm <- sim_dbSparseMatrix(num_rows = 10, num_cols = 10, memory = TRUE)
+  res_dgc <- as(dbsm, "dgCMatrix")
+  expect_s4_class(res_dgc, "dgCMatrix")
 })
