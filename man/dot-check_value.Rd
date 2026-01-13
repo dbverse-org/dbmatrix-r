@@ -7,7 +7,7 @@
 .check_value(value)
 }
 \arguments{
-\item{x}{A \link{Matrix}, \link{matrix}, or \link{tbl_duckdb_connection} object}
+\item{value}{A \code{Matrix}, \code{matrix}, or \code{tbl_duckdb_connection} object}
 }
 \description{
 Input validation for data arg

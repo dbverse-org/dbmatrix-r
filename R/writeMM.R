@@ -1,5 +1,9 @@
 #' @importFrom Matrix writeMM
 #' @export
+#' @param obj dbMatrix object
+#' @param file path to file
+#' @param ... additional arguments
+#' @rdname dbMatrix-methods
 setMethod("writeMM", signature(obj = "dbMatrix"), function(obj, file, ...) {
   # 1. Get dimensions and nnz
   dims <- dim(obj)

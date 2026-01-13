@@ -80,7 +80,9 @@ sim_denseMat <- function(num_rows = 50, num_cols = 50) {
 #' @return A dgCMatrix object
 #'
 #' @examples
+#' \dontrun{
 #' sim_ijx_matrix()
+#' }
 #'
 #' @keywords internal
 sim_ijx_matrix <- function(

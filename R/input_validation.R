@@ -1,6 +1,6 @@
 
 #' Input validation for data arg
-#' @param value A \link{Matrix}, \link{matrix}, or \link{tbl_duckdb_connection} object
+#' @param value A `Matrix`, `matrix`, or `tbl_duckdb_connection` object
 #' @keywords internal
 .check_value <- function(value) {
   if (is.character(value)) {

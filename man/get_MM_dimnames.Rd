@@ -26,7 +26,7 @@ database. by default, no header is assumed.}
 
 \item{mtx_colname_col_idx}{column index of column name file}
 
-\item{...}{additional params to pass to \link{data.table::fread}}
+\item{...}{additional params to pass to \code{\link[data.table:fread]{data.table::fread()}}}
 }
 \value{
 list of row and column name character vectors

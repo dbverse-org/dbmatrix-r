@@ -11,11 +11,11 @@
 \usage{
 rownames.dbMatrix(x, do.NULL = TRUE, prefix = "row")
 
-rownames.dbMatrix(x) <- value
+\method{rownames}{dbMatrix}(x) <- value
 
 colnames.dbMatrix(x, do.NULL = TRUE, prefix = "col")
 
-colnames.dbMatrix(x) <- value
+\method{colnames}{dbMatrix}(x) <- value
 
 \S4method{dimnames}{dbMatrix}(x)
 
