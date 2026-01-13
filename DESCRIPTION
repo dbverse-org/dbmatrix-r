@@ -7,7 +7,7 @@ Authors@R:
     person("Jiaji", "George Chen", email = "jiajic@bu.edu", role = c("aut")),
     person("Ruben", "Dries", email = "rubendries@gmail.com",role = c("aut")))
 Description: dbMatrix is a package in the dbverse for working with matrices in databases.
-License: GPL-3 | MIT + file LICENSE
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/dbverse-org/dbmatrix-r, https://dbverse-org.github.io/dbmatrix-r/
@@ -26,19 +26,28 @@ Imports:
     data.table (>= 1.12.2),
     glue,
     bit64,
-    crayon,
     cli,
-    R.utils,
-    checkmate,
-    reticulate,
-    RSpectra,
+    Rcpp,
     arrow,
-    dbProject
+    nanoarrow,
+    dbProject,
+    rlang
+LinkingTo: 
+    Rcpp,
+    RcppEigen,
+    RSpectra,
+    nanoarrow
 Suggests: 
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    irlba
+    irlba,
+    BPCells,
+    crayon,
+    R.utils,
+    checkmate,
+    reticulate,
+    RSpectra
 Remotes:
     dbProject=dbverse-org/dbproject-r
 VignetteBuilder: knitr
