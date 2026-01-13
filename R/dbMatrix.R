@@ -569,8 +569,7 @@ dbMatrix <- function(
 
     if (verbose) {
       msg <- if (use_transposed) {
-        "Using precomputed table '{precomp_name}' for densification (transposed)."
-      } else {
+        "Using precomputed table '{precomp_name}' for densification (transposed)." } else {
         "Using precomputed table '{precomp_name}' for densification."
       }
       cli::cli_alert_info(msg)
