@@ -1283,7 +1283,19 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #'
 #' *Logarithmic*:
 #' * `log()`, `log10()`, `log2()`, `log1p()`
-#' * **Note: `log1p()` is not supported**
+#'
+#' **DuckDB Log Function Mappings**:
+#' | R Function | DuckDB Function | Notes |
+#' |------------|-----------------|-------|
+#' | `log(x)` | `LN(x)` | Natural logarithm |
+#' | `log10(x)` | `LOG10(x)` | Base-10 logarithm |
+#' | `log2(x)` | `LOG2(x)` | Base-2 logarithm |
+#' | `log1p(x)` | `LN(x + 1)` | log(1+x), computed as LN |
+#'
+#' **Sparsity-Preserving Log**:
+#' For `dbSparseMatrix` with pending operations, `log(x + 1)` operations preserve sparsity
+#' since `log(0 + 1) = 0`. The multiplicative component is applied first,
+#' then the log transformation is applied to sparse values only.
 #'
 #' *Trigonometric*:
 #' * `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`
@@ -1315,14 +1327,57 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @concept transform
 #' @export
 setMethod('Math', signature(x = 'dbMatrix'), function(x) {
-  build_call <- glue::glue(
-    "x[] |>
-     dplyr::mutate(x = `",
-    as.character(.Generic),
-    "`(x))"
+  op_name <- as.character(.Generic)
+
+  # SQL translations for R functions that DuckDB doesn't have natively
+  # These functions need to be translated to equivalent SQL expressions
+  sql_translations <- list(
+    log1p = "LN(x + 1)",      # log(1+x)
+    expm1 = "EXP(x) - 1",     # exp(x) - 1
+    log = "LN(x)",            # R's log() is natural log
+    log10 = "LOG10(x)",
+    log2 = "LOG2(x)"
   )
 
-  x[] <- eval(str2lang(build_call))
+  if (op_name %in% names(sql_translations)) {
+    # Use the SQL translation
+    sql_expr <- sql_translations[[op_name]]
+    x[] <- x[] |> dplyr::mutate(x = dplyr::sql(!!sql_expr))
+  } else {
+    # Standard path: apply function directly
+    build_call <- glue::glue(
+      "x[] |>
+       dplyr::mutate(x = `",
+      op_name,
+      "`(x))"
+    )
+    x[] <- eval(str2lang(build_call))
+  }
+
+  x@name <- NA_character_
+  return(x)
+})
+
+# is.na ####
+#' Element-wise is.na for dbMatrix
+#'
+#' @description
+#' Returns a dbMatrix with numeric values indicating NA positions (1 = NA, 0 = not NA).
+#'
+#' @param x A dbMatrix object.
+#' @return A dbMatrix with same dimensions, containing 1 where the original
+#'   value was NA and 0 otherwise.
+#'
+#' @examples
+#' mat <- matrix(c(1, NA, 3, NA), nrow = 2)
+#' dbmat <- as.dbMatrix(mat)
+#' is.na(dbmat)
+#'
+#' @concept transform
+#' @export
+setMethod('is.na', signature(x = 'dbMatrix'), function(x) {
+  x[] <- x[] |>
+    dplyr::mutate(x = as.numeric(is.na(x)))
   x@name <- NA_character_
   return(x)
 })
