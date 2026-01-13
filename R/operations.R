@@ -543,15 +543,20 @@ setMethod(
 #' @description
 #' See ?\link{\code{methods::Ops}} for more details.
 #' @noRd
-#' @rdname summary
+#' @rdname dbMatrix-methods
 #' @export
+#' @usage \S4method{Ops}{dbMatrix,ANY}(e1, e2)
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   op <- as.character(.Generic)
+  compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
 
   if (is.na(e2) && op == "==") {
-    build_call <- glue::glue('e1[] |> dplyr::mutate(x = is.na(x))')
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(is.na(x)))')
   } else if (is.na(e2) && op == "!=") {
-    build_call <- glue::glue('e1[] |> dplyr::mutate(x = !is.na(x))')
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(!is.na(x)))')
+  } else if (op %in% compare_ops) {
+    # Comparison operators return BOOLEAN - cast to numeric for type safety
+    build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(`', op, '`(x, e2)))')
   } else {
     build_call <- glue::glue('e1[] |> dplyr::mutate(x = `', op, '`(x, e2))')
   }
@@ -566,14 +571,19 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @description
 #' See ?\link{\code{methods::Ops}} for more details.
 #' @noRd
-#' @rdname summary
+#' @rdname dbMatrix-methods
 #' @export
+#' @usage \S4method{Ops}{ANY,dbMatrix}(e1, e2)
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
-  build_call <- glue::glue(
-    'e2[] |> dplyr::mutate(x = `',
-    as.character(.Generic),
-    '`(e1, x))'
-  )
+  op <- as.character(.Generic)
+  compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
+  
+  if (op %in% compare_ops) {
+    # Comparison operators return BOOLEAN - cast to numeric for type safety
+    build_call <- glue::glue('e2[] |> dplyr::mutate(x = as.numeric(`', op, '`(e1, x)))')
+  } else {
+    build_call <- glue::glue('e2[] |> dplyr::mutate(x = `', op, '`(e1, x))')
+  }
 
   e2[] <- eval(str2lang(build_call))
   e2@name <- NA_character_
@@ -585,23 +595,33 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
 #' @description
 #' See ?\link{\code{methods::Ops}} for more details.
 #' @noRd
-#' @rdname summary
+#' @rdname dbMatrix-methods
 #' @export
+#' @usage \S4method{Ops}{dbMatrix,dbMatrix}(e1, e2)
 setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
   if (!any(e1@dims %in% e2@dims)) {
     stopf('non-conformable matrix dimensions')
   }
-
-  build_call <- glue::glue(
-    "
-    e1[] |>
-    dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
-    dplyr::mutate(x = `",
-    as.character(.Generic),
-    "`(x, x.y)) |>
-    dplyr::select(c('i', 'j', 'x'))
-    "
-  )
+  
+  op <- as.character(.Generic)
+  compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
+  
+  if (op %in% compare_ops) {
+    # Comparison operators return BOOLEAN - cast to numeric for type safety
+    build_call <- glue::glue("
+      e1[] |>
+      dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
+      dplyr::mutate(x = as.numeric(`", op, "`(x, x.y))) |>
+      dplyr::select(c('i', 'j', 'x'))
+    ")
+  } else {
+    build_call <- glue::glue("
+      e1[] |>
+      dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
+      dplyr::mutate(x = `", op, "`(x, x.y)) |>
+      dplyr::select(c('i', 'j', 'x'))
+    ")
+  }
 
   e1[] <- eval(str2lang(build_call))
   e1@name <- NA_character_
@@ -1028,24 +1048,13 @@ setMethod(
 #' @param ... Additional arguments (not used, but included for compatibility with the generic).
 #' @param useNames Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
-#' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
-#' for large computations. Set to TRUE to return the results as a vector.
 #' @concept summary
 #' @rdname row_col_vars
 #' @export
 setMethod(
   "rowVars",
   signature(x = "dbDenseMatrix"),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
     x <- .castNumeric(x)
     k <- ncol(x)
 
@@ -1060,30 +1069,13 @@ setMethod(
         var_x = (sum_x2 - (sum_x * sum_x) / !!k) / (!!k - 1)
       )
 
-    if (memory) {
-      v <- row_stats |>
-        dplyr::arrange(i) |>
-        dplyr::pull(var_x)
-      if (useNames) {
-        names(v) <- rownames(x)
-      }
-      return(v)
+    v <- row_stats |>
+      dplyr::arrange(i) |>
+      dplyr::pull(var_x)
+    if (useNames) {
+      names(v) <- rownames(x)
     }
-
-    rowVar <- row_stats |>
-      dplyr::transmute(i, j = 1L, x = var_x) |>
-      dplyr::collapse()
-
-    res <- new(
-      Class = "dbDenseMatrix",
-      value = rowVar,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(nrow(x), 1L),
-      dim_names = list(rownames(x), "col1")
-    )
-
-    return(res)
+    return(v)
   }
 )
 
@@ -1094,87 +1086,34 @@ setMethod(
 setMethod(
   'rowVars',
   signature(x = 'dbSparseMatrix'),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+
     x <- .castNumeric(x)
     k <- ncol(x)
     num_row <- nrow(x)
 
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(i) |>
-        dplyr::summarise(
-          sum_x = sum(x, na.rm = na.rm),
-          sum_x2 = sum(x * x, na.rm = na.rm),
-          .groups = "drop"
-        ) |>
-        dplyr::collect()
-
-      default_val <- if (k <= 1) NA_real_ else 0
-      res <- rep(default_val, num_row)
-
-      if (k > 1) {
-        vars <- (res_sparse$sum_x2 -
-          (res_sparse$sum_x * res_sparse$sum_x) / k) /
-          (k - 1)
-        res[res_sparse$i] <- vars
-      }
-
-      if (useNames) {
-        names(res) <- rownames(x)
-      }
-      return(res)
-    }
-
-    # Create temp table for all rows
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as i FROM generate_series(1, {num_row})"
-      ))
-    )
-
-    row_stats <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(i) |>
       dplyr::summarise(
         sum_x = sum(x, na.rm = na.rm),
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
       ) |>
-      dplyr::right_join(dim_tbl, by = c('i'), copy = TRUE) |>
-      dplyr::mutate(
-        sum_x = dplyr::coalesce(sum_x, 0),
-        sum_x2 = dplyr::coalesce(sum_x2, 0)
-      ) |>
-      dplyr::mutate(
-        var_x = dplyr::case_when(
-          k <= 1 ~ NA_real_,
-          TRUE ~ (sum_x2 - (sum_x * sum_x) / k) / (k - 1)
-        )
-      )
+      dplyr::collect()
 
-    # Return as dbDenseMatrix
-    rowVar <- row_stats |>
-      dplyr::mutate(j = 1, x = var_x) |>
-      dplyr::select(i, j, x)
+    default_val <- if (k <= 1) NA_real_ else 0
+    res <- rep(default_val, num_row)
 
-    res <- new(
-      Class = "dbDenseMatrix",
-      value = rowVar,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(nrow(x), 1L),
-      dim_names = list(rownames(x), c('col1'))
-    )
+    if (k > 1) {
+      vars <- (res_sparse$sum_x2 -
+        (res_sparse$sum_x * res_sparse$sum_x) / k) /
+        (k - 1)
+      res[res_sparse$i] <- vars
+    }
 
+    if (useNames) {
+      names(res) <- rownames(x)
+    }
     return(res)
   }
 )
@@ -1185,16 +1124,7 @@ setMethod(
 setMethod(
   "colVars",
   signature(x = "dbDenseMatrix"),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
     x <- .castNumeric(x)
     m <- nrow(x) # total rows
 
@@ -1209,30 +1139,13 @@ setMethod(
         var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
       )
 
-    if (memory) {
-      v <- col_stats |>
-        dplyr::arrange(j) |>
-        dplyr::pull(var_x)
-      if (useNames) {
-        names(v) <- colnames(x)
-      }
-      return(v)
+    v <- col_stats |>
+      dplyr::arrange(j) |>
+      dplyr::pull(var_x)
+    if (useNames) {
+      names(v) <- colnames(x)
     }
-
-    colVars <- col_stats |>
-      dplyr::transmute(i = j, j = 1L, x = var_x) |>
-      dplyr::collapse()
-
-    res <- new(
-      "dbDenseMatrix",
-      value = colVars,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(ncol(x), 1L),
-      dim_names = list(colnames(x), "col1")
-    )
-
-    return(res)
+    return(v)
   }
 )
 
@@ -1243,82 +1156,34 @@ setMethod(
 setMethod(
   "colVars",
   signature(x = "dbSparseMatrix"),
-  function(
-    x,
-    rows = NULL,
-    cols = NULL,
-    na.rm = TRUE,
-    center = NULL,
-    ...,
-    memory = FALSE,
-    useNames = TRUE
-  ) {
+  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+
     x <- .castNumeric(x)
     m <- nrow(x)
     num_col <- ncol(x)
 
-    if (memory) {
-      res_sparse <- x[] |>
-        dplyr::group_by(j) |>
-        dplyr::summarise(
-          sum_x = sum(x, na.rm = na.rm),
-          sum_x2 = sum(x * x, na.rm = na.rm),
-          .groups = "drop"
-        ) |>
-        dplyr::collect()
-
-      default_val <- if (m <= 1) NA_real_ else 0
-      res <- rep(default_val, num_col)
-
-      if (m > 1) {
-        vars <- (res_sparse$sum_x2 -
-          (res_sparse$sum_x * res_sparse$sum_x) / m) /
-          (m - 1)
-        res[res_sparse$j] <- vars
-      }
-
-      if (useNames) {
-        names(res) <- colnames(x)
-      }
-      return(res)
-    }
-
-    # Create temp table for all columns
-    dim_tbl <- dplyr::tbl(
-      dbplyr::remote_con(x[]),
-      dplyr::sql(glue::glue(
-        "SELECT generate_series as j FROM generate_series(1, {num_col})"
-      ))
-    )
-
-    col_stats <- x[] |>
+    res_sparse <- x[] |>
       dplyr::group_by(j) |>
       dplyr::summarise(
         sum_x = sum(x, na.rm = na.rm),
         sum_x2 = sum(x * x, na.rm = na.rm),
         .groups = "drop"
       ) |>
-      dplyr::right_join(dim_tbl, by = c('j'), copy = TRUE) |>
-      dplyr::mutate(
-        sum_x = dplyr::coalesce(sum_x, 0),
-        sum_x2 = dplyr::coalesce(sum_x2, 0)
-      ) |>
-      dplyr::mutate(
-        var_x = (sum_x2 - (sum_x * sum_x) / !!m) / (!!m - 1)
-      )
+      dplyr::collect()
 
-    colVars <- col_stats |>
-      dplyr::transmute(i = j, j = 1L, x = var_x)
+    default_val <- if (m <= 1) NA_real_ else 0
+    res <- rep(default_val, num_col)
 
-    res <- new(
-      "dbDenseMatrix",
-      value = colVars,
-      name = NA_character_,
-      init = TRUE,
-      dims = c(ncol(x), 1L),
-      dim_names = list(colnames(x), "col1")
-    )
+    if (m > 1) {
+      vars <- (res_sparse$sum_x2 -
+        (res_sparse$sum_x * res_sparse$sum_x) / m) /
+        (m - 1)
+      res[res_sparse$j] <- vars
+    }
 
+    if (useNames) {
+      names(res) <- colnames(x)
+    }
     return(res)
   }
 )
