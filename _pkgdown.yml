@@ -44,6 +44,7 @@ reference:
     contents:
       - has_concept("transform")
       - compute.dbMatrix
+      - db_svd
 
   - title: "Matrix Properties"
     desc: "Methods to retrieve basic properties of `dbMatrix` objects"
@@ -54,6 +55,7 @@ reference:
     desc: "Convenience methods for `dbData` objects"
     contents:
       - has_concept("dbData")
+      - 'dbLoad,DBIConnection-method'
 
   - title: "Package Options"
     desc: "Global options for the dbMatrix package"
