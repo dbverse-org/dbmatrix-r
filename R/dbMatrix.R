@@ -400,12 +400,15 @@ dbMatrix <- function(
   .check_value(value)
   .check_con(con)
   .check_name(name)
-  .check_overwrite(
-    conn = con,
-    overwrite = overwrite,
-    name = name,
-    skip_value_check = TRUE
-  )
+
+  if (!inherits(value, "tbl_duckdb_connection")) {
+    .check_overwrite(
+      conn = con,
+      overwrite = overwrite,
+      name = name,
+      skip_value_check = TRUE
+    )
+  }
 
   # check class
   if (is.null(class)) {
