@@ -18,6 +18,11 @@
 #' * `dbMatrix.precomp_db`: character. Path to an external DuckDB file containing
 #' precomputed table(s). If set, `dbMatrix` will automatically attach this
 #' database (read-only) and look for a suitable precomputed table to speed up densification.
+#' * `dbMatrix.allow_densify`: logical. If `FALSE` (default), automatic sparse-to-dense
+#' conversion is disabled. This prevents unexpected disk spilling and memory issues
+#' when operations would require densification (e.g., division by zero, scalar addition
+#' to sparse matrix). Set to `TRUE` to enable on-disk dense conversion. **Warning**:
+#' Dense conversion can cause massive disk usage for large matrices.
 #'
 #' @name dbMatrix_options
 #' @aliases dbMatrix-options

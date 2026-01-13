@@ -533,11 +533,23 @@ dbMatrix <- function(
 #' @return A [`dbDenseMatrix`] object
 #' @keywords internal
 #' @examples
+#' \dontrun{
 #' dbsm <- sim_dbSparseMatrix(10, 10)
-#' dbdm <- toDbDense(dbsm)
+#' dbdm <- .to_db_dense(dbsm)
+#' }
 .to_db_dense <- function(x, chunk_size = NULL) {
   if (!inherits(x, "dbSparseMatrix")) {
     stopf("Input must be a dbSparseMatrix object")
+  }
+
+  # Guard: Check if densification is allowed
+  if (!getOption("dbMatrix.allow_densify", default = FALSE)) {
+    stop(
+      "Automatic sparse-to-dense conversion is disabled.\n",
+      "To enable, review the documentation: ?dbMatrix_options\n",
+      "Then set: options(dbMatrix.allow_densify = TRUE)",
+      call. = FALSE
+    )
   }
 
   info <- .get_dbMatrix_info(x)
