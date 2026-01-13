@@ -569,7 +569,8 @@ dbMatrix <- function(
 
     if (verbose) {
       msg <- if (use_transposed) {
-        "Using precomputed table '{precomp_name}' for densification (transposed)." } else {
+        "Using precomputed table '{precomp_name}' for densification (transposed)."
+        } else {
         "Using precomputed table '{precomp_name}' for densification."
       }
       cli::cli_alert_info(msg)
@@ -796,12 +797,6 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = TRUE) {
         mat[idx] <- dat$x
       }
     } else {
-      if (getOption("dbMatrix.verbose", default = TRUE)) {
-        cli::cli_alert_info(
-          "Using chunked streaming conversion to save memory."
-        )
-      }
-
       # Single-fetch using collect() is faster than LIMIT/OFFSET chunking
       dat <- dplyr::collect(x[])
 
@@ -1098,10 +1093,6 @@ dbMatrix_from_tbl <- function(
     count_table <- tbl |>
       dplyr::group_by(rownames_colName, colnames_colName) |>
       dplyr::summarise(x = dplyr::n(), .groups = "drop")
-
-    cli::cli_alert_info(
-      "Counting occurrences of each row-column pair"
-    )
   }
 
   # add label encodings and get dimensions, dim names
