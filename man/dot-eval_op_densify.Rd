@@ -4,12 +4,12 @@
 \alias{.eval_op_densify}
 \title{Evaluate if a dbSparseMatrix should be densified}
 \usage{
-.eval_op_densify(generic_char, dbVector)
+.eval_op_densify(generic_char, vec_matrix)
 }
 \arguments{
 \item{generic_char}{A character string representing the operation to be performed.}
 
-\item{dbVector}{A \code{dbMatrix} object with 1D row or col.}
+\item{vec_matrix}{A \code{dbMatrix} object with 1D row or col.}
 }
 \description{
 Evaluate if a dbSparseMatrix should be densified

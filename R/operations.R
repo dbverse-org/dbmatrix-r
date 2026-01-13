@@ -103,8 +103,13 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     return(dbm)
   }
 
+
+
   if (.do_densification(num_vect, generic_char, dbm)) {
-    dbm <- .to_db_dense(x = dbm)
+    # Densify sparse matrix for operations that require it
+    if (is(dbm, "dbSparseMatrix")) {
+      dbm <- .to_db_dense(x = dbm)
+    }
   }
 
   if (.do_vect_multi(num_vect, generic_char, dbm)) {
@@ -183,11 +188,11 @@ arith_call_dbm_vect_multi <- function(
     swap_arith_order <- TRUE
   }
 
-  # Create dbDenseMatrix with dbVector
-  dbv <- .as_dbVector(vector = num_vect, con = con)
-  dbm <- .join_dbm_vector(
+  # Create dbDenseMatrix with vec_matrix
+  dbv <- .as_vector_matrix(vector = num_vect, con = con)
+  dbm <- .join_dbm_vect(
     dbm = dbm,
-    dbVector = dbv,
+    vec_matrix = dbv,
     op = generic_char,
     swap_arith_order = swap_arith_order
   )
@@ -196,11 +201,11 @@ arith_call_dbm_vect_multi <- function(
 
 #' @keywords internal
 #' @noRd
-.as_dbVector <- function(vector, con) {
+.as_vector_matrix <- function(vector, con) {
   ijx <- dplyr::tibble(i = seq_along(vector), j = 1, x = vector) |>
     dplyr::copy_to(
       dest = con,
-      name = unique_table_name('dbVector'),
+      name = unique_table_name('vec_matrix'),
       temporary = TRUE,
       overwrite = TRUE
     )
@@ -219,7 +224,7 @@ arith_call_dbm_vect_multi <- function(
 
 #' @title Evaluate if a dbSparseMatrix should be densified
 #' @param generic_char A character string representing the operation to be performed.
-#' @param dbVector A \code{dbMatrix} object with 1D row or col.
+#' @param vec_matrix A \code{dbMatrix} object with 1D row or col.
 #' @details
 #' Evaluates if a \code{dbSparseMatrix} should be
 #' densified for `[Arith]` operations and specific scalar values for
@@ -227,17 +232,17 @@ arith_call_dbm_vect_multi <- function(
 #'
 #'
 #' @keywords internal
-.eval_op_densify <- function(generic_char, dbVector) {
+.eval_op_densify <- function(generic_char, vec_matrix) {
   if (generic_char == "+" || generic_char == "-") {
-    if (suppressWarnings(all(dbVector == 0))) {
+    if (suppressWarnings(all(vec_matrix == 0))) {
       return(FALSE)
     } else {
       return(TRUE)
     }
   } else if (generic_char == "*") {
     if (
-      suppressWarnings(any(dbVector == Inf)) ||
-        suppressWarnings(any(dbVector == NaN))
+      suppressWarnings(any(vec_matrix == Inf)) ||
+        suppressWarnings(any(vec_matrix == NaN))
     ) {
       return(TRUE)
     } else {
@@ -250,8 +255,8 @@ arith_call_dbm_vect_multi <- function(
       generic_char == "^"
   ) {
     if (
-      suppressWarnings(any(dbVector == 0)) ||
-        suppressWarnings(any(dbVector == NaN))
+      suppressWarnings(any(vec_matrix == 0)) ||
+        suppressWarnings(any(vec_matrix == NaN))
     ) {
       return(TRUE)
     } else {
@@ -264,16 +269,16 @@ arith_call_dbm_vect_multi <- function(
 
 #' @title Join a \code{dbSparseMatrix} with a \code{dbMatrix} object
 #' @param dbm A \code{dbSparseMatrix} object.
-#' @param dbVector A \code{dbMatrix} object with 1D row or col.
-#' @param generic_char A character string representing the operation to be performed.
+#' @param vec_matrix A \code{dbMatrix} object with 1D row or col.
+#' @param op A character string representing the operation to be performed.
 #' @param swap_arith_order order of the arguments for the operation. default: NULL
 #' @keywords internal
-.join_dbm_vector <- function(dbm, dbVector, op, swap_arith_order = FALSE) {
+.join_dbm_vect <- function(dbm, vec_matrix, op, swap_arith_order = FALSE) {
   # check inputs
-  con <- dbplyr::remote_con(dbVector[])
+  con <- dbplyr::remote_con(vec_matrix[])
   n_rows <- bit64::as.integer64.integer(dim(dbm)[1])
   n_cols <- bit64::as.integer64.integer(dim(dbm)[2])
-  length <- bit64::as.integer64.integer(length(dbVector))
+  length <- bit64::as.integer64.integer(length(vec_matrix))
   total_dims <- n_rows * n_cols
 
   # validate dimensions
@@ -293,17 +298,21 @@ arith_call_dbm_vect_multi <- function(
   }
 
   # helper functions
-  .perform_dense_join <- function(dbm, dbVector, op) {
+  .perform_dense_join <- function(dbm, vec_matrix, op) {
     # get precomputed matrix
     precomp <- .initialize_precompute_matrix(con, n_rows, n_cols)
 
     # Prepare precomp with v_idx
     # We use idx (0-based) which is explicitly present in precomp table
     precomp_aug <- precomp |>
-      dplyr::mutate(v_idx = dplyr::sql(glue::glue("(idx % {length}) + 1")))
+      dplyr::mutate(
+        v_idx = dplyr::sql(glue::glue(
+          "(((j - 1) * {n_rows} + (i - 1)) % {length}) + 1"
+        ))
+      )
 
-    # Prepare dbVector (v)
-    v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
+    # Prepare vec_matrix (v)
+    v_tbl <- vec_matrix[] |> dplyr::select(v_i = i, v_x = x)
 
     # Prepare dbm (m)
     # Join on i, j directly to avoid calculating idx
@@ -325,10 +334,10 @@ arith_call_dbm_vect_multi <- function(
     return(res |> dplyr::select(i, j, x))
   }
 
-  .perform_sparse_join <- function(dbm, dbVector, op) {
+  .perform_sparse_join <- function(dbm, vec_matrix, op) {
     # Prepare tables
     m_tbl <- dbm[] |> dplyr::select(i, j, m_x = x)
-    v_tbl <- dbVector[] |> dplyr::select(v_i = i, v_x = x)
+    v_tbl <- vec_matrix[] |> dplyr::select(v_i = i, v_x = x)
 
     # Join
     res <- m_tbl |>
@@ -344,28 +353,60 @@ arith_call_dbm_vect_multi <- function(
     return(res |> dplyr::select(i, j, x))
   }
 
+  # Column-wise join (for vector length = ncol)
+  .perform_col_join <- function(dbm, vec_matrix, op) {
+    # Prepare tables
+    m_tbl <- dbm[] |> dplyr::select(i, j, m_x = x)
+    v_tbl <- vec_matrix[] |> dplyr::select(v_j = i, v_x = x) # Note: vec_matrix uses 'i' as index
+
+    # Join on column index
+    res <- m_tbl |>
+      dplyr::left_join(v_tbl, by = c("j" = "v_j"))
+
+    # Calculate x
+    if (swap_arith_order) {
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("v_x {op} m_x")))
+    } else {
+      res <- res |> dplyr::mutate(x = dplyr::sql(glue::glue("m_x {op} v_x")))
+    }
+
+    return(res |> dplyr::select(i, j, x))
+  }
+
   # main function
   if (is(dbm, "dbSparseMatrix")) {
-    if (.eval_op_densify(generic_char = op, dbVector = dbVector)) {
+    if (.eval_op_densify(generic_char = op, vec_matrix = vec_matrix)) {
       dense_dbm <- .to_db_dense(dbm)
-      dense_dbm[] <- .perform_dense_join(dense_dbm, dbVector, op)
+      dense_dbm[] <- .perform_dense_join(dense_dbm, vec_matrix, op)
       return(dense_dbm)
     } else {
-      if (nrow(dbm) == length(dbVector)) {
-        dbm[] <- .perform_sparse_join(dbm, dbVector, op)
+      if (nrow(dbm) == length(vec_matrix)) {
+        # Row-wise operation (vector length = nrow)
+        dbm[] <- .perform_sparse_join(dbm, vec_matrix, op)
+        return(dbm)
+      } else if (ncol(dbm) == length(vec_matrix)) {
+        # Column-wise operation (vector length = ncol)
+        dbm[] <- .perform_col_join(dbm, vec_matrix, op)
         return(dbm)
       } else {
-        dbm[] <- .perform_dense_join(dbm, dbVector, op)
+        # General recycling case
+        dbm[] <- .perform_dense_join(dbm, vec_matrix, op)
         return(dbm)
       }
     }
   } else {
     # dbDenseMatrix
-    if (nrow(dbm) == length(dbVector)) {
-      dbm[] <- .perform_sparse_join(dbm, dbVector, op)
+    if (nrow(dbm) == length(vec_matrix)) {
+      # Row-wise operation (vector length = nrow)
+      dbm[] <- .perform_sparse_join(dbm, vec_matrix, op)
+      return(dbm)
+    } else if (ncol(dbm) == length(vec_matrix)) {
+      # Column-wise operation (vector length = ncol)
+      dbm[] <- .perform_col_join(dbm, vec_matrix, op)
       return(dbm)
     } else {
-      dbm[] <- .perform_dense_join(dbm, dbVector, op)
+      # General recycling case
+      dbm[] <- .perform_dense_join(dbm, vec_matrix, op)
       return(dbm)
     }
   }
@@ -378,8 +419,9 @@ arith_call_dbm_vect_multi <- function(
 #' @description
 #' See ?\link{\code{methods::Arith}} for more details.
 #' @noRd
-#' @rdname summary
+#' @rdname dbMatrix-methods
 #' @export
+#' @usage \S4method{Arith}{dbMatrix,ANY}(e1, e2)
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   dbm <- .castNumeric(e1)
 
@@ -402,8 +444,9 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 #' @description
 #' See ?\link{\code{methods::Arith}} for more details.
 #' @noRd
-#' @rdname summary
+#' @rdname dbMatrix-methods
 #' @export
+#' @usage \S4method{Arith}{ANY,dbMatrix}(e1, e2)
 setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
   dbm <- .castNumeric(e2)
 
@@ -436,30 +479,38 @@ setMethod(
     dim1 <- dim(e1)
     dim2 <- dim(e2)
 
-    # Check for arith operations if neither is a dbVector
+    # Check for arith operations if neither is a vec_matrix
     if (!1 %in% c(dim1, dim2)) {
       if (generic_char %in% c('/', '^', '%%', '%/%')) {
-        stopf(
-          "Arith operations with '/', '^', '%%', '%/%' are not yet supported
-            between dbMatrix objects."
-        )
+        # Allow division for dbDenseMatrix only (no implicit zeros)
+        if (generic_char == '/' &&
+            is(e1, "dbDenseMatrix") &&
+            is(e2, "dbDenseMatrix")) {
+          # Continue to full_join logic below
+        } else {
+          stopf(
+            "Arith operations with '/', '^', '%%', '%/%' are not yet supported
+              between dbMatrix objects. Division is only supported for
+              dbDenseMatrix objects."
+          )
+        }
       }
     }
 
-    # Case 1: dbVector, dbVector
+    # Case 1: vec_matrix, vec_matrix
     if (1 %in% dim2 & 1 %in% dim1) {
       if (!all(dim1 == dim2)) {
-        stopf("dbVector-dbVector recycling not yet supported.")
+        stopf("vec_matrix-vec_matrix recycling not yet supported.")
       }
     } else if (1 %in% dim2) {
-      # Case 2: dbMatrix, dbVector
-      res <- .join_dbm_vector(dbm = e1, dbVector = e2, op = generic_char)
+      # Case 2: dbMatrix, vec_matrix
+      res <- .join_dbm_vect(dbm = e1, vec_matrix = e2, op = generic_char)
       return(res)
     } else if (1 %in% dim1) {
-      # Case 3: dbVector, dbMatrix
-      res <- .join_dbm_vector(
+      # Case 3: vec_matrix, dbMatrix
+      res <- .join_dbm_vect(
         dbm = e2,
-        dbVector = e1,
+        vec_matrix = e1,
         op = generic_char,
         swap_arith_order = TRUE
       )
