@@ -1476,9 +1476,10 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
 #' @export
 #' @rdname t-dbMatrix
 setMethod('t', signature(x = 'dbMatrix'), function(x) {
-  x[] <- x[] |> dplyr::select(i = j, j = i, x)
+  x@value <- x@value |> dplyr::select(i = j, j = i, x)
   x@dims <- c(x@dims[[2L]], x@dims[[1L]])
   x@dim_names <- list(x@dim_names[[2L]], x@dim_names[[1L]])
+
   return(x)
 })
 
@@ -1579,7 +1580,7 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 #' @rdname length
 #' @export
 setMethod('length', signature(x = 'dbMatrix'), function(x) {
-  #FIXME modify for dbVector class
+  #FIXME modify for vec_matrix class
   if (!1 %in% dim(x)) {
     # dbMatrix
     res <- prod(dim(x))
