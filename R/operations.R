@@ -103,8 +103,6 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     return(dbm)
   }
 
-
-
   if (.do_densification(num_vect, generic_char, dbm)) {
     # Densify sparse matrix for operations that require it
     if (is(dbm, "dbSparseMatrix")) {
@@ -536,7 +534,7 @@ setMethod(
     }
 
     # Case 1: vec_matrix, vec_matrix
-    if (1 %in% dim2 & 1 %in% dim1) {
+    if (1 %in% dim2 && 1 %in% dim1) {
       if (!all(dim1 == dim2)) {
         stopf("vec_matrix-vec_matrix recycling not yet supported.")
       }
@@ -594,7 +592,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
     build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(!is.na(x)))')
   } else if (op %in% compare_ops) {
     # Comparison operators return BOOLEAN - cast to numeric for type safety
-    build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(`', op, '`(x, e2)))')
+    build_call <- glue::glue(
+      'e1[] |> dplyr::mutate(x = as.numeric(`',
+      op,
+      '`(x, e2)))'
+    )
   } else {
     build_call <- glue::glue('e1[] |> dplyr::mutate(x = `', op, '`(x, e2))')
   }
@@ -615,10 +617,14 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
-  
+
   if (op %in% compare_ops) {
     # Comparison operators return BOOLEAN - cast to numeric for type safety
-    build_call <- glue::glue('e2[] |> dplyr::mutate(x = as.numeric(`', op, '`(e1, x)))')
+    build_call <- glue::glue(
+      'e2[] |> dplyr::mutate(x = as.numeric(`',
+      op,
+      '`(e1, x)))'
+    )
   } else {
     build_call <- glue::glue('e2[] |> dplyr::mutate(x = `', op, '`(e1, x))')
   }
@@ -640,25 +646,33 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
   if (!any(e1@dims %in% e2@dims)) {
     stopf('non-conformable matrix dimensions')
   }
-  
+
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
-  
+
   if (op %in% compare_ops) {
     # Comparison operators return BOOLEAN - cast to numeric for type safety
-    build_call <- glue::glue("
+    build_call <- glue::glue(
+      "
       e1[] |>
       dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
-      dplyr::mutate(x = as.numeric(`", op, "`(x, x.y))) |>
+      dplyr::mutate(x = as.numeric(`",
+      op,
+      "`(x, x.y))) |>
       dplyr::select(c('i', 'j', 'x'))
-    ")
+    "
+    )
   } else {
-    build_call <- glue::glue("
+    build_call <- glue::glue(
+      "
       e1[] |>
       dplyr::left_join(e2[], by = c('i', 'j'), suffix = c('', '.y')) |>
-      dplyr::mutate(x = `", op, "`(x, x.y)) |>
+      dplyr::mutate(x = `",
+      op,
+      "`(x, x.y)) |>
       dplyr::select(c('i', 'j', 'x'))
-    ")
+    "
+    )
   }
 
   e1[] <- eval(str2lang(build_call))
@@ -781,7 +795,7 @@ setMethod(
       dplyr::group_by(i) |>
       dplyr::summarise(sum_x = sum(x, na.rm = TRUE)) |>
       dplyr::collect()
-    
+
     # Build result vector with correct ordering using i indices
     res <- numeric(n_rows)
     res[res_df$i] <- res_df$sum_x
@@ -798,7 +812,6 @@ setMethod(
   'rowSums',
   signature(x = 'dbSparseMatrix'),
   function(x, ...) {
-
     x <- .castNumeric(x)
     num_row <- nrow(x)
 
@@ -844,7 +857,6 @@ setMethod(
   'colSums',
   signature(x = 'dbSparseMatrix'),
   function(x, ...) {
-
     x <- .castNumeric(x)
     num_col <- ncol(x)
 
@@ -875,7 +887,6 @@ setMethod(
   'rowMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-
     x <- .castNumeric(x)
     n_cols <- ncol(x)
 
@@ -893,7 +904,6 @@ setMethod(
   'colMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-
     x <- .castNumeric(x)
     n_rows <- nrow(x)
 
@@ -960,7 +970,6 @@ setMethod(
   "colSds",
   signature(x = "dbSparseMatrix"),
   function(x, ..., useNames = TRUE) {
-
     x <- .castNumeric(x)
     m <- nrow(x)
     num_col <- ncol(x)
@@ -1001,7 +1010,15 @@ setMethod(
 setMethod(
   "rowSds",
   signature(x = "dbDenseMatrix"),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     k <- ncol(x)
 
@@ -1037,8 +1054,15 @@ setMethod(
 setMethod(
   "rowSds",
   signature(x = "dbSparseMatrix"),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
-
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     k <- ncol(x)
     num_row <- nrow(x)
@@ -1092,7 +1116,15 @@ setMethod(
 setMethod(
   "rowVars",
   signature(x = "dbDenseMatrix"),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     k <- ncol(x)
 
@@ -1124,8 +1156,15 @@ setMethod(
 setMethod(
   'rowVars',
   signature(x = 'dbSparseMatrix'),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
-
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     k <- ncol(x)
     num_row <- nrow(x)
@@ -1162,7 +1201,15 @@ setMethod(
 setMethod(
   "colVars",
   signature(x = "dbDenseMatrix"),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     m <- nrow(x) # total rows
 
@@ -1194,8 +1241,15 @@ setMethod(
 setMethod(
   "colVars",
   signature(x = "dbSparseMatrix"),
-  function(x, rows = NULL, cols = NULL, na.rm = TRUE, center = NULL, ..., useNames = TRUE) {
-
+  function(
+    x,
+    rows = NULL,
+    cols = NULL,
+    na.rm = TRUE,
+    center = NULL,
+    ...,
+    useNames = TRUE
+  ) {
     x <- .castNumeric(x)
     m <- nrow(x)
     num_col <- ncol(x)
@@ -1370,9 +1424,9 @@ setMethod('Math', signature(x = 'dbMatrix'), function(x) {
   # SQL translations for R functions that DuckDB doesn't have natively
   # These functions need to be translated to equivalent SQL expressions
   sql_translations <- list(
-    log1p = "LN(x + 1)",      # log(1+x)
-    expm1 = "EXP(x) - 1",     # exp(x) - 1
-    log = "LN(x)",            # R's log() is natural log
+    log1p = "LN(x + 1)", # log(1+x)
+    expm1 = "EXP(x) - 1", # exp(x) - 1
+    log = "LN(x)", # R's log() is natural log
     log10 = "LOG10(x)",
     log2 = "LOG2(x)"
   )
@@ -1469,7 +1523,7 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
     stopf(paste0("range() is not yet supported for dbMatrix objects."))
   }
 
-  if (as.character(.Generic) == 'any' | as.character(.Generic) == 'all') {
+  if (as.character(.Generic) == 'any' || as.character(.Generic) == 'all') {
     # Always cast to logical for any/all to be safe and avoid eager evaluation
     x[] <- x[] |> dplyr::mutate(x = as.logical(x))
     # warning("coercing argument of type 'double' to logical")

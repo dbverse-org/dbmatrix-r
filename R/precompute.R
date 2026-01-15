@@ -75,7 +75,7 @@
     sep = "."
   )
 
-  dims_str <- gsub("precomp_", "", tables$table_name)
+  dims_str <- gsub("precomp_", "", tables$table_name, fixed = TRUE)
   dims_list <- strsplit(dims_str, "x")
 
   valid_fmt <- lengths(dims_list) == 2

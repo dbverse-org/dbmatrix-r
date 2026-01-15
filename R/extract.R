@@ -81,7 +81,7 @@ setMethod(
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_i) < 2000) {
-        safe_names <- gsub("'", "''", filter_i)
+        safe_names <- gsub("'", "''", filter_i, fixed = TRUE)
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
           sep = ", "
@@ -203,7 +203,7 @@ setMethod(
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_j) < 2000) {
-        safe_names <- gsub("'", "''", filter_j)
+        safe_names <- gsub("'", "''", filter_j, fixed = TRUE)
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
           sep = ", "
@@ -337,7 +337,7 @@ setMethod(
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_i) < 2000) {
-        safe_names <- gsub("'", "''", filter_i)
+        safe_names <- gsub("'", "''", filter_i, fixed = TRUE)
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
           sep = ", "
@@ -422,7 +422,7 @@ setMethod(
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_j) < 2000) {
-        safe_names <- gsub("'", "''", filter_j)
+        safe_names <- gsub("'", "''", filter_j, fixed = TRUE)
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
           sep = ", "
@@ -676,7 +676,7 @@ setMethod(
 store_mapping <- function(con, items, prefix, col_name_in_db) {
   # Inline SQL
   if (length(items) < 2000) {
-    safe_items <- gsub("'", "''", items)
+    safe_items <- gsub("'", "''", items, fixed = TRUE)
     items_sql <- glue::glue_collapse(glue::glue("'{safe_items}'"), sep = ", ")
     
     mapping_sql <- glue::glue(
