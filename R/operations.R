@@ -482,16 +482,54 @@ setMethod(
     # Check for arith operations if neither is a vec_matrix
     if (!1 %in% c(dim1, dim2)) {
       if (generic_char %in% c('/', '^', '%%', '%/%')) {
-        # Allow division for dbDenseMatrix only (no implicit zeros)
-        if (generic_char == '/' &&
+        # Division for dbSparseMatrix: only safe if all numerator positions
+        # are covered by denominator positions (support-preserving)
+        if (
+          generic_char == '/' &&
+            is(e1, "dbSparseMatrix") &&
+            is(e2, "dbSparseMatrix")
+        ) {
+          # Check for uncovered positions (would produce Inf from 0 denominator)
+          uncovered <- e1[] |>
+            dplyr::select(i, j) |>
+            dplyr::anti_join(e2[] |> dplyr::select(i, j), by = c('i', 'j')) |>
+            dplyr::collect()
+
+          if (nrow(uncovered) > 0) {
+            stopf(
+              "dbSparseMatrix division: %d numerator positions have implicit
+              zeros in denominator (would produce Inf). Ensure denominator
+              covers all numerator positions, or convert to dbDenseMatrix.",
+              nrow(uncovered)
+            )
+          }
+
+          # Safe to proceed with sparse-preserving inner_join division
+          e1[] <- e1[] |>
+            dplyr::inner_join(e2[], by = c('i', 'j')) |>
+            dplyr::mutate(x = x.x / x.y) |>
+            dplyr::select(i, j, x)
+          e1@name <- NA_character_
+          return(e1)
+        }
+        # Allow division for dbDenseMatrix (no implicit zeros issue)
+        if (
+          generic_char == '/' &&
             is(e1, "dbDenseMatrix") &&
-            is(e2, "dbDenseMatrix")) {
+            is(e2, "dbDenseMatrix")
+        ) {
           # Continue to full_join logic below
-        } else {
+        } else if (generic_char != '/') {
+          # Other ops (^, %%, %/%) still blocked for now
           stopf(
-            "Arith operations with '/', '^', '%%', '%/%' are not yet supported
-              between dbMatrix objects. Division is only supported for
-              dbDenseMatrix objects."
+            "Arith operations with '^', '%%', '%/%' are not yet supported
+              between dbMatrix objects."
+          )
+        } else {
+          # Mixed sparse/dense division - block for now
+          stopf(
+            "Division between mixed dbSparseMatrix/dbDenseMatrix not supported.
+              Convert both to same type first."
           )
         }
       }

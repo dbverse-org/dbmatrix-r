@@ -88,3 +88,43 @@ test_that("- different matrix equal", {
 # test_that("%/% matrix equal", {
 #   expect_equal(res_dgc, res_dbsm)
 # })
+
+# ---------------------------------------------------------------------------- #
+# Test support-preserving sparse division (numerator positions must be in denominator)
+
+test_that("/ sparse division works when denominator covers numerator", {
+  # D / (P + D) pattern: denominator always covers numerator
+  d <- dbsm
+  p_plus_d <- dbsm + dbsm2 # covers all positions from both
+
+  res_dbsm <- d / p_plus_d
+  expect_s4_class(res_dbsm, "dbSparseMatrix")
+
+  # Compare stored values (sparse doesn't store implicit 0/0 positions)
+  # D / (D + 2D) = D / 3D = 1/3 for all non-zero positions
+  res_data <- res_dbsm[] |> dplyr::collect()
+  expect_true(all(abs(res_data$x - 1 / 3) < 1e-10))
+  expect_equal(nrow(res_data), length(dgc@x)) # same number of stored values
+})
+
+test_that("/ sparse division fails when denominator doesn't cover numerator", {
+  # Create matrices with different non-zero positions
+  dgc_subset <- dgc[1:5, 1:5]
+  dbsm_full <- dbMatrix::dbMatrix(
+    value = dgc[1:10, 1:10],
+    con = con1,
+    name = 'full',
+    class = "dbSparseMatrix",
+    overwrite = TRUE
+  )
+  dbsm_subset <- dbMatrix::dbMatrix(
+    value = dgc_subset,
+    con = con1,
+    name = 'subset',
+    class = "dbSparseMatrix",
+    overwrite = TRUE
+  )
+
+  # full / subset should fail (full has positions subset doesn't)
+  expect_error(dbsm_full / dbsm_subset, "denominator")
+})
