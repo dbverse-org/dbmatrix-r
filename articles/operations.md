@@ -349,6 +349,6 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] bit_4.6.0         jsonlite_2.0.0    dplyr_1.1.4       compiler_4.5.2   
-    ##  [5] tidyselect_1.2.1  Rcpp_1.1.1        blob_1.2.4        nanoarrow_0.7.0-2
+    ##  [5] tidyselect_1.2.1  Rcpp_1.1.1        blob_1.3.0        nanoarrow_0.7.0-2
     ##  [9] pins_1.4.1        assertthat_0.2.1 
     ##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]
