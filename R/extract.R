@@ -77,7 +77,13 @@ setMethod(
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_i")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
@@ -116,18 +122,24 @@ setMethod(
       } else {
         req_df <- data.frame(
           new_i = seq_along(filter_i),
-          rowname = filter_i,
+          rowname = as.character(filter_i),
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_i")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
         con = con, 
-        items = x@dim_names[[1]], 
+        items = as.character(x@dim_names[[1]]), 
         prefix = "__dbM_extract_dim_map_i", 
         col_name_in_db = "rowname"
       )
@@ -226,7 +238,13 @@ setMethod(
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_j")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
@@ -265,18 +283,24 @@ setMethod(
       } else {
         req_df <- data.frame(
           new_j = seq_along(filter_j),
-          colname = filter_j,
+          colname = as.character(filter_j),
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_j")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
         con = con, 
-        items = x@dim_names[[2]], 
+        items = as.character(x@dim_names[[2]]), 
         prefix = "__dbM_extract_dim_map_j", 
         col_name_in_db = "colname"
       )
@@ -377,7 +401,13 @@ setMethod(
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_i")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         map_tbl_i <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
@@ -403,18 +433,24 @@ setMethod(
       } else {
         req_df <- data.frame(
           new_i = seq_along(filter_i),
-          rowname = filter_i,
+          rowname = as.character(filter_i),
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_i")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
         con = con, 
-        items = x@dim_names[[1]], 
+        items = as.character(x@dim_names[[1]]), 
         prefix = "__dbM_extract_dim_map_i", 
         col_name_in_db = "rowname"
       )
@@ -462,7 +498,13 @@ setMethod(
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_j")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         map_tbl_j <- dplyr::tbl(con, req_tbl_name)
       }
 
@@ -488,18 +530,24 @@ setMethod(
       } else {
         req_df <- data.frame(
           new_j = seq_along(filter_j),
-          colname = filter_j,
+          colname = as.character(filter_j),
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_j")
-        duckdb::duckdb_register(con, req_tbl_name, req_df, overwrite = TRUE)
+        dplyr::copy_to(
+          dest = con,
+          req_df,
+          name = req_tbl_name,
+          temporary = TRUE,
+          overwrite = TRUE
+        )
         req_tbl <- dplyr::tbl(con, req_tbl_name)
       }
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
         con = con, 
-        items = x@dim_names[[2]], 
+        items = as.character(x@dim_names[[2]]), 
         prefix = "__dbM_extract_dim_map_j", 
         col_name_in_db = "colname"
       )
@@ -749,7 +797,13 @@ store_mapping <- function(con, items, prefix, col_name_in_db) {
   colnames(df)[2] <- col_name_in_db
   
   tbl_name <- unique_table_name(prefix)
-  duckdb::duckdb_register(con, tbl_name, df, overwrite = TRUE)
+  dplyr::copy_to(
+    dest = con,
+    df,
+    name = tbl_name,
+    temporary = TRUE,
+    overwrite = TRUE
+  )
   return(dplyr::tbl(con, tbl_name))
 }
 
