@@ -34,6 +34,8 @@ setMethod(
       i <- int_idx
     }
 
+    n_i <- NA_integer_
+
     if (is.numeric(i)) {
       # Handle negative indices: convert to positive by excluding
       if (any(i < 0)) {
@@ -50,10 +52,18 @@ setMethod(
         i <- which(i)
       }
 
+      i_idx <- as.integer(i)
+      n_i <- length(i_idx)
+
+      # Identity fast path: full set of rows in original order
+      if (length(i_idx) == dim[1] && identical(i_idx, seq_len(dim[1]))) {
+        return(x)
+      }
+
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(i) < 2000) {
+      if (length(i_idx) < 2000) {
         values_list <- glue::glue_collapse(
-          glue::glue("({seq_along(i)}, {as.integer(i)})"),
+          glue::glue("({seq_along(i_idx)}, {i_idx})"),
           sep = ", "
         )
         sql <- glue::glue(
@@ -62,8 +72,8 @@ setMethod(
         map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
-          new_i = seq_along(i),
-          i = as.integer(i),
+          new_i = seq_along(i_idx),
+          i = i_idx,
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_i")
@@ -71,13 +81,26 @@ setMethod(
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
-      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
+      filter_i <- x@dim_names[[1]][i_idx]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
         dbM_dimnames = x@dim_names,
         dims = 1
       )
+
+      n_i <- length(filter_i)
+
+      # Identity fast path: if this selection is the full set of rows in the
+      # original order, subsetting is a no-op and we can avoid building
+      # mapping tables and joins.
+      orig_i <- x@dim_names[[1]]
+      if (!is.null(orig_i)) {
+        if (length(filter_i) == length(orig_i) &&
+            identical(as.character(filter_i), as.character(orig_i))) {
+          return(x)
+        }
+      }
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_i) < 2000) {
@@ -118,13 +141,17 @@ setMethod(
         dplyr::select(new_i, i)
     }
 
-    x[] <- x[] |>
+    x_tbl <- x[]
+    if (exists("i_idx") && length(i_idx) < 2000) {
+      x_tbl <- dplyr::filter(x_tbl, i %in% i_idx)
+    }
+    x[] <- x_tbl |>
       dplyr::inner_join(map_tbl, by = "i") |>
       dplyr::select(i = new_i, j, x)
 
     # Preserve factor status for dim_names
     x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
-    x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
+    x@dims[1L] <- n_i
     x@name <- NA_character_
 
     return(x)
@@ -156,6 +183,8 @@ setMethod(
       j <- int_idx
     }
 
+    n_j <- NA_integer_
+
     if (is.numeric(j)) {
       # Handle negative indices: convert to positive by excluding
       if (any(j < 0)) {
@@ -172,10 +201,18 @@ setMethod(
         j <- which(j)
       }
 
+      j_idx <- as.integer(j)
+      n_j <- length(j_idx)
+
+      # Identity fast path: full set of columns in original order
+      if (length(j_idx) == dim[2] && identical(j_idx, seq_len(dim[2]))) {
+        return(x)
+      }
+
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(j) < 2000) {
+      if (length(j_idx) < 2000) {
         values_list <- glue::glue_collapse(
-          glue::glue("({seq_along(j)}, {as.integer(j)})"),
+          glue::glue("({seq_along(j_idx)}, {j_idx})"),
           sep = ", "
         )
         sql <- glue::glue(
@@ -184,8 +221,8 @@ setMethod(
         map_tbl <- dplyr::tbl(con, dplyr::sql(sql))
       } else {
         req_df <- data.frame(
-          new_j = seq_along(j),
-          j = as.integer(j),
+          new_j = seq_along(j_idx),
+          j = j_idx,
           stringsAsFactors = FALSE
         )
         req_tbl_name <- unique_table_name("__dbM_extract_req_j")
@@ -193,13 +230,26 @@ setMethod(
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
-      filter_j <- x@dim_names[[2]][j]  # Returns NULL if dim_names[[2]] is NULL
+      filter_j <- x@dim_names[[2]][j_idx]  # Returns NULL if dim_names[[2]] is NULL
     } else {
       filter_j <- get_dbM_sub_idx(
         index = j,
         dbM_dimnames = x@dim_names,
         dims = 2
       )
+
+      n_j <- length(filter_j)
+
+      # Identity fast path: if this selection is the full set of columns in the
+      # original order, subsetting is a no-op and we can avoid building
+      # mapping tables and joins.
+      orig_j <- x@dim_names[[2]]
+      if (!is.null(orig_j)) {
+        if (length(filter_j) == length(orig_j) &&
+            identical(as.character(filter_j), as.character(orig_j))) {
+          return(x)
+        }
+      }
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(filter_j) < 2000) {
@@ -240,13 +290,17 @@ setMethod(
         dplyr::select(new_j, j)
     }
 
-    x[] <- x[] |>
+    x_tbl <- x[]
+    if (exists("j_idx") && length(j_idx) < 2000) {
+      x_tbl <- dplyr::filter(x_tbl, j %in% j_idx)
+    }
+    x[] <- x_tbl |>
       dplyr::inner_join(map_tbl, by = "j") |>
       dplyr::select(i, j = new_j, x)
 
     # Preserve factor status for dim_names
     x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
-    x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
+    x@dims[2L] <- n_j
     x@name <- NA_character_
 
     return(x)
