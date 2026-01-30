@@ -17,25 +17,42 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
   
   if (is.null(center_rows)) center_rows <- TRUE
   
+  # Column-wise centering/scaling not yet supported in C++ operator
+
+  if (!center_rows && (center || scale))
+    stop("center_rows=FALSE with center=TRUE or scale=TRUE is not yet supported")
+  
+  dbm <- .castNumeric(dbm) # Ensure numeric type
   con <- get_con(dbm)
-  tbl <- dbm[]
-  final_sql <- as.character(dbplyr::sql_render(tbl))
   dims <- dim(dbm)
   n_rows <- dims[1]
   n_cols <- dims[2]
   
-  # Get means or compute
-  means <- numeric(0)
-  sds <- numeric(0)
+  # Validate dimensions
 
-  if (center) {
-    means <- as.numeric(if (center_rows) rowMeans(dbm) else colMeans(dbm))
+  if (n_rows == 0 || n_cols == 0)
+    stop("Matrix must have at least one row and one column")
+  
+  # Validate k (Spectra requires k <= n_rows - 1 for the Gram operator)
+  k <- as.integer(k)
+  max_k <- min(n_rows - 1L, n_cols)
+  if (k < 1) stop("k must be at least 1")
+  if (max_k < 1) stop("Matrix too small for SVD (need at least 2 rows)")
+  if (k > max_k) {
+    warning(sprintf("k=%d exceeds max allowed (%d); reducing", k, max_k))
+    k <- max_k
   }
-
+  
+  # Compute row means/sds for normalization (center_rows=TRUE when center||scale)
+  means <- if (center) as.numeric(rowMeans(dbm)) else numeric(0)
+  sds <- numeric(0)
   if (scale) {
-    sds <- as.numeric(if (center_rows) rowSds(dbm) else colSds(dbm))
+    sds <- as.numeric(rowSds(dbm))
     sds[is.na(sds) | sds == 0] <- 1
   }
+
+  tbl <- dbm[]
+  final_sql <- as.character(dbplyr::sql_render(tbl))
 
   # Estimate data size for path selection
   nnz_df <- dplyr::collect(tbl |> dplyr::count())
@@ -62,9 +79,18 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
   if (!is(dbm, "dbSparseMatrix"))
     stop("db_svd currently only supports dbSparseMatrix objects")
 
-  # Determine row_offset and col_scale
+  # Determine row_offset, row_scale, col_scale for implicit normalization
+  # A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
   row_offset <- if (center) -means else rep(0, n_rows)
+  row_scale <- rep(1, n_rows)
   col_scale <- rep(1, n_cols)
+
+  if (scale) {
+    inv_sds <- 1 / sds
+    row_scale <- as.numeric(inv_sds)
+    # Adjust offset: centering after scaling means offset = -mean/sd
+    if (center) row_offset <- -means * inv_sds
+  }
   
   if (use_cache) {
     # Fast Path: Arrow -> Eigen CSC
@@ -76,6 +102,7 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
       n_rows = as.integer(n_rows),
       n_cols = as.integer(n_cols),
       row_offset = as.numeric(row_offset),
+      row_scale = as.numeric(row_scale),
       col_scale = as.numeric(col_scale),
       k = as.integer(k)
     )
@@ -111,11 +138,15 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
     
     bp_mat <- BPCells::open_matrix_dir(bp_dir)
     
+    # Implicit norm: A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
+    if (!all(row_scale == 1))
+      bp_mat <- BPCells::multiply_rows(bp_mat, row_scale)
+    
     if (!all(col_scale == 1))
       bp_mat <- BPCells::multiply_cols(bp_mat, col_scale)
     
-    if (!all(means == 0))
-      bp_mat <- bp_mat - means
+    if (!all(row_offset == 0))
+      bp_mat <- bp_mat + row_offset
     
     bp_result <- BPCells::svds(bp_mat, k = k)
     result <- list(d = bp_result$d, u = bp_result$u, v = bp_result$v)
