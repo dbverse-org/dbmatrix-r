@@ -72,11 +72,15 @@ test_that("db_svd warns and reduces k when exceeding max allowed", {
   testthat::skip_if_not_installed("nanoarrow")
 
   dbm <- sim_dbSparseMatrix(num_rows = 10, num_cols = 20, memory = TRUE)
+  # max_k = min(10-1, 20) = 9
   testthat::expect_warning(
-    res <- db_svd(dbm, k = 15, center = FALSE, scale = FALSE, memory_limit = 10^12),
+    db_svd(dbm, k = 15, center = FALSE, scale = FALSE, memory_limit = 10^12),
     "k=15 exceeds max allowed"
   )
-  # max_k = min(10-1, 20) = 9
+
+  res <- suppressWarnings(
+    db_svd(dbm, k = 15, center = FALSE, scale = FALSE, memory_limit = 10^12)
+  )
   testthat::expect_length(res$d, 9)
 })
 
