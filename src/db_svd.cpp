@@ -30,13 +30,14 @@
 using namespace Spectra;
 
 // OP-Aware Gram Operator for implicit centering/scaling inspired by BPCells
-// Computes y = A_norm @ A_norm^T @ x where A_norm = A * diag(col_scale) +
+// Computes y = A_norm @ A_norm^T @ x where A_norm = diag(row_scale) * A * diag(col_scale) +
 // row_offset
 class OpAwareGramOp {
 private:
   const Eigen::SparseMatrix<double, Eigen::ColMajor> &A_;
   Eigen::SparseMatrix<double, Eigen::RowMajor> At_;
   const Eigen::VectorXd &row_offset_;
+  const Eigen::VectorXd &row_scale_;
   const Eigen::VectorXd &col_scale_;
   int n_rows_, n_cols_;
   mutable Eigen::VectorXd z_, scaled_z_;
@@ -44,9 +45,11 @@ private:
 public:
   OpAwareGramOp(const Eigen::SparseMatrix<double, Eigen::ColMajor> &A,
                 const Eigen::VectorXd &row_offset,
+                const Eigen::VectorXd &row_scale,
                 const Eigen::VectorXd &col_scale)
       : A_(A), At_(A.transpose()), row_offset_(row_offset),
-        col_scale_(col_scale), n_rows_(A.rows()), n_cols_(A.cols()),
+        row_scale_(row_scale), col_scale_(col_scale),
+        n_rows_(A.rows()), n_cols_(A.cols()),
         z_(A.cols()), scaled_z_(A.cols()) {}
 
   int rows() const { return n_rows_; }
@@ -56,15 +59,18 @@ public:
     Eigen::Map<const Eigen::VectorXd> x(x_in, n_rows_);
     Eigen::Map<Eigen::VectorXd> y(y_out, n_rows_);
 
-    // z = A_norm^T @ x = col_scale * (A^T @ x + row_offset^T @ x)
+    // A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
+    // z = A_norm^T @ x = col_scale * (A^T @ (row_scale * x) + row_offset^T @ x)
+    Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
     double offset_dot_x = row_offset_.dot(x);
-    z_.noalias() = At_ * x;
+    z_.noalias() = At_ * scaled_x;
     z_ = col_scale_.cwiseProduct(z_);
     z_.array() += col_scale_.array() * offset_dot_x;
 
-    // y = A_norm @ z = A @ (col_scale * z) + row_offset * sum(z)
+    // y = A_norm @ z = row_scale * (A @ (col_scale * z)) + row_offset * sum(z)
     scaled_z_ = col_scale_.cwiseProduct(z_);
     y.noalias() = A_ * scaled_z_;
+    y = row_scale_.cwiseProduct(y);
     y += row_offset_ * z_.sum();
   }
 };
@@ -72,6 +78,7 @@ public:
 // [[Rcpp::export(.compute_op_svd_arrow_cpp)]]
 Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
                                     Rcpp::NumericVector row_offset,
+                                    Rcpp::NumericVector row_scale,
                                     Rcpp::NumericVector col_scale, int k) {
   // Stream Arrow triplets into Eigen
   std::vector<Eigen::Triplet<double>> triplets;
@@ -111,8 +118,9 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
 
   // Create operator and solve
   Eigen::VectorXd r_off = Rcpp::as<Eigen::VectorXd>(row_offset);
+  Eigen::VectorXd r_scl = Rcpp::as<Eigen::VectorXd>(row_scale);
   Eigen::VectorXd c_scl = Rcpp::as<Eigen::VectorXd>(col_scale);
-  OpAwareGramOp op(A, r_off, c_scl);
+  OpAwareGramOp op(A, r_off, r_scl, c_scl);
 
   int ncv = std::min(std::max(4 * k, 40), n_rows);
   SymEigsSolver<double, LARGEST_ALGE, OpAwareGramOp> eigs(&op, k, ncv);
@@ -142,6 +150,7 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   }
 
   // Compute V = A_norm^T @ U @ D^-1
+  // A_norm^T = col_scale * A^T * row_scale + row_offset^T
   Eigen::SparseMatrix<double, Eigen::RowMajor> At = A.transpose();
   Rcpp::NumericMatrix v_vecs(n_cols, k);
 
@@ -153,8 +162,10 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
     for (int r = 0; r < n_rows; ++r)
       u_col[r] = u_vecs(r, col);
 
+    // v = col_scale * (A^T @ (row_scale * u) + row_offset^T @ u)
+    Eigen::VectorXd scaled_u = r_scl.cwiseProduct(u_col);
     double offset_dot_u = r_off.dot(u_col);
-    Eigen::VectorXd v_col = At * u_col;
+    Eigen::VectorXd v_col = At * scaled_u;
     v_col = c_scl.cwiseProduct(v_col);
     v_col.array() += c_scl.array() * offset_dot_u;
     v_col /= d[col];
