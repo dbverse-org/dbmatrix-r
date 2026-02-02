@@ -415,20 +415,20 @@ dbMatrix <- function(
     stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
   if (
-    !is.character(class) | !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))
+    !is.character(class) || !(class %in% c("dbDenseMatrix", "dbSparseMatrix"))
   ) {
     stopf("Invalid class: choose 'dbDenseMatrix' or 'dbSparseMatrix'")
   }
 
   # check value and class mismatch
   if (
-    (inherits(value, "matrix") | inherits(value, "denseMatrix")) &
+    (inherits(value, "matrix") || inherits(value, "denseMatrix")) &&
       class == "dbSparseMatrix"
   ) {
     stopf("Class mismatch: set class to 'dbDenseMatrix' for dense matrices")
   }
   if (
-    (inherits(value, "dgCMatrix") | inherits(value, "sparseMatrix")) &
+    (inherits(value, "dgCMatrix") || inherits(value, "sparseMatrix")) &&
       class == "dbDenseMatrix"
   ) {
     stopf("Class mismatch: set class to 'dbSparseMatrix' for sparse matrices")
@@ -436,7 +436,7 @@ dbMatrix <- function(
 
   # check dims, dim_names
   if (inherits(value, "tbl_duckdb_connection")) {
-    if (is.null(dims) | is.null(dim_names)) {
+    if (is.null(dims) || is.null(dim_names)) {
       stop(
         "Invalid dims or dim_names: must be provided for tbl_duckdb_connection objects"
       )
@@ -481,7 +481,7 @@ dbMatrix <- function(
           "Invalid file type. Please provide a .mtx, .csv, .txt, or .tsv file."
         )
       }
-    } else if (inherits(value, "matrix") | inherits(value, "Matrix")) {
+    } else if (inherits(value, "matrix") || inherits(value, "Matrix")) {
       return(as.dbMatrix(
         value,
         con = con,
@@ -570,7 +570,7 @@ dbMatrix <- function(
     if (verbose) {
       msg <- if (use_transposed) {
         "Using precomputed table '{precomp_name}' for densification (transposed)."
-        } else {
+      } else {
         "Using precomputed table '{precomp_name}' for densification."
       }
       cli::cli_alert_info(msg)
@@ -750,11 +750,11 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = TRUE) {
     )
   }
 
-  if (is(x, "dbDenseMatrix") & sparse) {
+  if (is(x, "dbDenseMatrix") && sparse) {
     stopf("Cannot convert dbDensematrix into sparse matrix. Set sparse=FALSE")
   }
 
-  if (is(x, "dbSparseMatrix") & !sparse) {
+  if (is(x, "dbSparseMatrix") && !sparse) {
     cli::cli_alert_info(
       "Converting dbSparseMatrix into dense matrix. Set 'sparse=TRUE' to construct 'dgCMatrix'."
     )
@@ -776,8 +776,6 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = TRUE) {
 
     # Pre-allocate dense matrix with zeros
     mat <- matrix(0, nrow = n_rows, ncol = n_cols)
-
-
 
     if (est_peak_memory < limit) {
       if (getOption("dbMatrix.verbose", default = TRUE)) {
@@ -929,7 +927,7 @@ as.dbMatrix <- function(x, con, name, ...) {
   }
 
   # Convert matrix into dbMatrix
-  if (inherits(x, "matrix") | inherits(x, "dgeMatrix")) {
+  if (inherits(x, "matrix") || inherits(x, "dgeMatrix")) {
     class <- "dbDenseMatrix"
   } else if (inherits(x, "dgCMatrix")) {
     class <- "dbSparseMatrix"
@@ -957,7 +955,7 @@ as_ijx <- function(x) {
   if (is(x, "dgCMatrix")) {
     ijx <- as(x, "TsparseMatrix")
     df <- data.table::data.table(i = ijx@i + 1L, j = ijx@j + 1L, x = ijx@x)
-  } else if (is(x, "matrix") | is(x, "dgeMatrix")) {
+  } else if (is(x, "matrix") || is(x, "dgeMatrix")) {
     row_indices <- rep(seq_len(nrow(x)), times = ncol(x))
     col_indices <- rep(seq_len(ncol(x)), each = nrow(x))
     values <- as.vector(x)
@@ -1280,36 +1278,38 @@ dbMatrix_from_tbl <- function(
         dplyr::summarise(x = dplyr::n(), .groups = "drop")
     }
 
-  # add label encodings and get dimensions, dim names
-  i_encoded <- rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
-  j_encoded <- rlang::sym(paste0(as.character(colnames_colName), "_encoded"))
+    i_encoded <- rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
+    j_encoded <- rlang::sym(paste0(as.character(colnames_colName), "_encoded"))
 
-  count_table <- count_table |>
-    dplyr::mutate(i_encoded := dplyr::dense_rank(rownames_colName)) |>
-    dbplyr::window_order(rownames_colName)
+    count_table <- count_table |>
+      dplyr::mutate(i_encoded := dplyr::dense_rank(rownames_colName)) |>
+      dbplyr::window_order(rownames_colName)
 
-  row_names <- count_table |>
-    dplyr::distinct(rownames_colName) |>
-    dplyr::arrange(rownames_colName) |>
-    dplyr::pull(rownames_colName)
+    # Extract row names from data (DENSE_RANK indices match this ordering)
+    row_names <- count_table |>
+      dplyr::distinct(rownames_colName) |>
+      dplyr::arrange(rownames_colName) |>
+      dplyr::pull(rownames_colName)
 
-  dim_i <- as.integer(length(row_names))
+    dim_i <- as.integer(length(row_names))
 
-  count_table <- count_table |>
-    dplyr::mutate(j_encoded := dplyr::dense_rank(colnames_colName)) |>
-    dbplyr::window_order(colnames_colName) |>
-    dplyr::ungroup()
+    count_table <- count_table |>
+      dplyr::mutate(j_encoded := dplyr::dense_rank(colnames_colName)) |>
+      dbplyr::window_order(colnames_colName) |>
+      dplyr::ungroup()
 
-  col_names <- count_table |>
-    dplyr::distinct(colnames_colName) |>
-    dplyr::arrange(colnames_colName) |>
-    dplyr::pull(colnames_colName)
+    # Extract col names from data
+    col_names <- count_table |>
+      dplyr::distinct(colnames_colName) |>
+      dplyr::arrange(colnames_colName) |>
+      dplyr::pull(colnames_colName)
 
-  dim_j <- as.integer(length(col_names))
+    dim_j <- as.integer(length(col_names))
 
-  ijx <- count_table |>
-    dplyr::select(i = i_encoded, j = j_encoded, x) |>
-    dplyr::compute(name = name, overwrite = overwrite, temporary = FALSE)
+    ijx <- count_table |>
+      dplyr::select(i = i_encoded, j = j_encoded, x) |>
+      dplyr::compute(name = name, overwrite = overwrite, temporary = FALSE)
+  }
 
   # set metadata
   dims <- c(dim_i, dim_j)
@@ -1800,8 +1800,6 @@ compute.dbSparseMatrix <- function(
   if (dimnames) {
     .write_dimnames(x = x, name = name)
   }
-
-
 
   # Return new dbMatrix pointing to the new table
   new_tbl <- dplyr::tbl(con, name)
