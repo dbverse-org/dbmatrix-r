@@ -982,6 +982,13 @@ as_ijx <- function(x) {
 #' This is useful when the input table already contains aggregated counts (e.g., from a GROUP BY + SUM operation).
 #' If \code{value_colName} is \code{NULL} (default), the function counts occurrences of each row-column pair.
 #'
+#' When \code{row_names} and/or \code{col_names} are provided, the function uses these directly
+#' instead of querying distinct values from the table. This can significantly improve performance
+#' when the input table is a complex lazy query (e.g., result of spatial joins).
+#'
+#' When \code{i_col} and \code{j_col} are provided, the function uses these pre-computed integer
+#' indices directly, skipping expensive string-to-index encoding. This is the fastest path.
+#'
 #' @param tbl \code{tbl_duckdb_connection} table in DuckDB database in long format
 #' @param con DBI or duckdb connection object \code{(required)}
 #' @param rownames_colName \code{character} column name of rownames in tbl \code{(required)}
@@ -990,6 +997,14 @@ as_ijx <- function(x) {
 #' If \code{NULL} (default), counts occurrences of each row-column pair. \code{(optional)}
 #' @param name table name to assign within database \code{(required, default: "dbMatrix")}
 #' @param overwrite whether to overwrite if table already exists in database \code{(required)}
+#' @param row_names \code{character} vector of pre-computed row names (sorted). If \code{NULL}
+#' (default), row names are extracted from the table. \code{(optional)}
+#' @param col_names \code{character} vector of pre-computed column names (sorted). If \code{NULL}
+#' (default), column names are extracted from the table. \code{(optional)}
+#' @param i_col \code{character} column name containing pre-computed row indices (1-based integers).
+#' If provided with \code{j_col}, skips index encoding for optimal performance. \code{(optional)}
+#' @param j_col \code{character} column name containing pre-computed column indices (1-based integers).
+#' If provided with \code{i_col}, skips index encoding for optimal performance. \code{(optional)}
 #'
 #' @return `dbMatrix` object
 #' @concept dbMatrix
@@ -1000,7 +1015,11 @@ dbMatrix_from_tbl <- function(
   colnames_colName,
   value_colName = NULL,
   name = "dbMatrix",
-  overwrite = FALSE
+  overwrite = FALSE,
+  row_names = NULL,
+  col_names = NULL,
+  i_col = NULL,
+  j_col = NULL
 ) {
   # Check args
   con <- dbplyr::remote_con(tbl)
@@ -1014,7 +1033,7 @@ dbMatrix_from_tbl <- function(
     overwrite = overwrite
   )
 
-  if (is.null(rownames_colName) | is.null(colnames_colName)) {
+  if (is.null(rownames_colName) || is.null(colnames_colName)) {
     stop("rownames_colName and colnames_colName must be provided")
   }
 
@@ -1024,7 +1043,7 @@ dbMatrix_from_tbl <- function(
     )
   }
 
-  if (name %in% DBI::dbListTables(con) & !overwrite) {
+  if (name %in% DBI::dbListTables(con) && !overwrite) {
     stop(
       "name already exists in the database.
           Please choose a unique name or set overwrite to 'TRUE'."
@@ -1073,27 +1092,193 @@ dbMatrix_from_tbl <- function(
     stop("NA values found in rownames or colnames. Please remove NA values.")
   }
 
-  # Aggregate counts based on whether pre-aggregated data is provided
-  if (!is.null(value_colName)) {
-    # Use pre-aggregated counts from specified column
-    value_colName_sym <- rlang::sym(value_colName)
+  # Get connection
+  con <- dbplyr::remote_con(tbl)
 
-    count_table <- tbl |>
-      dplyr::group_by(rownames_colName, colnames_colName) |>
-      dplyr::summarise(
-        x = sum(!!value_colName_sym, na.rm = TRUE),
-        .groups = "drop"
-      )
+  # Fast path: use pre-computed integer indices if available
+  use_precomputed_indices <- !is.null(i_col) &&
+    !is.null(j_col) &&
+    all(c(i_col, j_col) %in% colnames(tbl))
 
-    cli::cli_alert_info(
-      "Using pre-aggregated counts from '{value_colName}' column"
+  if (use_precomputed_indices) {
+    # Validate that row_names and col_names are also provided
+    if (is.null(row_names) || is.null(col_names)) {
+      stop("row_names and col_names must be provided when using i_col/j_col")
+    }
+
+    row_names <- sort(unique(as.character(row_names)))
+    col_names <- sort(unique(as.character(col_names)))
+    dim_i <- as.integer(length(row_names))
+    dim_j <- as.integer(length(col_names))
+
+    # Build aggregation query using pre-computed indices directly
+    source_sql <- dbplyr::sql_render(tbl)
+    row_col <- as.character(rownames_colName)
+    col_col <- as.character(colnames_colName)
+
+    if (!is.null(value_colName)) {
+      agg_expr <- paste0("SUM(", value_colName, ")")
+    } else {
+      agg_expr <- "COUNT(*)"
+    }
+
+    if (overwrite) {
+      DBI::dbExecute(con, glue::glue('DROP TABLE IF EXISTS "{name}"'))
+    }
+
+    # Aggregate using pre-computed integer indices - no JOINs needed
+    sql <- glue::glue(
+      'CREATE TABLE "{name}" AS
+        SELECT
+          "{i_col}" AS i,
+          "{j_col}" AS j,
+          {agg_expr} AS x
+        FROM ({source_sql}) AS _src
+        WHERE "{i_col}" IS NOT NULL AND "{j_col}" IS NOT NULL
+        GROUP BY "{i_col}", "{j_col}"
+      '
     )
-  } else {
-    # Count occurrences of each row-column pair (original behavior)
-    count_table <- tbl |>
-      dplyr::group_by(rownames_colName, colnames_colName) |>
-      dplyr::summarise(x = dplyr::n(), .groups = "drop")
+    DBI::dbExecute(con, sql)
+    ijx <- dplyr::tbl(con, name)
+
+    # set metadata
+    dims <- c(dim_i, dim_j)
+    dim_names <- list(row_names, col_names)
+
+    res <- new(
+      Class = "dbSparseMatrix",
+      value = ijx,
+      name = name,
+      init = TRUE,
+      dim_names = dim_names,
+      dims = dims
+    )
+
+    return(res)
   }
+
+  # Decide encoding strategy:
+  # - If row_names/col_names provided: use lookup JOINs for correct index mapping
+  #   (needed when caller expects specific dimension ordering)
+  # - Otherwise: use DENSE_RANK for fast SQL aggregation
+  use_lookup_joins <- !is.null(row_names) && !is.null(col_names)
+
+  if (use_lookup_joins) {
+    # Prepare sorted unique dimension names
+    row_names <- sort(unique(as.character(row_names)))
+    col_names <- sort(unique(as.character(col_names)))
+    dim_i <- as.integer(length(row_names))
+    dim_j <- as.integer(length(col_names))
+
+    # Get the source table name from the lazy query
+    source_sql <- dbplyr::sql_render(tbl)
+
+    # Build aggregation + encoding query using raw SQL
+    row_col <- as.character(rownames_colName)
+    col_col <- as.character(colnames_colName)
+
+    if (!is.null(value_colName)) {
+      agg_expr <- paste0("SUM(", value_colName, ")")
+      cli::cli_alert_info(
+        "Using pre-aggregated counts from '{value_colName}' column"
+      )
+    } else {
+      agg_expr <- "COUNT(*)"
+    }
+
+    # Create temporary lookup tables for row/col name -> index mapping
+    row_lookup_name <- paste0(
+      "_row_lookup_",
+      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
+    )
+    col_lookup_name <- paste0(
+      "_col_lookup_",
+      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
+    )
+
+    # Register row lookup
+    row_lookup_df <- data.frame(
+      row_name = row_names,
+      i = seq_along(row_names),
+      stringsAsFactors = FALSE
+    )
+    duckdb::duckdb_register(
+      con,
+      row_lookup_name,
+      row_lookup_df,
+      overwrite = TRUE
+    )
+
+    # Register col lookup
+    col_lookup_df <- data.frame(
+      col_name = col_names,
+      j = seq_along(col_names),
+      stringsAsFactors = FALSE
+    )
+    duckdb::duckdb_register(
+      con,
+      col_lookup_name,
+      col_lookup_df,
+      overwrite = TRUE
+    )
+
+    # Use JOIN with lookup tables to get correct indices based on provided names
+    if (overwrite) {
+      DBI::dbExecute(con, paste0("DROP TABLE IF EXISTS \"", name, "\""))
+    }
+
+    # Optimized: JOIN for indices FIRST, then aggregate on integers
+    # This is faster than aggregating strings then JOINing, because integer
+    # GROUP BY is more efficient than string GROUP BY
+    value_select <- if (!is.null(value_colName)) {
+      glue::glue(', _src."{value_colName}"')
+    } else {
+      ""
+    }
+
+    sql <- glue::glue(
+      'CREATE TABLE "{name}" AS
+        SELECT
+          indexed.i AS i,
+          indexed.j AS j,
+          {agg_expr} AS x
+        FROM (
+          SELECT r.i, c.j{value_select}
+          FROM ({source_sql}) AS _src
+          INNER JOIN "{row_lookup_name}" AS r
+            ON _src."{row_col}" = r.row_name
+          INNER JOIN "{col_lookup_name}" AS c
+            ON _src."{col_col}" = c.col_name
+        ) AS indexed
+        GROUP BY indexed.i, indexed.j
+      '
+    )
+    DBI::dbExecute(con, sql)
+
+    # Clean up temporary lookup tables
+    duckdb::duckdb_unregister(con, row_lookup_name)
+    duckdb::duckdb_unregister(con, col_lookup_name)
+
+    ijx <- dplyr::tbl(con, name)
+  } else {
+    # Fast path: use DENSE_RANK when caller doesn't specify dimension names
+    # Aggregate counts
+    if (!is.null(value_colName)) {
+      value_colName_sym <- rlang::sym(value_colName)
+      count_table <- tbl |>
+        dplyr::group_by(rownames_colName, colnames_colName) |>
+        dplyr::summarise(
+          x = sum(!!value_colName_sym, na.rm = TRUE),
+          .groups = "drop"
+        )
+      cli::cli_alert_info(
+        "Using pre-aggregated counts from '{value_colName}' column"
+      )
+    } else {
+      count_table <- tbl |>
+        dplyr::group_by(rownames_colName, colnames_colName) |>
+        dplyr::summarise(x = dplyr::n(), .groups = "drop")
+    }
 
   # add label encodings and get dimensions, dim names
   i_encoded <- rlang::sym(paste0(as.character(rownames_colName), "_encoded"))
