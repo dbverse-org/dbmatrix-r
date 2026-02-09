@@ -192,8 +192,6 @@ setMethod(
       overwrite = 'PASS'
     )
 
-
-
     return(x)
   }
 )
@@ -242,10 +240,10 @@ unique_table_name <- function(prefix = "dbMatrix") {
 # Temp table cleanup ####
 
 #' Extract temp table names from SQL query
-#' 
+#'
 #' Finds all __dbM_* prefixed table names in a SQL query string.
 #' These are temporary tables created during operations like subsetting.
-#' 
+#'
 #' @param sql Character string of SQL query
 #' @return Character vector of temp table names found
 #' @keywords internal
@@ -258,39 +256,48 @@ unique_table_name <- function(prefix = "dbMatrix") {
 }
 
 #' Cleanup temp tables from a connection
-#' 
+#'
 #' Unregisters and drops temp tables created during dbMatrix operations.
-#' 
+#'
 #' @param con DuckDB connection
 #' @param tables Character vector of table names to clean up
 #' @param verbose Logical, whether to print cleanup messages
 #' @keywords internal
 #' @noRd
-.cleanup_temp_tables <- function(con, tables, verbose = getOption("dbMatrix.verbose", TRUE)) {
-  if (length(tables) == 0) return(invisible(NULL))
-  
+.cleanup_temp_tables <- function(
+  con,
+  tables,
+  verbose = getOption("dbMatrix.verbose", TRUE)
+) {
+  if (length(tables) == 0) {
+    return(invisible(NULL))
+  }
+
   for (tbl in tables) {
     # Try to unregister (for registered views)
     try(duckdb::duckdb_unregister(con, tbl), silent = TRUE)
     # Try to drop table (for materialized temps)
-    try(DBI::dbExecute(con, paste0("DROP TABLE IF EXISTS \"", tbl, "\"")), silent = TRUE)
+    try(
+      DBI::dbExecute(con, paste0("DROP TABLE IF EXISTS \"", tbl, "\"")),
+      silent = TRUE
+    )
   }
-  
+
   if (verbose && length(tables) > 0) {
     cli::cli_alert_success("Cleaned up {length(tables)} temp table(s).")
   }
-  
+
   invisible(tables)
 }
 
 # Named long format conversion ####
 
 #' Convert dbMatrix to named long format
-#' 
-#' Internal helper that converts a dbMatrix to a lazy tbl with actual 
+#'
+#' Internal helper that converts a dbMatrix to a lazy tbl with actual
 #' row_name and col_name columns instead of integer i/j indices.
 #' Useful for downstream joins that need named identifiers.
-#' 
+#'
 #' @param x A dbMatrix object (dbSparseMatrix or dbDenseMatrix)
 #' @param row_col Name for the row name column (default: "row_name")
 #' @param col_col Name for the column name column (default: "col_name")
@@ -299,20 +306,20 @@ unique_table_name <- function(prefix = "dbMatrix") {
 #' @keywords internal
 #' @noRd
 .to_named_long <- function(
-  x, 
-  row_col = "row_name", 
+  x,
+  row_col = "row_name",
   col_col = "col_name",
   compute = FALSE
 ) {
   if (!inherits(x, "dbMatrix")) {
     stopf("Input must be a dbMatrix object")
   }
-  
+
   # Get connection and dimension names
-con <- dbplyr::remote_con(x[])
+  con <- dbplyr::remote_con(x[])
   row_names <- rownames(x)
   col_names <- colnames(x)
-  
+
   # Build lookup data.frames
   row_lookup <- data.frame(
     i = seq_along(row_names),
@@ -324,21 +331,23 @@ con <- dbplyr::remote_con(x[])
     .col_name_tmp = col_names,
     stringsAsFactors = FALSE
   )
-  
+
   # Copy to database as temporary tables
   row_tbl <- dplyr::copy_to(
-    con, row_lookup, 
+    con,
+    row_lookup,
     name = unique_table_name("row_lookup"),
-    temporary = TRUE, 
+    temporary = TRUE,
     overwrite = TRUE
   )
   col_tbl <- dplyr::copy_to(
-    con, col_lookup, 
+    con,
+    col_lookup,
     name = unique_table_name("col_lookup"),
-    temporary = TRUE, 
+    temporary = TRUE,
     overwrite = TRUE
   )
-  
+
   # Join and rename
   result <- x[] |>
     dplyr::left_join(row_tbl, by = "i") |>
@@ -348,7 +357,7 @@ con <- dbplyr::remote_con(x[])
       !!rlang::sym(col_col) := .col_name_tmp,
       x
     )
-  
+
   if (compute) {
     result <- dplyr::compute(
       result,
@@ -357,6 +366,6 @@ con <- dbplyr::remote_con(x[])
       overwrite = TRUE
     )
   }
-  
+
   result
 }
