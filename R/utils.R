@@ -159,7 +159,10 @@ setMethod(
       stopf("Class must be 'dbDenseMatrix' or 'dbSparseMatrix'")
     }
 
-    dim_names <- c(paste0("__", name, "_rownames"), paste0("__", name, "_colnames"))
+    dim_names <- c(
+      paste0("__", name, "_rownames"),
+      paste0("__", name, "_colnames")
+    )
 
     # check if rownames and colnames exist
     if (!all(dim_names %in% DBI::dbListTables(conn))) {
@@ -167,8 +170,14 @@ setMethod(
     }
 
     # load values saved from dbMatrix::compute()
-    rownames <- dplyr::tbl(conn, dim_names[1]) |> dplyr::pull('rownames')
-    colnames <- dplyr::tbl(conn, dim_names[2]) |> dplyr::pull('colnames')
+    # IMPORTANT: must sort by i/j to ensure correct ordering.
+    # DuckDB table scan order is not guaranteed to match insertion order.
+    rownames <- dplyr::tbl(conn, dim_names[1]) |>
+      dplyr::arrange(i) |>
+      dplyr::pull('rownames')
+    colnames <- dplyr::tbl(conn, dim_names[2]) |>
+      dplyr::arrange(j) |>
+      dplyr::pull('colnames')
     dim_names <- list(as.factor(rownames), as.factor(colnames))
     dims <- c(length(rownames), length(colnames))
     value <- dplyr::tbl(conn, name)

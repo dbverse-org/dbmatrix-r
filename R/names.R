@@ -110,7 +110,7 @@ setMethod(
   if (!inherits(x, 'dbMatrix')) {
     stopf('x must be a dbMatrix object')
   }
-  if (is.na(x@name) & is.null(name)) {
+  if (is.na(x@name) && is.null(name)) {
     stopf('Name is empty. Use dbSave() to save the lazy dbMatrix object.')
   }
   check_names <- c(
@@ -131,17 +131,23 @@ setMethod(
     })
   }
 
+  # Include explicit integer indices to avoid non-deterministic ROW_NUMBER()
   rownames_dt <- data.table::data.table(
+    i = seq_along(dimnames[[1]]),
     rownames = dimnames[[1]] |> as.character()
   )
   colnames_dt <- data.table::data.table(
+    j = seq_along(dimnames[[2]]),
     colnames = dimnames[[2]] |> as.character()
   )
 
+  # NOTE: Using __ prefix to distinguish from user tables
+  # temporary = FALSE ensures tables persist across connection close/reopen
   dplyr::copy_to(
     df = rownames_dt,
     dest = con,
-    name = paste0("__", name, "_temp_rownames"),
+    name = paste0("__", name, "_rownames"),
+    temporary = FALSE,
     overwrite = TRUE
   ) |>
     invisible()
@@ -149,25 +155,11 @@ setMethod(
   dplyr::copy_to(
     df = colnames_dt,
     dest = con,
-    name = paste0("__", name, "_temp_colnames"),
+    name = paste0("__", name, "_colnames"),
+    temporary = FALSE,
     overwrite = TRUE
   ) |>
     invisible()
-
-  # NOTE: Using __ prefix to distinguish from user tables
-  dplyr::tbl(con, paste0("__", name, "_temp_rownames")) |>
-    dplyr::mutate(i = dplyr::row_number()) |>
-    dplyr::compute(temporary = FALSE, name = paste0("__", name, "_rownames")) |>
-    invisible()
-
-  dplyr::tbl(con, paste0("__", name, "_temp_colnames")) |>
-    dplyr::mutate(j = dplyr::row_number()) |>
-    dplyr::compute(temporary = FALSE, name = paste0("__", name, "_colnames")) |>
-    invisible()
-
-  # remove temporary tables
-  DBI::dbRemoveTable(con, paste0("__", name, "_temp_rownames"))
-  DBI::dbRemoveTable(con, paste0("__", name, "_temp_colnames"))
 }
 
 #' @keywords internal
