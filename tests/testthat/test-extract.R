@@ -155,3 +155,64 @@ dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
 test_that("out-of-order row/col indexing works", {
   expect_equal(dgc_subset, dgc_db_subset)
 })
+
+# ---------------------------------------------------------------------------- #
+# Perform empty indexing (regression: avoid invalid SQL like `VALUES )`)
+
+dgc_subset <- dgc[integer(0), ]
+dbsm_subset <- dbsm[integer(0), ]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty integer row indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[, integer(0)]
+dbsm_subset <- dbsm[, integer(0)]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty integer col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[integer(0), integer(0)]
+dbsm_subset <- dbsm[integer(0), integer(0)]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty integer row/col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[integer(0), 1:10]
+dbsm_subset <- dbsm[integer(0), 1:10]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty rows with non-empty cols works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+dgc_subset <- dgc[1:10, integer(0)]
+dbsm_subset <- dbsm[1:10, integer(0)]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("non-empty rows with empty cols works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+false_rows <- rep(FALSE, nrow(dgc))
+dgc_subset <- dgc[false_rows, ]
+dbsm_subset <- dbsm[false_rows, ]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty logical row indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})
+
+false_cols <- rep(FALSE, ncol(dgc))
+dgc_subset <- dgc[, false_cols]
+dbsm_subset <- dbsm[, false_cols]
+dgc_db_subset <- as.matrix(dbsm_subset, sparse = TRUE, names = TRUE)
+
+test_that("empty logical col indexing works", {
+  expect_equal(dgc_subset, dgc_db_subset)
+})

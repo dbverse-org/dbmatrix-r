@@ -55,6 +55,16 @@ setMethod(
       i_idx <- as.integer(i)
       n_i <- length(i_idx)
 
+      # Empty selection: avoid generating invalid SQL like `VALUES )`
+      if (n_i == 0L) {
+        filter_i <- x@dim_names[[1]][i_idx]  # Returns NULL if dim_names[[1]] is NULL
+        x[] <- dplyr::filter(x[], FALSE)
+        x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+        x@dims[1L] <- 0L
+        x@name <- NA_character_
+        return(x)
+      }
+
       # Identity fast path: full set of rows in original order
       if (length(i_idx) == dim[1] && identical(i_idx, seq_len(dim[1]))) {
         return(x)
@@ -96,6 +106,15 @@ setMethod(
       )
 
       n_i <- length(filter_i)
+
+      # Empty selection: avoid generating invalid SQL like `VALUES )`
+      if (n_i == 0L) {
+        x[] <- dplyr::filter(x[], FALSE)
+        x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+        x@dims[1L] <- 0L
+        x@name <- NA_character_
+        return(x)
+      }
 
       # Identity fast path: if this selection is the full set of rows in the
       # original order, subsetting is a no-op and we can avoid building
@@ -154,7 +173,7 @@ setMethod(
     }
 
     x_tbl <- x[]
-    if (exists("i_idx") && length(i_idx) < 2000) {
+    if (exists("i_idx") && length(i_idx) > 0 && length(i_idx) < 2000) {
       x_tbl <- dplyr::filter(x_tbl, i %in% i_idx)
     }
     x[] <- x_tbl |>
@@ -216,6 +235,16 @@ setMethod(
       j_idx <- as.integer(j)
       n_j <- length(j_idx)
 
+      # Empty selection: avoid generating invalid SQL like `VALUES )`
+      if (n_j == 0L) {
+        filter_j <- x@dim_names[[2]][j_idx]  # Returns NULL if dim_names[[2]] is NULL
+        x[] <- dplyr::filter(x[], FALSE)
+        x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+        x@dims[2L] <- 0L
+        x@name <- NA_character_
+        return(x)
+      }
+
       # Identity fast path: full set of columns in original order
       if (length(j_idx) == dim[2] && identical(j_idx, seq_len(dim[2]))) {
         return(x)
@@ -257,6 +286,15 @@ setMethod(
       )
 
       n_j <- length(filter_j)
+
+      # Empty selection: avoid generating invalid SQL like `VALUES )`
+      if (n_j == 0L) {
+        x[] <- dplyr::filter(x[], FALSE)
+        x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+        x@dims[2L] <- 0L
+        x@name <- NA_character_
+        return(x)
+      }
 
       # Identity fast path: if this selection is the full set of columns in the
       # original order, subsetting is a no-op and we can avoid building
@@ -315,7 +353,7 @@ setMethod(
     }
 
     x_tbl <- x[]
-    if (exists("j_idx") && length(j_idx) < 2000) {
+    if (exists("j_idx") && length(j_idx) > 0 && length(j_idx) < 2000) {
       x_tbl <- dplyr::filter(x_tbl, j %in% j_idx)
     }
     x[] <- x_tbl |>
@@ -384,8 +422,12 @@ setMethod(
         i <- which(i)
       }
 
+      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
+
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(i) < 2000) {
+      if (length(i) == 0L) {
+        map_tbl_i <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1"))
+      } else if (length(i) < 2000) {
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(i)}, {as.integer(i)})"),
           sep = ", "
@@ -410,8 +452,6 @@ setMethod(
         )
         map_tbl_i <- dplyr::tbl(con, req_tbl_name)
       }
-      # Handle NULL dim_names: keep NULL or subset existing names
-      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -419,49 +459,53 @@ setMethod(
         dims = 1
       )
 
-      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(filter_i) < 2000) {
-        safe_names <- gsub("'", "''", filter_i, fixed = TRUE)
-        values_list <- glue::glue_collapse(
-          glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
-          sep = ", "
-        )
-        sql <- glue::glue(
-          "SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)"
-        )
-        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      if (length(filter_i) == 0L) {
+        map_tbl_i <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1"))
       } else {
-        req_df <- data.frame(
-          new_i = seq_along(filter_i),
-          rowname = as.character(filter_i),
-          stringsAsFactors = FALSE
+        # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+        if (length(filter_i) < 2000) {
+          safe_names <- gsub("'", "''", filter_i, fixed = TRUE)
+          values_list <- glue::glue_collapse(
+            glue::glue("({seq_along(filter_i)}, '{safe_names}')"),
+            sep = ", "
+          )
+          sql <- glue::glue(
+            "SELECT * FROM (VALUES {values_list}) AS map(new_i, rowname)"
+          )
+          req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+        } else {
+          req_df <- data.frame(
+            new_i = seq_along(filter_i),
+            rowname = as.character(filter_i),
+            stringsAsFactors = FALSE
+          )
+          req_tbl_name <- unique_table_name("__dbM_extract_req_i")
+          dplyr::copy_to(
+            dest = con,
+            req_df,
+            name = req_tbl_name,
+            temporary = TRUE,
+            overwrite = TRUE
+          )
+          req_tbl <- dplyr::tbl(con, req_tbl_name)
+        }
+
+        # Use helper to create dimension mapping
+        dim_map_tbl <- store_mapping(
+          con = con, 
+          items = as.character(x@dim_names[[1]]), 
+          prefix = "__dbM_extract_dim_map_i", 
+          col_name_in_db = "rowname"
         )
-        req_tbl_name <- unique_table_name("__dbM_extract_req_i")
-        dplyr::copy_to(
-          dest = con,
-          req_df,
-          name = req_tbl_name,
-          temporary = TRUE,
-          overwrite = TRUE
-        )
-        req_tbl <- dplyr::tbl(con, req_tbl_name)
+
+        map_tbl_i <- req_tbl |>
+          dplyr::inner_join(
+            dim_map_tbl,
+            by = "rowname"
+          ) |>
+          dplyr::rename(i = idx) |>
+          dplyr::select(new_i, i)
       }
-
-      # Use helper to create dimension mapping
-      dim_map_tbl <- store_mapping(
-        con = con, 
-        items = as.character(x@dim_names[[1]]), 
-        prefix = "__dbM_extract_dim_map_i", 
-        col_name_in_db = "rowname"
-      )
-
-      map_tbl_i <- req_tbl |>
-        dplyr::inner_join(
-          dim_map_tbl,
-          by = "rowname"
-        ) |>
-        dplyr::rename(i = idx) |>
-        dplyr::select(new_i, i)
     }
 
     # Process j index (same logic as column-only subsetting)
@@ -481,8 +525,12 @@ setMethod(
         j <- which(j)
       }
 
+      filter_j <- x@dim_names[[2]][j]  # Returns NULL if dim_names[[2]] is NULL
+
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(j) < 2000) {
+      if (length(j) == 0L) {
+        map_tbl_j <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1"))
+      } else if (length(j) < 2000) {
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(j)}, {as.integer(j)})"),
           sep = ", "
@@ -507,8 +555,6 @@ setMethod(
         )
         map_tbl_j <- dplyr::tbl(con, req_tbl_name)
       }
-
-      filter_j <- x@dim_names[[2]][j]
     } else {
       filter_j <- get_dbM_sub_idx(
         index = j,
@@ -516,49 +562,53 @@ setMethod(
         dims = 2
       )
 
-      # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
-      if (length(filter_j) < 2000) {
-        safe_names <- gsub("'", "''", filter_j, fixed = TRUE)
-        values_list <- glue::glue_collapse(
-          glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
-          sep = ", "
-        )
-        sql <- glue::glue(
-          "SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)"
-        )
-        req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+      if (length(filter_j) == 0L) {
+        map_tbl_j <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1"))
       } else {
-        req_df <- data.frame(
-          new_j = seq_along(filter_j),
-          colname = as.character(filter_j),
-          stringsAsFactors = FALSE
+        # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
+        if (length(filter_j) < 2000) {
+          safe_names <- gsub("'", "''", filter_j, fixed = TRUE)
+          values_list <- glue::glue_collapse(
+            glue::glue("({seq_along(filter_j)}, '{safe_names}')"),
+            sep = ", "
+          )
+          sql <- glue::glue(
+            "SELECT * FROM (VALUES {values_list}) AS map(new_j, colname)"
+          )
+          req_tbl <- dplyr::tbl(con, dplyr::sql(sql))
+        } else {
+          req_df <- data.frame(
+            new_j = seq_along(filter_j),
+            colname = as.character(filter_j),
+            stringsAsFactors = FALSE
+          )
+          req_tbl_name <- unique_table_name("__dbM_extract_req_j")
+          dplyr::copy_to(
+            dest = con,
+            req_df,
+            name = req_tbl_name,
+            temporary = TRUE,
+            overwrite = TRUE
+          )
+          req_tbl <- dplyr::tbl(con, req_tbl_name)
+        }
+
+        # Use helper to create dimension mapping
+        dim_map_tbl <- store_mapping(
+          con = con, 
+          items = as.character(x@dim_names[[2]]), 
+          prefix = "__dbM_extract_dim_map_j", 
+          col_name_in_db = "colname"
         )
-        req_tbl_name <- unique_table_name("__dbM_extract_req_j")
-        dplyr::copy_to(
-          dest = con,
-          req_df,
-          name = req_tbl_name,
-          temporary = TRUE,
-          overwrite = TRUE
-        )
-        req_tbl <- dplyr::tbl(con, req_tbl_name)
+
+        map_tbl_j <- req_tbl |>
+          dplyr::inner_join(
+            dim_map_tbl,
+            by = "colname"
+          ) |>
+          dplyr::rename(j = idx) |>
+          dplyr::select(new_j, j)
       }
-
-      # Use helper to create dimension mapping
-      dim_map_tbl <- store_mapping(
-        con = con, 
-        items = as.character(x@dim_names[[2]]), 
-        prefix = "__dbM_extract_dim_map_j", 
-        col_name_in_db = "colname"
-      )
-
-      map_tbl_j <- req_tbl |>
-        dplyr::inner_join(
-          dim_map_tbl,
-          by = "colname"
-        ) |>
-        dplyr::rename(j = idx) |>
-        dplyr::select(new_j, j)
     }
 
     x[] <- x[] |>
@@ -662,7 +712,7 @@ recycle_boolean_index <- function(index, length) {
 #' @keywords internal
 .check_extract <- function(x = x, i = NULL, j = NULL, dim) {
   if (!is.null(j)) {
-    if ((is.numeric(j) || is.logical(j)) && max(j) > dim[2]) {
+    if ((is.numeric(j) || is.logical(j)) && length(j) > 0L && !all(is.na(j)) && max(j, na.rm = TRUE) > dim[2]) {
       stopf("Index exceeds column dimension of", dim[2])
     } else if (is.character(j) && !all(j %in% colnames(x))) {
       missing_cols <- j[!j %in% colnames(x)]
@@ -671,7 +721,7 @@ recycle_boolean_index <- function(index, length) {
   }
 
   if (!is.null(i)) {
-    if ((is.numeric(i) || is.logical(i)) && max(i) > dim[1]) {
+    if ((is.numeric(i) || is.logical(i)) && length(i) > 0L && !all(is.na(i)) && max(i, na.rm = TRUE) > dim[1]) {
       stopf("Index exceeds row dimension of", dim[1])
     } else if (is.character(i) && !all(i %in% rownames(x))) {
       missing_rows <- i[!i %in% rownames(x)]
