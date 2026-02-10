@@ -28,8 +28,13 @@ setMethod(
       int_idx <- match(i, x@dim_names[[1]])
       if (anyNA(int_idx)) {
         bad_names <- i[is.na(int_idx)]
-        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
-             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+        stop(
+          "Invalid row names: ",
+          paste(head(bad_names, 5), collapse = ", "),
+          if (length(bad_names) > 5) {
+            paste0(", ... (", length(bad_names), " total)")
+          }
+        )
       }
       i <- int_idx
     }
@@ -42,9 +47,9 @@ setMethod(
         if (any(i > 0)) {
           stop("Cannot mix positive and negative indices")
         }
-        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+        i <- seq_len(dim[1])[i] # Convert negative indices to positive
       }
-      
+
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -57,9 +62,13 @@ setMethod(
 
       # Empty selection: avoid generating invalid SQL like `VALUES )`
       if (n_i == 0L) {
-        filter_i <- x@dim_names[[1]][i_idx]  # Returns NULL if dim_names[[1]] is NULL
+        filter_i <- x@dim_names[[1]][i_idx] # Returns NULL if dim_names[[1]] is NULL
         x[] <- dplyr::filter(x[], FALSE)
-        x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+        x@dim_names[[1L]] <- if (is.factor(filter_i)) {
+          filter_i
+        } else {
+          as.factor(filter_i)
+        }
         x@dims[1L] <- 0L
         x@name <- NA_character_
         return(x)
@@ -97,7 +106,7 @@ setMethod(
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
-      filter_i <- x@dim_names[[1]][i_idx]  # Returns NULL if dim_names[[1]] is NULL
+      filter_i <- x@dim_names[[1]][i_idx] # Returns NULL if dim_names[[1]] is NULL
     } else {
       filter_i <- get_dbM_sub_idx(
         index = i,
@@ -110,7 +119,11 @@ setMethod(
       # Empty selection: avoid generating invalid SQL like `VALUES )`
       if (n_i == 0L) {
         x[] <- dplyr::filter(x[], FALSE)
-        x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+        x@dim_names[[1L]] <- if (is.factor(filter_i)) {
+          filter_i
+        } else {
+          as.factor(filter_i)
+        }
         x@dims[1L] <- 0L
         x@name <- NA_character_
         return(x)
@@ -121,8 +134,10 @@ setMethod(
       # mapping tables and joins.
       orig_i <- x@dim_names[[1]]
       if (!is.null(orig_i)) {
-        if (length(filter_i) == length(orig_i) &&
-            identical(as.character(filter_i), as.character(orig_i))) {
+        if (
+          length(filter_i) == length(orig_i) &&
+            identical(as.character(filter_i), as.character(orig_i))
+        ) {
           return(x)
         }
       }
@@ -157,9 +172,9 @@ setMethod(
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
-        con = con, 
-        items = as.character(x@dim_names[[1]]), 
-        prefix = "__dbM_extract_dim_map_i", 
+        con = con,
+        items = as.character(x@dim_names[[1]]),
+        prefix = "__dbM_extract_dim_map_i",
         col_name_in_db = "rowname"
       )
 
@@ -181,7 +196,11 @@ setMethod(
       dplyr::select(i = new_i, j, x)
 
     # Preserve factor status for dim_names
-    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) {
+      filter_i
+    } else {
+      as.factor(filter_i)
+    }
     x@dims[1L] <- n_i
     x@name <- NA_character_
 
@@ -208,8 +227,13 @@ setMethod(
       int_idx <- match(j, x@dim_names[[2]])
       if (anyNA(int_idx)) {
         bad_names <- j[is.na(int_idx)]
-        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
-             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+        stop(
+          "Invalid column names: ",
+          paste(head(bad_names, 5), collapse = ", "),
+          if (length(bad_names) > 5) {
+            paste0(", ... (", length(bad_names), " total)")
+          }
+        )
       }
       j <- int_idx
     }
@@ -222,9 +246,9 @@ setMethod(
         if (any(j > 0)) {
           stop("Cannot mix positive and negative indices")
         }
-        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+        j <- seq_len(dim[2])[j] # Convert negative indices to positive
       }
-      
+
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -237,9 +261,13 @@ setMethod(
 
       # Empty selection: avoid generating invalid SQL like `VALUES )`
       if (n_j == 0L) {
-        filter_j <- x@dim_names[[2]][j_idx]  # Returns NULL if dim_names[[2]] is NULL
+        filter_j <- x@dim_names[[2]][j_idx] # Returns NULL if dim_names[[2]] is NULL
         x[] <- dplyr::filter(x[], FALSE)
-        x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+        x@dim_names[[2L]] <- if (is.factor(filter_j)) {
+          filter_j
+        } else {
+          as.factor(filter_j)
+        }
         x@dims[2L] <- 0L
         x@name <- NA_character_
         return(x)
@@ -277,7 +305,7 @@ setMethod(
         map_tbl <- dplyr::tbl(con, req_tbl_name)
       }
       # Handle NULL dim_names: keep NULL or subset existing names
-      filter_j <- x@dim_names[[2]][j_idx]  # Returns NULL if dim_names[[2]] is NULL
+      filter_j <- x@dim_names[[2]][j_idx] # Returns NULL if dim_names[[2]] is NULL
     } else {
       filter_j <- get_dbM_sub_idx(
         index = j,
@@ -290,7 +318,11 @@ setMethod(
       # Empty selection: avoid generating invalid SQL like `VALUES )`
       if (n_j == 0L) {
         x[] <- dplyr::filter(x[], FALSE)
-        x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+        x@dim_names[[2L]] <- if (is.factor(filter_j)) {
+          filter_j
+        } else {
+          as.factor(filter_j)
+        }
         x@dims[2L] <- 0L
         x@name <- NA_character_
         return(x)
@@ -301,8 +333,10 @@ setMethod(
       # mapping tables and joins.
       orig_j <- x@dim_names[[2]]
       if (!is.null(orig_j)) {
-        if (length(filter_j) == length(orig_j) &&
-            identical(as.character(filter_j), as.character(orig_j))) {
+        if (
+          length(filter_j) == length(orig_j) &&
+            identical(as.character(filter_j), as.character(orig_j))
+        ) {
           return(x)
         }
       }
@@ -337,9 +371,9 @@ setMethod(
 
       # Use helper to create dimension mapping
       dim_map_tbl <- store_mapping(
-        con = con, 
-        items = as.character(x@dim_names[[2]]), 
-        prefix = "__dbM_extract_dim_map_j", 
+        con = con,
+        items = as.character(x@dim_names[[2]]),
+        prefix = "__dbM_extract_dim_map_j",
         col_name_in_db = "colname"
       )
 
@@ -361,7 +395,11 @@ setMethod(
       dplyr::select(i, j = new_j, x)
 
     # Preserve factor status for dim_names
-    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) {
+      filter_j
+    } else {
+      as.factor(filter_j)
+    }
     x@dims[2L] <- n_j
     x@name <- NA_character_
 
@@ -389,18 +427,28 @@ setMethod(
       int_idx <- match(i, x@dim_names[[1]])
       if (anyNA(int_idx)) {
         bad_names <- i[is.na(int_idx)]
-        stop("Invalid row names: ", paste(head(bad_names, 5), collapse = ", "),
-             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+        stop(
+          "Invalid row names: ",
+          paste(head(bad_names, 5), collapse = ", "),
+          if (length(bad_names) > 5) {
+            paste0(", ... (", length(bad_names), " total)")
+          }
+        )
       }
       i <- int_idx
     }
-    
+
     if (is.character(j)) {
       int_idx <- match(j, x@dim_names[[2]])
       if (anyNA(int_idx)) {
         bad_names <- j[is.na(int_idx)]
-        stop("Invalid column names: ", paste(head(bad_names, 5), collapse = ", "),
-             if (length(bad_names) > 5) paste0(", ... (", length(bad_names), " total)"))
+        stop(
+          "Invalid column names: ",
+          paste(head(bad_names, 5), collapse = ", "),
+          if (length(bad_names) > 5) {
+            paste0(", ... (", length(bad_names), " total)")
+          }
+        )
       }
       j <- int_idx
     }
@@ -412,9 +460,9 @@ setMethod(
         if (any(i > 0)) {
           stop("Cannot mix positive and negative indices")
         }
-        i <- seq_len(dim[1])[i]  # Convert negative indices to positive
+        i <- seq_len(dim[1])[i] # Convert negative indices to positive
       }
-      
+
       if (is.logical(i)) {
         if (length(i) < dim[1]) {
           i <- rep_len(i, dim[1])
@@ -422,11 +470,14 @@ setMethod(
         i <- which(i)
       }
 
-      filter_i <- x@dim_names[[1]][i]  # Returns NULL if dim_names[[1]] is NULL
+      filter_i <- x@dim_names[[1]][i] # Returns NULL if dim_names[[1]] is NULL
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(i) == 0L) {
-        map_tbl_i <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1"))
+        map_tbl_i <- dplyr::tbl(
+          con,
+          dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1")
+        )
       } else if (length(i) < 2000) {
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(i)}, {as.integer(i)})"),
@@ -460,7 +511,10 @@ setMethod(
       )
 
       if (length(filter_i) == 0L) {
-        map_tbl_i <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1"))
+        map_tbl_i <- dplyr::tbl(
+          con,
+          dplyr::sql("SELECT 1 AS new_i, 1 AS i WHERE 0=1")
+        )
       } else {
         # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
         if (length(filter_i) < 2000) {
@@ -492,9 +546,9 @@ setMethod(
 
         # Use helper to create dimension mapping
         dim_map_tbl <- store_mapping(
-          con = con, 
-          items = as.character(x@dim_names[[1]]), 
-          prefix = "__dbM_extract_dim_map_i", 
+          con = con,
+          items = as.character(x@dim_names[[1]]),
+          prefix = "__dbM_extract_dim_map_i",
           col_name_in_db = "rowname"
         )
 
@@ -515,9 +569,9 @@ setMethod(
         if (any(j > 0)) {
           stop("Cannot mix positive and negative indices")
         }
-        j <- seq_len(dim[2])[j]  # Convert negative indices to positive
+        j <- seq_len(dim[2])[j] # Convert negative indices to positive
       }
-      
+
       if (is.logical(j)) {
         if (length(j) < dim[2]) {
           j <- rep_len(j, dim[2])
@@ -525,11 +579,14 @@ setMethod(
         j <- which(j)
       }
 
-      filter_j <- x@dim_names[[2]][j]  # Returns NULL if dim_names[[2]] is NULL
+      filter_j <- x@dim_names[[2]][j] # Returns NULL if dim_names[[2]] is NULL
 
       # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
       if (length(j) == 0L) {
-        map_tbl_j <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1"))
+        map_tbl_j <- dplyr::tbl(
+          con,
+          dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1")
+        )
       } else if (length(j) < 2000) {
         values_list <- glue::glue_collapse(
           glue::glue("({seq_along(j)}, {as.integer(j)})"),
@@ -563,7 +620,10 @@ setMethod(
       )
 
       if (length(filter_j) == 0L) {
-        map_tbl_j <- dplyr::tbl(con, dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1"))
+        map_tbl_j <- dplyr::tbl(
+          con,
+          dplyr::sql("SELECT 1 AS new_j, 1 AS j WHERE 0=1")
+        )
       } else {
         # <2000 use inline SQL, >=2000 use register (avoids massive SQL strings)
         if (length(filter_j) < 2000) {
@@ -595,9 +655,9 @@ setMethod(
 
         # Use helper to create dimension mapping
         dim_map_tbl <- store_mapping(
-          con = con, 
-          items = as.character(x@dim_names[[2]]), 
-          prefix = "__dbM_extract_dim_map_j", 
+          con = con,
+          items = as.character(x@dim_names[[2]]),
+          prefix = "__dbM_extract_dim_map_j",
           col_name_in_db = "colname"
         )
 
@@ -617,8 +677,16 @@ setMethod(
       dplyr::select(i = new_i, j = new_j, x)
 
     # update dbMatrix attributes - preserve factor status
-    x@dim_names[[1L]] <- if (is.factor(filter_i)) filter_i else as.factor(filter_i)
-    x@dim_names[[2L]] <- if (is.factor(filter_j)) filter_j else as.factor(filter_j)
+    x@dim_names[[1L]] <- if (is.factor(filter_i)) {
+      filter_i
+    } else {
+      as.factor(filter_i)
+    }
+    x@dim_names[[2L]] <- if (is.factor(filter_j)) {
+      filter_j
+    } else {
+      as.factor(filter_j)
+    }
     x@dims[1L] <- if (!is.null(filter_i)) length(filter_i) else length(i)
     x@dims[2L] <- if (!is.null(filter_j)) length(filter_j) else length(j)
     x@name <- NA_character_
@@ -712,7 +780,12 @@ recycle_boolean_index <- function(index, length) {
 #' @keywords internal
 .check_extract <- function(x = x, i = NULL, j = NULL, dim) {
   if (!is.null(j)) {
-    if ((is.numeric(j) || is.logical(j)) && length(j) > 0L && !all(is.na(j)) && max(j, na.rm = TRUE) > dim[2]) {
+    if (
+      (is.numeric(j) || is.logical(j)) &&
+        length(j) > 0L &&
+        !all(is.na(j)) &&
+        max(j, na.rm = TRUE) > dim[2]
+    ) {
       stopf("Index exceeds column dimension of", dim[2])
     } else if (is.character(j) && !all(j %in% colnames(x))) {
       missing_cols <- j[!j %in% colnames(x)]
@@ -721,7 +794,12 @@ recycle_boolean_index <- function(index, length) {
   }
 
   if (!is.null(i)) {
-    if ((is.numeric(i) || is.logical(i)) && length(i) > 0L && !all(is.na(i)) && max(i, na.rm = TRUE) > dim[1]) {
+    if (
+      (is.numeric(i) || is.logical(i)) &&
+        length(i) > 0L &&
+        !all(is.na(i)) &&
+        max(i, na.rm = TRUE) > dim[1]
+    ) {
       stopf("Index exceeds row dimension of", dim[1])
     } else if (is.character(i) && !all(i %in% rownames(x))) {
       missing_rows <- i[!i %in% rownames(x)]
@@ -830,14 +908,14 @@ store_mapping <- function(con, items, prefix, col_name_in_db) {
   if (length(items) < 2000) {
     safe_items <- gsub("'", "''", items, fixed = TRUE)
     items_sql <- glue::glue_collapse(glue::glue("'{safe_items}'"), sep = ", ")
-    
+
     mapping_sql <- glue::glue(
       "SELECT ROW_NUMBER() OVER () as idx, unnest as {col_name_in_db} 
        FROM (SELECT UNNEST([{items_sql}]) as unnest)"
     )
     return(dplyr::tbl(con, dplyr::sql(glue::glue("({mapping_sql})"))))
-  } 
-  
+  }
+
   # Registered virtual table
   df <- data.frame(
     idx = seq_along(items),
@@ -845,7 +923,7 @@ store_mapping <- function(con, items, prefix, col_name_in_db) {
     stringsAsFactors = FALSE
   )
   colnames(df)[2] <- col_name_in_db
-  
+
   tbl_name <- unique_table_name(prefix)
   dplyr::copy_to(
     dest = con,
