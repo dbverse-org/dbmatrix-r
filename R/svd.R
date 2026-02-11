@@ -63,9 +63,7 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
   use_cache <- memory_limit > 0 && data_size <= memory_limit
 
   if (getOption("dbMatrix.verbose", TRUE)) {
-    if (use_cache) {
-      cli::cli_alert_info("Data size ({format(structure(data_size, class='object_size'), units='auto')}) fits in memory limit - using cached iteration")
-    } else if (memory_limit > 0) {
+    if (!use_cache && memory_limit > 0) {
       cli::cli_alert_info("Data size ({format(structure(data_size, class='object_size'), units='auto')}) exceeds limit - using streaming iteration")
     }
   }
@@ -94,8 +92,9 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
   
   if (use_cache) {
     # Fast Path: Arrow -> Eigen CSC
-    if (getOption("dbMatrix.verbose", TRUE))
-      cli::cli_alert_info("Using Fast Path (Arrow -> Eigen CSC)")
+    if (getOption("dbMatrix.verbose", TRUE)) {
+      cli::cli_alert_info("Data size ({format(structure(data_size, class='object_size'), units='auto')}) - Arrow/Eigen (CSC)")
+    }
     
     result <- .compute_op_svd_arrow_cpp(
       stream_factory = stream_factory,
