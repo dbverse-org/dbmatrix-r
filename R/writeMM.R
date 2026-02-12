@@ -33,10 +33,26 @@ setMethod("writeMM", signature(obj = "dbMatrix"), function(obj, file, ...) {
   con <- get_con(obj)
   sql <- dbplyr::sql_render(obj[])
 
+  # Ensure Matrix Market triplet column order and types are stable.
+  # readMM expects: i (int), j (int), x (numeric) in this order.
+  export_sql <- glue::glue(
+    "SELECT CAST(i AS BIGINT) AS i, 
+     CAST(j AS BIGINT) AS j, 
+     CAST(x AS DOUBLE) AS x FROM ({sql}) t"
+  )
+
+  # Validate required columns exist before export.
+  test_sql <- glue::glue("SELECT * FROM ({sql}) t LIMIT 0")
+  test_df <- DBI::dbGetQuery(con, test_sql)
+  if (!all(c("i", "j", "x") %in% colnames(test_df))) {
+    stopf("writeMM requires triplet columns 'i', 'j', 'x'")
+  }
+
   # DuckDB COPY command
   # We want space delimiter, no header, no quotes
   copy_sql <- glue::glue(
-    "COPY ({sql}) TO '{temp_data_file}' (FORMAT CSV, DELIMITER ' ', HEADER FALSE, QUOTE '');"
+    "COPY ({export_sql}) TO '{temp_data_file}'
+    (FORMAT CSV, DELIMITER ' ', HEADER FALSE, QUOTE '');"
   )
 
   DBI::dbExecute(con, copy_sql)
