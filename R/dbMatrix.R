@@ -814,28 +814,33 @@ as.matrix.dbMatrix <- function(x, ..., sparse = FALSE, names = TRUE) {
     return(mat)
   }
 
-  # Stream to disk for sparse matrix (non-OP path)
-  temp_file <- tempfile(fileext = ".mtx")
+  # Build sparse matrix directly from i/j/x triplets.
+  # This avoids Matrix Market scan/parsing issues and keeps conversion sparse.
+  dat <- x[] |>
+    dplyr::select(i, j, x) |>
+    dplyr::collect()
 
-  # Ensure cleanup
-  tryCatch(
-    {
-      writeMM(x, temp_file)
-      mat <- Matrix::readMM(temp_file)
-      mat <- as(mat, "CsparseMatrix")
+  i_vals <- suppressWarnings(as.integer(dat$i))
+  j_vals <- suppressWarnings(as.integer(dat$j))
 
-      if (names) {
-        dimnames(mat) <- dim_names
-      }
+  bad_i <- !is.na(dat$i) & is.na(i_vals)
+  bad_j <- !is.na(dat$j) & is.na(j_vals)
+  if (any(bad_i) || any(bad_j)) {
+    stopf("Invalid sparse indices: non-integer i/j values encountered during sparse coercion")
+  }
 
-      return(mat)
-    },
-    finally = {
-      if (file.exists(temp_file)) {
-        unlink(temp_file)
-      }
-    }
+  mat <- Matrix::sparseMatrix(
+    i = i_vals,
+    j = j_vals,
+    x = as.numeric(dat$x),
+    dims = c(n_rows, n_cols)
   )
+
+  if (names) {
+    dimnames(mat) <- dim_names
+  }
+
+  return(as(mat, "CsparseMatrix"))
 }
 
 #' @method as.matrix dbSparseMatrix
