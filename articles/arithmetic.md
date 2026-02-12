@@ -193,7 +193,7 @@ sessionInfo()
 #> loaded via a namespace (and not attached):
 #>  [1] bit_4.6.0             Matrix_1.7-4          jsonlite_2.0.0       
 #>  [4] dplyr_1.2.0           compiler_4.5.2        tidyselect_1.2.1     
-#>  [7] Rcpp_1.1.1            blob_1.3.0            nanoarrow_0.7.0-3    
+#>  [7] Rcpp_1.1.1            blob_1.3.0            nanoarrow_0.8.0      
 #> [10] pins_1.4.1            assertthat_0.2.1      dbProject_0.0.0.9002 
 #> [13] jquerylib_0.1.4       arrow_23.0.0.1        systemfonts_1.3.1    
 #> [16] textshaping_1.0.4     yaml_2.3.12           fastmap_1.2.0        

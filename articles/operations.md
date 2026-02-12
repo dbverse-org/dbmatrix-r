@@ -348,7 +348,7 @@ sessionInfo()
     ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9126
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] bit_4.6.0         jsonlite_2.0.0    dplyr_1.2.0       compiler_4.5.2   
-    ##  [5] tidyselect_1.2.1  Rcpp_1.1.1        blob_1.3.0        nanoarrow_0.7.0-3
-    ##  [9] pins_1.4.1        assertthat_0.2.1 
+    ##  [1] bit_4.6.0        jsonlite_2.0.0   dplyr_1.2.0      compiler_4.5.2  
+    ##  [5] tidyselect_1.2.1 Rcpp_1.1.1       blob_1.3.0       nanoarrow_0.8.0 
+    ##  [9] pins_1.4.1       assertthat_0.2.1
     ##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]
