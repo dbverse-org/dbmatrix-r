@@ -27,3 +27,4 @@ A lazy tbl with columns: row_col, col_col, x
 Converts a \code{dbMatrix} to a lazy long table where row and column indices are
 replaced by dimension names.
 }
+\concept{dbMatrix}

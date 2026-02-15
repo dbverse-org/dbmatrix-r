@@ -302,6 +302,7 @@ unique_table_name <- function(prefix = "dbMatrix") {
 #' @param col_col Name for the column-name column (default: "col_name")
 #' @param compute Whether to materialize as temp table (default: FALSE)
 #' @return A lazy tbl with columns: row_col, col_col, x
+#' @concept dbMatrix
 #' @export
 to_named_ijx_tbl <- function(
   x,
