@@ -292,20 +292,18 @@ unique_table_name <- function(prefix = "dbMatrix") {
 
 # Named long format conversion ####
 
-#' Convert dbMatrix to named long format
+#' Convert dbMatrix to named ijx table
 #'
-#' Internal helper that converts a dbMatrix to a lazy tbl with actual
-#' row_name and col_name columns instead of integer i/j indices.
-#' Useful for downstream joins that need named identifiers.
+#' Converts a `dbMatrix` to a lazy long table where row and column indices are
+#' replaced by dimension names.
 #'
 #' @param x A dbMatrix object (dbSparseMatrix or dbDenseMatrix)
-#' @param row_col Name for the row name column (default: "row_name")
-#' @param col_col Name for the column name column (default: "col_name")
+#' @param row_col Name for the row-name column (default: "row_name")
+#' @param col_col Name for the column-name column (default: "col_name")
 #' @param compute Whether to materialize as temp table (default: FALSE)
 #' @return A lazy tbl with columns: row_col, col_col, x
-#' @keywords internal
-#' @noRd
-.to_named_long <- function(
+#' @export
+to_named_ijx_tbl <- function(
   x,
   row_col = "row_name",
   col_col = "col_name",
@@ -368,4 +366,20 @@ unique_table_name <- function(prefix = "dbMatrix") {
   }
 
   result
+}
+
+#' @keywords internal
+#' @noRd
+.to_named_long <- function(
+  x,
+  row_col = "row_name",
+  col_col = "col_name",
+  compute = FALSE
+) {
+  to_named_ijx_tbl(
+    x = x,
+    row_col = row_col,
+    col_col = col_col,
+    compute = compute
+  )
 }
