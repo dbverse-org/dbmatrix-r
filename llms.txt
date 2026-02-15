@@ -72,6 +72,9 @@ Function for creating `dbMatrix` objects
 - [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md)
   : dbMatrix_from_tbl
 
+- [`to_named_ijx_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/to_named_ijx_tbl.md)
+  : Convert dbMatrix to named ijx table
+
 ## Matrix Summary Operations
 
 Methods to compute summary statistics for `dbMatrix` objects
