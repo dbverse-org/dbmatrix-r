@@ -323,7 +323,7 @@ DBI::dbDisconnect(con2, shutdown = TRUE)
 sessionInfo()
 ```
 
-    ## R version 4.5.2 (2025-10-31)
+    ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.3 LTS
     ## 
@@ -348,7 +348,7 @@ sessionInfo()
     ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9126
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] bit_4.6.0        jsonlite_2.0.0   dplyr_1.2.0      compiler_4.5.2  
+    ##  [1] bit_4.6.0        jsonlite_2.0.0   dplyr_1.2.0      compiler_4.5.3  
     ##  [5] tidyselect_1.2.1 Rcpp_1.1.1       blob_1.3.0       nanoarrow_0.8.0 
-    ##  [9] pins_1.4.1       assertthat_0.2.1
+    ##  [9] pins_1.4.2       assertthat_0.2.1
     ##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]
