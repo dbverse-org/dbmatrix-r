@@ -4,12 +4,12 @@
 #' @param center Logical, center rows (default TRUE)
 #' @param scale Logical, scale rows (default FALSE)
 #' @param center_rows Logical, center rows vs columns (default TRUE for standard PCA)
-#' @param memory_limit Bytes for Fast Path. Set 0 to force BPCells path. Default 500 MB.
+#' @param memory_limit Bytes for Fast Path. Set 0 to force BPCells path. Default 8 GB.
 #' @param return_format "svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)
 #' @return List with SVD or PCA components
 #' @export
 db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL,
-                   memory_limit = getOption("dbMatrix.svd_memory", 500 * 1024^2),
+                   memory_limit = getOption("dbMatrix.svd_memory", 8 * 1024^3),
                    return_format = c("svd", "pca")) {
   
   if (!requireNamespace("nanoarrow", quietly = TRUE))
