@@ -4,7 +4,7 @@
 #' @param center Logical, center rows (default TRUE)
 #' @param scale Logical, scale rows (default FALSE)
 #' @param center_rows Logical, center rows vs columns (default TRUE for standard PCA)
-#' @param memory_limit Bytes for Fast Path. Set 0 to force BPCells path. Default 8 GB.
+#' @param memory_limit Bytes for Fast Path. Default 8 GB.
 #' @param return_format "svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)
 #' @return List with SVD or PCA components
 #' @export
@@ -106,49 +106,7 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
       k = as.integer(k)
     )
   } else {
-    # BPCells Path: Stream to disk, disk-backed SVD
-    if (!requireNamespace("BPCells", quietly = TRUE))
-      stop("Package 'BPCells' required for large matrix SVD. Install with: remotes::install_github('bnprks/BPCells/r')")
-    
-    if (getOption("dbMatrix.verbose", TRUE))
-      cli::cli_alert_info("Using BPCells File Path (streaming write, disk-backed SVD)")
-    
-    bp_dir <- tempfile(pattern = "bpcells_")
-    dir.create(bp_dir)
-    on.exit(unlink(bp_dir, recursive = TRUE), add = TRUE)
-    
-    sorted_sql <- paste0("SELECT * FROM (", final_sql, ") ORDER BY j")
-    sorted_stream_factory <- function() {
-      res <- DBI::dbSendQuery(con, sorted_sql, arrow = TRUE)
-      reader <- duckdb::duckdb_fetch_arrow(res, chunk_size = 1000000)
-      nanoarrow::as_nanoarrow_array_stream(reader)
-    }
-    
-    write_result <- .write_arrow_to_bpcells_cpp(
-      output_dir = bp_dir,
-      n_rows = as.integer(n_rows),
-      n_cols = as.integer(n_cols),
-      col_scale = rep(1.0, n_cols),
-      stream_factory = sorted_stream_factory
-    )
-    
-    if (getOption("dbMatrix.verbose", TRUE))
-      cli::cli_alert_success(paste0("Wrote ", format(write_result$nnz, big.mark = ","), " entries to BPCells format"))
-    
-    bp_mat <- BPCells::open_matrix_dir(bp_dir)
-    
-    # Implicit norm: A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
-    if (!all(row_scale == 1))
-      bp_mat <- BPCells::multiply_rows(bp_mat, row_scale)
-    
-    if (!all(col_scale == 1))
-      bp_mat <- BPCells::multiply_cols(bp_mat, col_scale)
-    
-    if (!all(row_offset == 0))
-      bp_mat <- bp_mat + row_offset
-    
-    bp_result <- BPCells::svds(bp_mat, k = k)
-    result <- list(d = bp_result$d, u = bp_result$u, v = bp_result$v)
+    stop("Estimated SVD input exceeds memory_limit; increase memory_limit to use the in-memory Arrow/Eigen path.")
   }
   
   # Format results

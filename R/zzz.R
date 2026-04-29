@@ -16,9 +16,8 @@ utils::globalVariables(c(
   "..mtx_colname_col_idx", "..mtx_rowname_col_idx",
   
   # Coercion variables
-  "x.i", "x.x",
+  "x.i", "x.x", "x.y",
   
   # Temporary lookup table columns
   ".col_name_tmp", ".row_name_tmp"
 ))
-

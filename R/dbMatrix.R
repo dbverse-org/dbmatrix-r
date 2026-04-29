@@ -993,7 +993,6 @@ as_ijx <- function(x) {
 #' indices directly, skipping expensive string-to-index encoding. This is the fastest path.
 #'
 #' @param tbl \code{tbl_duckdb_connection} table in DuckDB database in long format
-#' @param con DBI or duckdb connection object \code{(required)}
 #' @param rownames_colName \code{character} column name of rownames in tbl \code{(required)}
 #' @param colnames_colName \code{character} column name of colnames in tbl \code{(required)}
 #' @param value_colName \code{character} column name containing pre-aggregated integer counts.

@@ -10,7 +10,7 @@ db_svd(
   center = TRUE,
   scale = FALSE,
   center_rows = NULL,
-  memory_limit = getOption("dbMatrix.svd_memory", 500 * 1024^2),
+  memory_limit = getOption("dbMatrix.svd_memory", 8 * 1024^3),
   return_format = c("svd", "pca")
 )
 }
@@ -25,7 +25,7 @@ db_svd(
 
 \item{center_rows}{Logical, center rows vs columns (default TRUE for standard PCA)}
 
-\item{memory_limit}{Bytes for Fast Path. Set 0 to force BPCells path. Default 500 MB.}
+\item{memory_limit}{Bytes for Fast Path. Default 8 GB.}
 
 \item{return_format}{"svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)}
 }

@@ -415,8 +415,9 @@ arith_call_dbm_vect_multi <- function(
 ## Arith: dbm_e2 ####
 #' Arith dbMatrix, e2
 #' @description
-#' See ?\link{\code{methods::Arith}} for more details.
-#' @noRd
+#' See `methods::Arith` for more details.
+#' @param e1 First operand.
+#' @param e2 Second operand.
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Arith}{dbMatrix,ANY}(e1, e2)
@@ -440,8 +441,7 @@ setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 ## Arith: e1_dbm ####
 #' Arith e1, dbMatrix
 #' @description
-#' See ?\link{\code{methods::Arith}} for more details.
-#' @noRd
+#' See `methods::Arith` for more details.
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Arith}{ANY,dbMatrix}(e1, e2)
@@ -465,9 +465,8 @@ setMethod('Arith', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
 ## Arith: dbm_dbm ####
 #' Arith dbMatrix, e2
 #' @description
-#' See ?\link{\code{methods::Arith}} for more details.
-#' @noRd
-#' @rdname summary
+#' See `methods::Arith` for more details.
+#' @rdname dbMatrix-methods
 #' @export
 setMethod(
   'Arith',
@@ -577,8 +576,7 @@ setMethod(
 ## Ops: dbm_e2 ####
 #' Ops dbMatrix, e2
 #' @description
-#' See ?\link{\code{methods::Ops}} for more details.
-#' @noRd
+#' See `methods::Ops` for more details.
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Ops}{dbMatrix,ANY}(e1, e2)
@@ -609,8 +607,7 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 ## Ops: e1_dbm ####
 #' Ops e1, dbMatrix
 #' @description
-#' See ?\link{\code{methods::Ops}} for more details.
-#' @noRd
+#' See `methods::Ops` for more details.
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Ops}{ANY,dbMatrix}(e1, e2)
@@ -637,8 +634,7 @@ setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
 ## Ops: dbm_dbm ####
 #' Ops dbMatrix, dbMatrix
 #' @description
-#' See ?\link{\code{methods::Ops}} for more details.
-#' @noRd
+#' See `methods::Ops` for more details.
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Ops}{dbMatrix,dbMatrix}(e1, e2)

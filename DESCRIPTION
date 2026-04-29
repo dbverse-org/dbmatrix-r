@@ -1,15 +1,17 @@
 Package: dbMatrix
-Title: dbMatrix
-Version: 0.0.0.9126
+Title: Database-Backed Matrix Classes and Operations
+Version: 0.1.0
 Authors@R:
   c(person("Edward", "C. Ruiz", , "ecr7407@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-9174-5387")),
     person("Jiaji", "George Chen", email = "jiajic@bu.edu", role = c("aut")),
     person("Ruben", "Dries", email = "rubendries@gmail.com",role = c("aut")))
-Description: dbMatrix is a package in the dbverse for working with matrices in databases.
+Description: Provides S4 classes and methods for storing dense and sparse
+    matrices in DuckDB databases. Implements database-backed matrix
+    construction, extraction, arithmetic, summaries, and selected linear
+    algebra operations for larger-than-memory workflows.
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 URL: https://github.com/dbverse-org/dbmatrix-r, https://dbverse-org.github.io/dbmatrix-r/
 BugReports: https://github.com/dbverse-org/dbmatrix-r/issues
 RoxygenNote: 7.3.3
@@ -42,14 +44,12 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0),
     irlba,
-    BPCells,
     crayon,
     R.utils,
     checkmate,
     reticulate,
+    sparseMatrixStats,
     RSpectra
-Remotes:
-    dbProject=dbverse-org/dbproject-r
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Roxygen: list(markdown = TRUE)

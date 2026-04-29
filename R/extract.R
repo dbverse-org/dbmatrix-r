@@ -9,7 +9,18 @@
 # dbMatrix ####
 ## vector indexing ####
 ### rows only ####
-#' @noRd
+#' Extract or replace values in database-backed matrices
+#' @description Methods for subsetting and replacing values in `dbMatrix`
+#' objects.
+#' @param x A `dbMatrix` object.
+#' @param i Row, logical matrix, or matrix-style index.
+#' @param j Column index.
+#' @param ... Additional arguments.
+#' @param drop Ignored; included for matrix API compatibility.
+#' @param value Replacement value.
+#' @return A subsetted or modified `dbMatrix`, or an extracted vector for
+#' matrix-style indexing.
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -209,7 +220,7 @@ setMethod(
 )
 
 ### cols only ####
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -408,7 +419,7 @@ setMethod(
 )
 
 ### rows and cols ####
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -809,7 +820,7 @@ recycle_boolean_index <- function(index, length) {
 }
 
 ## matrix index ####
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -842,7 +853,7 @@ setMethod(
 
 
 # *** matrix index assignment ####
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -935,7 +946,7 @@ store_mapping <- function(con, items, prefix, col_name_in_db) {
   return(dplyr::tbl(con, tbl_name))
 }
 
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -965,7 +976,7 @@ setMethod(
   }
 )
 
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(
@@ -979,7 +990,7 @@ setMethod(
   }
 )
 
-#' @noRd
+#' @rdname extract-dbMatrix
 #' @concept dbMatrix
 #' @export
 setMethod(

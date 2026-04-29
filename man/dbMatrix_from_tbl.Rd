@@ -42,8 +42,6 @@ If provided with \code{j_col}, skips index encoding for optimal performance. \co
 
 \item{j_col}{\code{character} column name containing pre-computed column indices (1-based integers).
 If provided with \code{i_col}, skips index encoding for optimal performance. \code{(optional)}}
-
-\item{con}{DBI or duckdb connection object \code{(required)}}
 }
 \value{
 \code{dbMatrix} object

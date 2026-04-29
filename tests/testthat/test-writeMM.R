@@ -1,5 +1,4 @@
 test_that("writeMM works correctly", {
-  devtools::load_all()
   skip_if_not_installed("duckdb")
 
   # Create a simulated dbSparseMatrix
@@ -22,7 +21,6 @@ test_that("writeMM works correctly", {
 })
 
 test_that("as.matrix uses writeMM and cleans up", {
-  devtools::load_all()
   skip_if_not_installed("duckdb")
 
   db_mat <- sim_dbSparseMatrix(20, 20)

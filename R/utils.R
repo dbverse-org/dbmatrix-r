@@ -118,25 +118,25 @@ ij_array_map <- function(i, j, dims) {
 
 # DBI ####
 
-#' ## dbDisconnect ####
-#' #' @title dbDisconnect
-#' #' @rdname DBI
-#' #' @export
-#' setMethod('dbDisconnect', signature(x = 'dbMatrix'),
-#'           function(x, ...){
-#'             con <- get_con(x)
-#'             DBI::dbDisconnect(conn = con, shutdown = TRUE)
-#'           })
-#'
-#' ## dbListTables ####
-#' #' @title dbListTables
-#' #' @rdname DBI
-#' #' @export
-#' setMethod('dbListTables', signature(x = 'dbMatrix'),
-#'           function(x, ...){
-#'             con <- get_con(x)
-#'             DBI::dbListTables(conn = con)
-#'           })
+# ## dbDisconnect ####
+# #' @title dbDisconnect
+# #' @rdname DBI
+# #' @export
+# setMethod('dbDisconnect', signature(x = 'dbMatrix'),
+#           function(x, ...){
+#             con <- get_con(x)
+#             DBI::dbDisconnect(conn = con, shutdown = TRUE)
+#           })
+#
+# ## dbListTables ####
+# #' @title dbListTables
+# #' @rdname DBI
+# #' @export
+# setMethod('dbListTables', signature(x = 'dbMatrix'),
+#           function(x, ...){
+#             con <- get_con(x)
+#             DBI::dbListTables(conn = con)
+#           })
 
 # dbMatrix ####
 
