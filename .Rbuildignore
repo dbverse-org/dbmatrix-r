@@ -16,3 +16,4 @@
 ^tutorials$
 ^src/.*\.o$
 ^src/.*\.so$
+^CRAN-SUBMISSION$
