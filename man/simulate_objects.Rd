@@ -75,9 +75,7 @@ a non-zero value.
 
 }}
 \examples{
-\dontrun{
-sim_ijx_matrix()
-}
+dbMatrix:::sim_ijx_matrix(mat_type = "sparse")
 
 }
 \keyword{internal}

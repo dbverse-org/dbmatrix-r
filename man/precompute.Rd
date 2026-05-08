@@ -37,9 +37,13 @@ In such cases, run this function again with a larger
 table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 }
 \examples{
-\dontrun{
-con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
-precompute(con = con , m = 100, n = 100)
+\donttest{
+old_wd <- getwd()
+setwd(tempdir())
+con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+dbMatrix:::precompute(con = con, m = 100, n = 100)
+DBI::dbDisconnect(con, shutdown = TRUE)
+setwd(old_wd)
 }
 }
 \concept{dbMatrix}

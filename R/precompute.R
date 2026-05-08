@@ -211,9 +211,13 @@
 #' @keywords internal
 #' @concept dbMatrix
 #' @examples
-#' \dontrun{
-#' con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
-#' precompute(con = con , m = 100, n = 100)
+#' \donttest{
+#' old_wd <- getwd()
+#' setwd(tempdir())
+#' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+#' dbMatrix:::precompute(con = con, m = 100, n = 100)
+#' DBI::dbDisconnect(con, shutdown = TRUE)
+#' setwd(old_wd)
 #' }
 precompute <- function(conn, m, n, verbose = FALSE) {
   .check_con(conn = conn)

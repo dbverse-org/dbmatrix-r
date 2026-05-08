@@ -700,17 +700,20 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
 #' A logical vector of the same length as `x`, indicating which elements of `x` are in `table`.
 #'
 #' @examples
-#' \dontrun{
-#' # Create a dbMatrix
+#' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #' mat <- matrix(1:9, nrow = 3, ncol = 3)
-#' dbmat <- as.dbMatrix(mat)
+#' dbmat <- dbMatrix(
+#'   value = mat,
+#'   con = con,
+#'   name = "example_matrix",
+#'   class = "dbDenseMatrix",
+#'   overwrite = TRUE
+#' )
 #'
-#' # Check if elements in dbMatrix are in a vector
-#' result <- dbmat %in% c(1, 3, 5, 7, 9)
+#' dbmat %in% c(1, 3, 5, 7, 9)
 #'
-#' # Check if elements in a vector are in dbMatrix
-#' result <- c(1, 3, 5, 7, 9) %in% dbmat
-#' }
+#' c(1, 3, 5, 7, 9) %in% dbmat
+#' DBI::dbDisconnect(con, shutdown = TRUE)
 #' @rdname percent-in
 #' @concept transform
 #' @export

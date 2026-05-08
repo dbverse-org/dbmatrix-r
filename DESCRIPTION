@@ -7,9 +7,12 @@ Authors@R:
     person("Jiaji", "George Chen", email = "jiajic@bu.edu", role = c("aut")),
     person("Ruben", "Dries", email = "rubendries@gmail.com",role = c("aut")))
 Description: Provides S4 classes and methods for storing dense and sparse
-    matrices in DuckDB databases. Implements database-backed matrix
-    construction, extraction, arithmetic, summaries, and selected linear
-    algebra operations for larger-than-memory workflows.
+    matrices in 'DuckDB' databases. The package supports constructing
+    database-backed matrices from base R and 'Matrix' objects, extracting
+    slices and summaries, performing arithmetic and selected linear algebra
+    operations, and materializing results for larger-than-memory workflows.
+    It integrates with 'dbProject' to keep database paths, live connections,
+    and lazy matrix tables synchronized across interactive analyses.
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/dbverse-org/dbmatrix-r, https://dbverse-org.github.io/dbmatrix-r/

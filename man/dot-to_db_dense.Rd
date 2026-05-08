@@ -23,9 +23,12 @@ Internal function to convert a \code{\link{dbSparseMatrix}} to
 \code{\link{dbDenseMatrix}}.
 }
 \examples{
-\dontrun{
+\donttest{
+old <- options(dbMatrix.allow_densify = TRUE)
 dbsm <- sim_dbSparseMatrix(10, 10)
-dbdm <- .to_db_dense(dbsm)
+dbdm <- dbMatrix:::.to_db_dense(dbsm)
+options(old)
+DBI::dbDisconnect(dbProject::conn(dbsm), shutdown = TRUE)
 }
 }
 \keyword{internal}

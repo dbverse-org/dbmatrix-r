@@ -536,9 +536,12 @@ dbMatrix <- function(
 #' @return A [`dbDenseMatrix`] object
 #' @keywords internal
 #' @examples
-#' \dontrun{
+#' \donttest{
+#' old <- options(dbMatrix.allow_densify = TRUE)
 #' dbsm <- sim_dbSparseMatrix(10, 10)
-#' dbdm <- .to_db_dense(dbsm)
+#' dbdm <- dbMatrix:::.to_db_dense(dbsm)
+#' options(old)
+#' DBI::dbDisconnect(dbProject::conn(dbsm), shutdown = TRUE)
 #' }
 .to_db_dense <- function(x, chunk_size = NULL) {
   if (!inherits(x, "dbSparseMatrix")) {

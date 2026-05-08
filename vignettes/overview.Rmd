@@ -14,10 +14,33 @@ knitr::opts_chunk$set(
 )
 ```
 
+```{r setup}
+library(dbMatrix)
+```
+
 ## dbMatrix
 `dbMatrix` is a core package in the [`dbverse`](https://dbverse-org.github.io/dbverse/) library that inherits from the `dbData` base class and consists of two subclasses, `dbSparseMatrix` and `dbDenseMatrix`.
 
 `dbMatrix` objects emulate in-memory dense and sparse matrices in an embedded database powered by DuckDB. 
+
+## Minimal example
+
+```{r}
+con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+
+mat <- matrix(1:9, nrow = 3, ncol = 3)
+dbmat <- dbMatrix(
+  value = mat,
+  con = con,
+  name = "overview_matrix",
+  class = "dbDenseMatrix",
+  overwrite = TRUE
+)
+
+dbmat
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
 
 
 ## dbSparseMatrix
@@ -35,5 +58,4 @@ Support for compressed sparse column matrices of the `dgCMatrix` class from the 
 
 We use the same approach as `dbSparseMatrix` to represent a dense matrix as a
 triplet `i`, `j`, and `x` vector. The only difference is that the `dbDenseMatrix` class consists of all values in the matrix, including zeros.
-
 
