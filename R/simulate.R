@@ -78,11 +78,6 @@ sim_denseMat <- function(num_rows = 50, num_cols = 50) {
 #' @param seed_num The seed number for reproducibility (default: 42)
 #'
 #' @return A dgCMatrix object
-#'
-#' @examples
-#' sim_ijx_matrix <- getFromNamespace("sim_ijx_matrix", "dbMatrix")
-#' sim_ijx_matrix(mat_type = "sparse")
-#'
 #' @keywords internal
 sim_ijx_matrix <- function(
   mat_type = NULL,

@@ -211,13 +211,6 @@
 #'   table in DuckDB.
 #' @keywords internal
 #' @concept dbMatrix
-#' @examples
-#' \donttest{
-#' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
-#' precompute <- getFromNamespace("precompute", "dbMatrix")
-#' precompute(con = con, m = 100, n = 100)
-#' DBI::dbDisconnect(con, shutdown = TRUE)
-#' }
 precompute <- function(conn, m, n, verbose = FALSE) {
   .check_con(conn = conn)
 

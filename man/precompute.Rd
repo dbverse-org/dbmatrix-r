@@ -37,13 +37,5 @@ In such cases, run this function again with a larger
 \code{n_rows} and \code{num_cols}, or to manually remove the precomputed
 table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 }
-\examples{
-\donttest{
-con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
-precompute <- getFromNamespace("precompute", "dbMatrix")
-precompute(con = con, m = 100, n = 100)
-DBI::dbDisconnect(con, shutdown = TRUE)
-}
-}
 \concept{dbMatrix}
 \keyword{internal}

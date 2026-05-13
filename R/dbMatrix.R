@@ -538,15 +538,6 @@ dbMatrix <- function(
 #' If the total size is within the limit, a single chunk is used.
 #' @return A [`dbDenseMatrix`] object
 #' @keywords internal
-#' @examples
-#' \donttest{
-#' old <- options(dbMatrix.allow_densify = TRUE)
-#' on.exit(options(old), add = TRUE)
-#' dbsm <- sim_dbSparseMatrix(10, 10)
-#' to_db_dense <- getFromNamespace(".to_db_dense", "dbMatrix")
-#' dbdm <- to_db_dense(dbsm)
-#' DBI::dbDisconnect(dbProject::conn(dbsm), shutdown = TRUE)
-#' }
 .to_db_dense <- function(x, chunk_size = NULL) {
   if (!inherits(x, "dbSparseMatrix")) {
     stopf("Input must be a dbSparseMatrix object")
