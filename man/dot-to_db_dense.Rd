@@ -25,9 +25,10 @@ Internal function to convert a \code{\link{dbSparseMatrix}} to
 \examples{
 \donttest{
 old <- options(dbMatrix.allow_densify = TRUE)
+on.exit(options(old), add = TRUE)
 dbsm <- sim_dbSparseMatrix(10, 10)
-dbdm <- dbMatrix:::.to_db_dense(dbsm)
-options(old)
+to_db_dense <- getFromNamespace(".to_db_dense", "dbMatrix")
+dbdm <- to_db_dense(dbsm)
 DBI::dbDisconnect(dbProject::conn(dbsm), shutdown = TRUE)
 }
 }

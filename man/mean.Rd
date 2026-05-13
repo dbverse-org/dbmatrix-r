@@ -14,6 +14,10 @@
 
 \item{...}{further arguments passed to or from other methods.}
 }
+\value{
+A length-one numeric vector giving the arithmetic mean of all entries
+in \code{x}.
+}
 \description{
 Generic function for the (trimmed) arithmetic mean.
 }

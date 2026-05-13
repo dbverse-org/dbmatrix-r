@@ -9,6 +9,9 @@
 \arguments{
 \item{x}{\code{\link{dbMatrix}} object}
 }
+\value{
+A length-one integer giving the number of stored elements in \code{x}.
+}
 \description{
 Get or set the length of vectors (including lists) and factors,
 and of any other R object for which a method has been defined.

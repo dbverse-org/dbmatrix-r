@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 # Enable densification for vignette examples
-options(dbMatrix.allow_densify = TRUE)
+old_options <- options(dbMatrix.allow_densify = TRUE)
 ```
 
 ```{r setup}
@@ -90,6 +90,7 @@ TODO
 ### Cleanup
 ```{r}
 DBI::dbDisconnect(con, shutdown = TRUE)
+options(old_options)
 ```
 
 ### Session Info

@@ -65,6 +65,10 @@ with the generic.}
 \item{useNames}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}
 }
+\value{
+A named numeric vector containing one sample standard deviation per
+row or column of \code{x}.
+}
 \description{
 Calculates the standard deviation for each row (column) of a matrix-like
 object.

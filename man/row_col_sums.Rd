@@ -30,6 +30,9 @@ the generic.}
 \item{memory}{logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
 for large computations. Set to TRUE to return the results as a vector.}
 }
+\value{
+A named numeric vector containing one sum per row or column of \code{x}.
+}
 \description{
 Calculates the sum for each row (column) of a matrix-like object.
 }

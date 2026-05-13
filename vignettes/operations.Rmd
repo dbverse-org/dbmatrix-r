@@ -10,8 +10,10 @@ vignette: >
 ---
 
 ```{r, include=FALSE}
-options(max.print = 10) # Set the maximum number of rows to display
-options(width = 80) # Set the maximum number of columns to display
+old_options <- options(
+  max.print = 10, # Set the maximum number of rows to display
+  width = 80 # Set the maximum number of columns to display
+)
 ```
 
 ## Introduction
@@ -191,6 +193,7 @@ dim(dense)
 ```{r}
 DBI::dbDisconnect(con, shutdown = TRUE)
 DBI::dbDisconnect(con2, shutdown = TRUE)
+options(old_options)
 ```
 
 ## Session Info

@@ -5,6 +5,8 @@
 #' @description
 #' Coercion methods to convert `dbMatrix` objects to in-memory `matrix` objects.
 #' Respects `dbMatrix.max_mem_convert` option to prevent OOM errors.
+#' @return A base R [`matrix`] containing the collected matrix values with the
+#'   same dimensions and dimnames as the source object.
 setAs("dbMatrix", "matrix", function(from) {
   .check_mem_limit(from)
   as.matrix(from)
@@ -29,6 +31,8 @@ setAs("dbSparseMatrix", "matrix", function(from) {
 #' @description
 #' Coercion methods to convert `dbMatrix` objects to in-memory `dgCMatrix` objects.
 #' Respects `dbMatrix.max_mem_convert` option to prevent OOM errors.
+#' @return A [`Matrix::dgCMatrix-class`] object containing the collected matrix
+#'   values. Dense inputs are converted to sparse Matrix format after collection.
 setAs("dbMatrix", "dgCMatrix", function(from) {
   .check_mem_limit(from)
   as.matrix(from, sparse = TRUE)
@@ -54,6 +58,9 @@ setAs("dbSparseMatrix", "dgCMatrix", function(from) {
 #' @description
 #' Coercion methods to convert in-memory `matrix` objects to `dbMatrix` objects.
 #' Creates a new in-memory DuckDB connection.
+#' @return A database-backed matrix object. Dense inputs return a
+#'   [`dbDenseMatrix`], while sparse [`Matrix::dgCMatrix-class`] inputs return a
+#'   [`dbSparseMatrix`].
 setAs("matrix", "dbMatrix", function(from) {
   con <- DBI::dbConnect(duckdb::duckdb())
   as.dbMatrix(from, con = con)

@@ -4,6 +4,11 @@
 \alias{coerce-matrix-dbMatrix}
 \alias{coerce-dgCMatrix-dbMatrix}
 \title{Coerce matrix to dbMatrix}
+\value{
+A database-backed matrix object. Dense inputs return a
+\code{\link{dbDenseMatrix}}, while sparse \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} inputs return a
+\code{\link{dbSparseMatrix}}.
+}
 \description{
 Coercion methods to convert in-memory \code{matrix} objects to \code{dbMatrix} objects.
 Creates a new in-memory DuckDB connection.

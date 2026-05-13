@@ -7,7 +7,11 @@
 get_dbdir(dbMatrix)
 }
 \arguments{
-\item{dbMatrix}{}
+\item{dbMatrix}{A database-backed object inheriting from \code{dbData}.}
+}
+\value{
+A character scalar giving the DuckDB database directory used by the
+object.
 }
 \description{
 get_dbdir

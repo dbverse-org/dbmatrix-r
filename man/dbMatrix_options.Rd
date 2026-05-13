@@ -4,6 +4,9 @@
 \alias{dbMatrix_options}
 \alias{dbMatrix-options}
 \title{dbMatrix Package Global Options}
+\value{
+No return value. This documentation page describes package options.
+}
 \description{
 The following global options can be modified to control the
 behavior of the \code{\link{dbMatrix}} package.

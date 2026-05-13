@@ -7,7 +7,11 @@
 get_tblName(dbMatrix)
 }
 \arguments{
-\item{dbMatrix}{}
+\item{dbMatrix}{A database-backed object inheriting from \code{dbData}.}
+}
+\value{
+A character scalar giving the DuckDB table name associated with the
+object.
 }
 \description{
 get_tblName

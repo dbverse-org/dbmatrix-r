@@ -207,17 +207,16 @@
 #' \code{n_rows} and \code{num_cols}, or to manually remove the precomputed
 #' table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 #'
-#' @return tbl_dbi
+#' @return A `tbl_dbi` object referencing the newly created precomputed lookup
+#'   table in DuckDB.
 #' @keywords internal
 #' @concept dbMatrix
 #' @examples
 #' \donttest{
-#' old_wd <- getwd()
-#' setwd(tempdir())
 #' con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
-#' dbMatrix:::precompute(con = con, m = 100, n = 100)
+#' precompute <- getFromNamespace("precompute", "dbMatrix")
+#' precompute(con = con, m = 100, n = 100)
 #' DBI::dbDisconnect(con, shutdown = TRUE)
-#' setwd(old_wd)
 #' }
 precompute <- function(conn, m, n, verbose = FALSE) {
   .check_con(conn = conn)

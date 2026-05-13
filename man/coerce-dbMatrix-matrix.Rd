@@ -5,6 +5,10 @@
 \alias{coerce-dbDenseMatrix-matrix}
 \alias{coerce-dbSparseMatrix-matrix}
 \title{Coerce dbMatrix to matrix}
+\value{
+A base R \code{\link{matrix}} containing the collected matrix values with the
+same dimensions and dimnames as the source object.
+}
 \description{
 Coercion methods to convert \code{dbMatrix} objects to in-memory \code{matrix} objects.
 Respects \code{dbMatrix.max_mem_convert} option to prevent OOM errors.

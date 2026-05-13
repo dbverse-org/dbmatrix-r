@@ -75,7 +75,8 @@ a non-zero value.
 
 }}
 \examples{
-dbMatrix:::sim_ijx_matrix(mat_type = "sparse")
+sim_ijx_matrix <- getFromNamespace("sim_ijx_matrix", "dbMatrix")
+sim_ijx_matrix(mat_type = "sparse")
 
 }
 \keyword{internal}

@@ -67,6 +67,10 @@ with the generic.}
 \item{useNames}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}
 }
+\value{
+A named numeric vector containing one sample variance per row or
+column of \code{x}.
+}
 \description{
 Calculates the variance for each row (column) of a matrix-like object.
 }

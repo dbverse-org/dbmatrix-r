@@ -44,6 +44,17 @@
 
 \item{...}{additional arguments}
 }
+\value{
+\itemize{
+\item Arithmetic and logical group methods return a \code{\link{dbMatrix}} object of
+the appropriate dense or sparse subclass, with the same dimensions as the
+input and transformed values stored in DuckDB.
+\item \code{dbLoad()} returns a \code{\link{dbDenseMatrix}} or \code{\link{dbSparseMatrix}} pointing
+to an existing DuckDB table.
+\item \code{writeMM()} writes a Matrix Market file to \code{file} and returns
+\code{invisible(TRUE)} on success.
+}
+}
 \description{
 See \code{methods::Arith} for more details.
 

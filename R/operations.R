@@ -229,6 +229,8 @@ arith_call_dbm_vect_multi <- function(
 #' operations in the order of dbSparseMatrix, vector
 #'
 #'
+#' @return `TRUE` if the operation should densify the sparse matrix before
+#'   evaluation, otherwise `FALSE`.
 #' @keywords internal
 .eval_op_densify <- function(generic_char, vec_matrix) {
   if (generic_char == "+" || generic_char == "-") {
@@ -270,6 +272,8 @@ arith_call_dbm_vect_multi <- function(
 #' @param vec_matrix A \code{dbMatrix} object with 1D row or col.
 #' @param op A character string representing the operation to be performed.
 #' @param swap_arith_order order of the arguments for the operation. default: NULL
+#' @return A [`dbMatrix`] object containing the result of applying `op` between
+#'   `dbm` and `vec_matrix`.
 #' @keywords internal
 .join_dbm_vect <- function(dbm, vec_matrix, op, swap_arith_order = FALSE) {
   # check inputs
@@ -418,6 +422,15 @@ arith_call_dbm_vect_multi <- function(
 #' See `methods::Arith` for more details.
 #' @param e1 First operand.
 #' @param e2 Second operand.
+#' @return \itemize{
+#'   \item Arithmetic and logical group methods return a [`dbMatrix`] object of
+#'   the appropriate dense or sparse subclass, with the same dimensions as the
+#'   input and transformed values stored in DuckDB.
+#'   \item `dbLoad()` returns a [`dbDenseMatrix`] or [`dbSparseMatrix`] pointing
+#'   to an existing DuckDB table.
+#'   \item `writeMM()` writes a Matrix Market file to `file` and returns
+#'   `invisible(TRUE)` on success.
+#' }
 #' @rdname dbMatrix-methods
 #' @export
 #' @usage \S4method{Arith}{dbMatrix,ANY}(e1, e2)
@@ -777,6 +790,7 @@ setMethod(
 #' the generic.
 #' @param memory logical. If FALSE (default), results returned as dbDenseMatrix. This is recommended
 #' for large computations. Set to TRUE to return the results as a vector.
+#' @return A named numeric vector containing one sum per row or column of `x`.
 #' @concept summary
 #' @rdname row_col_sums
 #' @export
@@ -879,6 +893,7 @@ setMethod(
 #' with the generic.
 #' @param dims Always 1 for [`dbMatrix`] queries. Included for compatibility with
 #' the generic.
+#' @return A named numeric vector containing one mean per row or column of `x`.
 #' @concept summary
 #' @rdname row_col_means
 #' @export
@@ -926,6 +941,8 @@ setMethod(
 #' @param ... Additional arguments (not used, but included for compatibility with the generic).
 #' @param useNames Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
+#' @return A named numeric vector containing one sample standard deviation per
+#'   row or column of `x`.
 #' @concept summary
 #' @rdname row_col_sds
 #' @export
@@ -1109,6 +1126,8 @@ setMethod(
 #' @param ... Additional arguments (not used, but included for compatibility with the generic).
 #' @param useNames Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
+#' @return A named numeric vector containing one sample variance per row or
+#'   column of `x`.
 #' @concept summary
 #' @rdname row_col_vars
 #' @export
@@ -1285,6 +1304,8 @@ setMethod(
 #' @inheritParams base::mean
 #' @inherit base::mean description
 #' @param x [`dbMatrix`] object
+#' @return A length-one numeric vector giving the arithmetic mean of all entries
+#'   in `x`.
 #' @concept summary
 #' @rdname mean
 #' @export
@@ -1579,6 +1600,7 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 #' The Number of Rows/Columns of a dbMatrix Object
 #' @description `nrow` and `ncol` return the number of rows or columns present in `x`.
 #' @param x [`dbMatrix`] object
+#' @return A length-one integer giving the number of rows or columns in `x`.
 #' @concept matrix_props
 #' @rdname nrow_ncol
 #' @export
@@ -1619,6 +1641,8 @@ ncol.dbMatrix <- function(x) {
 #' Dimensions of an Object
 #' @description Retrieve the dimension of an object.
 #' @param x [`dbMatrix`] object
+#' @return An integer vector of length 2 giving the number of rows and columns
+#'   in `x`.
 #' @concept matrix_props
 #' @export
 setMethod('dim', signature(x = 'dbMatrix'), function(x) {
@@ -1633,6 +1657,8 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 #' Return the First or Last Parts of an Object
 #' @inherit utils::head description
 #' @inheritParams utils::head
+#' @return A [`dbMatrix`] object containing the first or last `n` rows of `x`,
+#'   with updated dimensions and row names.
 #' @concept matrix_props
 #' @rdname head_tail
 #' @export
@@ -1668,6 +1694,7 @@ setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 #' @description Get or set the length of vectors (including lists) and factors,
 #' and of any other R object for which a method has been defined.
 #' @param x [`dbMatrix`] object
+#' @return A length-one integer giving the number of stored elements in `x`.
 #' @rdname length
 #' @export
 setMethod('length', signature(x = 'dbMatrix'), function(x) {

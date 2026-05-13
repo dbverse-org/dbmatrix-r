@@ -1,6 +1,8 @@
 
 #' Input validation for data arg
 #' @param value A `Matrix`, `matrix`, or `tbl_duckdb_connection` object
+#' @return No return value. Called for input validation and throws an error if
+#'   `value` is invalid.
 #' @keywords internal
 .check_value <- function(value) {
   if (is.character(value)) {

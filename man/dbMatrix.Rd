@@ -62,6 +62,14 @@ database. by default, no header is assumed. \code{(optional)}}
 
 \item{...}{additional params to pass to \code{dplyr::copy_to}}
 }
+\value{
+\code{dbMatrix()} returns an initialized \code{\link{dbDenseMatrix}} or
+\code{\link{dbSparseMatrix}} S4 object that points to matrix data stored in DuckDB.
+
+A \code{\link{dbDenseMatrix}} or \code{\link{dbSparseMatrix}} object, depending on
+\code{class}, pointing to matrix data stored in DuckDB. The object records the
+matrix dimensions and dimension names.
+}
 \description{
 Representation of sparse and dense matrices in a database. Each object
 is used as a connection to a single table that exists within the database.

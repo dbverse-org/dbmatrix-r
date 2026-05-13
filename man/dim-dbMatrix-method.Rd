@@ -9,6 +9,10 @@
 \arguments{
 \item{x}{\code{\link{dbMatrix}} object}
 }
+\value{
+An integer vector of length 2 giving the number of rows and columns
+in \code{x}.
+}
 \description{
 Retrieve the dimension of an object.
 }

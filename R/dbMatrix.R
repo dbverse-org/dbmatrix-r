@@ -369,6 +369,9 @@ setMethod("show", signature("dbSparseMatrix"), function(object) {
 #'  existing [`dbMatrix`] object. \code{dims} and \code{dim_names} must be
 #'  specified if \code{value} is \code{tbl_duckdb_connection}.
 #' }
+#' @return A [`dbDenseMatrix`] or [`dbSparseMatrix`] object, depending on
+#'   `class`, pointing to matrix data stored in DuckDB. The object records the
+#'   matrix dimensions and dimension names.
 #' @concept dbMatrix
 #' @export
 #' @examples
@@ -538,9 +541,10 @@ dbMatrix <- function(
 #' @examples
 #' \donttest{
 #' old <- options(dbMatrix.allow_densify = TRUE)
+#' on.exit(options(old), add = TRUE)
 #' dbsm <- sim_dbSparseMatrix(10, 10)
-#' dbdm <- dbMatrix:::.to_db_dense(dbsm)
-#' options(old)
+#' to_db_dense <- getFromNamespace(".to_db_dense", "dbMatrix")
+#' dbdm <- to_db_dense(dbsm)
 #' DBI::dbDisconnect(dbProject::conn(dbsm), shutdown = TRUE)
 #' }
 .to_db_dense <- function(x, chunk_size = NULL) {
@@ -1633,6 +1637,8 @@ get_MM_dimnames <- function(
 #' * j (col index)
 #' * j_names (colnames)
 #' * x (counts of i,j occcurences)
+#' @return A lazy `tbl_dbi` with `i`, `j`, `x`, and the mapped row/column name
+#'   columns.
 #' @param dbMatrix dbMatrix object
 #' @param colName_i name of column rownames to add to database
 #' @param colName_j name of column colnames to add to database

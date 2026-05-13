@@ -21,6 +21,9 @@ the generic.}
 
 \item{...}{Additional arguments passed to specific methods.}
 }
+\value{
+A named numeric vector containing one mean per row or column of \code{x}.
+}
 \description{
 Calculates the mean for each row (column) of a matrix-like object.
 }

@@ -9,6 +9,10 @@
 \arguments{
 \item{value}{A \code{Matrix}, \code{matrix}, or \code{tbl_duckdb_connection} object}
 }
+\value{
+No return value. Called for input validation and throws an error if
+\code{value} is invalid.
+}
 \description{
 Input validation for data arg
 }

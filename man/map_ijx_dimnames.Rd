@@ -14,6 +14,10 @@ map_ijx_dimnames(dbMatrix, colName_i, colName_j)
 \item{colName_j}{name of column colnames to add to database
 default: 'FALSE'.'}
 }
+\value{
+A lazy \code{tbl_dbi} with \code{i}, \code{j}, \code{x}, and the mapped row/column name
+columns.
+}
 \description{
 Map dimnames to i,j indices
 }

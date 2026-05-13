@@ -19,6 +19,11 @@ as.dbMatrix(x, con = NULL, name = "dbMatrix", overwrite = FALSE, ...)
 
 \item{...}{Additional arguments passed to methods}
 }
+\value{
+A \code{\link{dbDenseMatrix}} for dense matrix inputs or a \code{\link{dbSparseMatrix}}
+for sparse matrix inputs. The returned object keeps the input dimensions
+and dimnames while storing matrix values in DuckDB.
+}
 \description{
 Converts in-memory \code{\link{matrix}}, \code{\link[Matrix:dgeMatrix-class]{Matrix::dgeMatrix}}, or
 \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} into a \code{\link{dbMatrix}} object.

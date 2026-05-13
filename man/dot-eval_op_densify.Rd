@@ -11,6 +11,10 @@
 
 \item{vec_matrix}{A \code{dbMatrix} object with 1D row or col.}
 }
+\value{
+\code{TRUE} if the operation should densify the sparse matrix before
+evaluation, otherwise \code{FALSE}.
+}
 \description{
 Evaluate if a dbSparseMatrix should be densified
 }

@@ -5,6 +5,10 @@
 \alias{coerce-dbDenseMatrix-dgCMatrix}
 \alias{coerce-dbSparseMatrix-dgCMatrix}
 \title{Coerce dbMatrix to dgCMatrix}
+\value{
+A \code{\link[Matrix:dgCMatrix-class]{Matrix::dgCMatrix}} object containing the collected matrix
+values. Dense inputs are converted to sparse Matrix format after collection.
+}
 \description{
 Coercion methods to convert \code{dbMatrix} objects to in-memory \code{dgCMatrix} objects.
 Respects \code{dbMatrix.max_mem_convert} option to prevent OOM errors.

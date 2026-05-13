@@ -26,6 +26,9 @@ setMethod('names', signature(x = 'dbDenseMatrix'), function(x) {
 #' generic.
 #' @param prefix Not used for this method. Included for compatibility with the
 #' generic.
+#' @return `rownames()` and `colnames()` return character vectors of dimension
+#'   names. `dimnames()` returns a length-2 list containing row and column name
+#'   vectors. The replacement forms return the modified [`dbMatrix`] object.
 #' @rdname matrix_props
 #' @concept matrix_props
 #' @export

@@ -1,7 +1,9 @@
 # internal functions ####
 #' get_tblName
 #'
-#' @param dbMatrix
+#' @param dbMatrix A database-backed object inheriting from `dbData`.
+#' @return A character scalar giving the DuckDB table name associated with the
+#'   object.
 #'
 #' @keywords internal
 get_tblName <- function(dbMatrix) {
@@ -17,7 +19,9 @@ get_tblName <- function(dbMatrix) {
 
 #' get_dbdir
 #'
-#' @param dbMatrix
+#' @param dbMatrix A database-backed object inheriting from `dbData`.
+#' @return A character scalar giving the DuckDB database directory used by the
+#'   object.
 #'
 #' @keywords internal
 #' string of the path to the database directory
@@ -35,7 +39,8 @@ get_dbdir <- function(dbMatrix) {
 
 #' get_con
 #'
-#' @param dbMatrix
+#' @param dbMatrix A database-backed object inheriting from `dbData`.
+#' @return A live DBI connection associated with the database-backed object.
 #'
 #' @keywords internal
 #'

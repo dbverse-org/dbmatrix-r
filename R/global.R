@@ -24,6 +24,7 @@
 #' to sparse matrix). Set to `TRUE` to enable on-disk dense conversion. **Warning**:
 #' Dense conversion can cause massive disk usage for large matrices.
 #'
+#' @return No return value. This documentation page describes package options.
 #' @name dbMatrix_options
 #' @aliases dbMatrix-options
 NULL

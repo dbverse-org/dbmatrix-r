@@ -16,7 +16,8 @@ precompute(conn, m, n, verbose = FALSE)
 \item{verbose}{logical, print progress messages. default: FALSE.}
 }
 \value{
-tbl_dbi
+A \code{tbl_dbi} object referencing the newly created precomputed lookup
+table in DuckDB.
 }
 \description{
 Precomputes a COO list table in a specificied database connection in column-
@@ -38,12 +39,10 @@ table set \code{options(dbMatrix.precomp = NULL)} in the R console.
 }
 \examples{
 \donttest{
-old_wd <- getwd()
-setwd(tempdir())
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
-dbMatrix:::precompute(con = con, m = 100, n = 100)
+precompute <- getFromNamespace("precompute", "dbMatrix")
+precompute(con = con, m = 100, n = 100)
 DBI::dbDisconnect(con, shutdown = TRUE)
-setwd(old_wd)
 }
 }
 \concept{dbMatrix}

@@ -6,6 +6,9 @@
 #' @param name Table name to assign within database
 #' @param overwrite Whether to overwrite if table already exists
 #' @param ... Additional arguments passed to methods
+#' @return A [`dbDenseMatrix`] for dense matrix inputs or a [`dbSparseMatrix`]
+#'   for sparse matrix inputs. The returned object keeps the input dimensions
+#'   and dimnames while storing matrix values in DuckDB.
 #' @export
 as.dbMatrix <- function(
   x,

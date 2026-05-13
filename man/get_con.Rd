@@ -7,7 +7,10 @@
 get_con(dbMatrix)
 }
 \arguments{
-\item{dbMatrix}{}
+\item{dbMatrix}{A database-backed object inheriting from \code{dbData}.}
+}
+\value{
+A live DBI connection associated with the database-backed object.
 }
 \description{
 get_con

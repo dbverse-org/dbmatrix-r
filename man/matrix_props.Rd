@@ -36,6 +36,11 @@ generic.}
     \code{NULL} or a character vector of non-zero length equal to the
     appropriate dimension.}
 }
+\value{
+\code{rownames()} and \code{colnames()} return character vectors of dimension
+names. \code{dimnames()} returns a length-2 list containing row and column name
+vectors. The replacement forms return the modified \code{\link{dbMatrix}} object.
+}
 \description{
 Retrieve and Set Row (Column) Dimension Names of dbMatrix Objects
 }

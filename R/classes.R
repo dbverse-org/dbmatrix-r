@@ -12,6 +12,8 @@
 #' @slot dim_names row (1) and col (2) names
 #' @slot dims dimensions of the matrix
 #' @slot init logical. Whether the object is fully initialized
+#' @return `dbMatrix()` returns an initialized [`dbDenseMatrix`] or
+#'   [`dbSparseMatrix`] S4 object that points to matrix data stored in DuckDB.
 #' @rdname dbMatrix
 #' @aliases dbMatrix-class
 #' @exportClass dbMatrix
@@ -71,6 +73,9 @@ dbMatrix <- setClass(
 #'
 #' @description Representation of dense matrices using an on-disk database.
 #' Inherits from \link{dbMatrix}.
+#' @return Objects of class `dbDenseMatrix` store all matrix entries explicitly
+#'   in DuckDB. They are typically returned by [dbMatrix()] or [as.dbMatrix()]
+#'   for dense inputs.
 #'
 #' @name dbDenseMatrix-class
 #' @export
@@ -84,6 +89,9 @@ dbDenseMatrix <- setClass(
 #'
 #' @description Representation of sparse matrices using an on-disk database.
 #' Inherits from \link{dbMatrix}.
+#' @return Objects of class `dbSparseMatrix` store only non-zero matrix entries
+#'   in DuckDB. They are typically returned by [dbMatrix()] or [as.dbMatrix()]
+#'   for sparse inputs.
 #' @name dbSparseMatrix-class
 #' @export
 dbSparseMatrix <- setClass(

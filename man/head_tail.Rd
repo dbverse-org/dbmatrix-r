@@ -25,6 +25,10 @@
 
 \item{...}{arguments to be passed to or from other methods.}
 }
+\value{
+A \code{\link{dbMatrix}} object containing the first or last \code{n} rows of \code{x},
+with updated dimensions and row names.
+}
 \description{
 Returns the first or last parts of a vector, matrix, array, table, data frame
   or function.  Since \code{head()} and \code{tail()} are generic

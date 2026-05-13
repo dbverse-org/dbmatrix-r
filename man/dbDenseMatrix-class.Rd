@@ -5,6 +5,11 @@
 \alias{dbDenseMatrix-class}
 \alias{dbDenseMatrix}
 \title{S4 Class for \code{dbDenseMatrix}}
+\value{
+Objects of class \code{dbDenseMatrix} store all matrix entries explicitly
+in DuckDB. They are typically returned by \code{\link[=dbMatrix]{dbMatrix()}} or \code{\link[=as.dbMatrix]{as.dbMatrix()}}
+for dense inputs.
+}
 \description{
 Representation of dense matrices using an on-disk database.
 Inherits from \link{dbMatrix}.

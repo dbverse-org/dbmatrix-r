@@ -15,6 +15,10 @@
 
 \item{swap_arith_order}{order of the arguments for the operation. default: NULL}
 }
+\value{
+A \code{\link{dbMatrix}} object containing the result of applying \code{op} between
+\code{dbm} and \code{vec_matrix}.
+}
 \description{
 Join a \code{dbSparseMatrix} with a \code{dbMatrix} object
 }

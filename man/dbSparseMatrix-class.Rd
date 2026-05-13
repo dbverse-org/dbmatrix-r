@@ -5,6 +5,11 @@
 \alias{dbSparseMatrix-class}
 \alias{dbSparseMatrix}
 \title{S4 Class for dbSparseMatrix}
+\value{
+Objects of class \code{dbSparseMatrix} store only non-zero matrix entries
+in DuckDB. They are typically returned by \code{\link[=dbMatrix]{dbMatrix()}} or \code{\link[=as.dbMatrix]{as.dbMatrix()}}
+for sparse inputs.
+}
 \description{
 Representation of sparse matrices using an on-disk database.
 Inherits from \link{dbMatrix}.

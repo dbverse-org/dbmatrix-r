@@ -12,6 +12,9 @@ ncol.dbMatrix(x)
 \arguments{
 \item{x}{\code{\link{dbMatrix}} object}
 }
+\value{
+A length-one integer giving the number of rows or columns in \code{x}.
+}
 \description{
 \code{nrow} and \code{ncol} return the number of rows or columns present in \code{x}.
 }
