@@ -16,4 +16,5 @@
 ^tutorials$
 ^src/.*\.o$
 ^src/.*\.so$
+^cran-comments\.md$
 ^CRAN-SUBMISSION$
