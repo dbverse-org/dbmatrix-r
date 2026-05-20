@@ -12,7 +12,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/dbverse-org/dbmatrix-r/blob/dev/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/dbverse-org/dbmatrix-r/blob/v0.1.0/DESCRIPTION)
 
 C. Ruiz E, George Chen J, Dries R (2026). *dbMatrix: Database-Backed
 Matrix Classes and Operations*. R package version 0.1.0,
