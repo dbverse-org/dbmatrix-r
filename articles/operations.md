@@ -8,6 +8,7 @@ by `dbMatrix`.
 ## Loading library
 
 ``` r
+
 library(dbMatrix)
 library(Matrix)
 ```
@@ -43,6 +44,7 @@ operations listed below with support for more coming soon.
 Let’s create a sparse matrix for demonstration:
 
 ``` r
+
 set.seed(42)
 dgc <- Matrix::rsparsematrix(100, 50, density = 0.1, rand.x = function(n) rpois(n, 5) + 1)
 rownames(dgc) <- paste0("gene_", seq_len(100))
@@ -62,6 +64,7 @@ dplyr::glimpse(dgc)
     ##   ..@ factors : list()
 
 ``` r
+
 # create dbSparseMatrix from the same dgc
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
@@ -93,6 +96,7 @@ head(sparse)
 ### transpose
 
 ``` r
+
 dbMatrix::t(sparse)
 ```
 
@@ -114,6 +118,7 @@ dbMatrix::t(sparse)
 ### colMeans
 
 ``` r
+
 dbMatrix::colMeans(sparse)
 ```
 
@@ -124,6 +129,7 @@ dbMatrix::colMeans(sparse)
 ### colSums
 
 ``` r
+
 dbMatrix::colSums(sparse)
 ```
 
@@ -134,6 +140,7 @@ dbMatrix::colSums(sparse)
 ### rowMeans
 
 ``` r
+
 dbMatrix::rowMeans(sparse)
 ```
 
@@ -144,6 +151,7 @@ dbMatrix::rowMeans(sparse)
 ### rowSums
 
 ``` r
+
 dbMatrix::rowSums(sparse)
 ```
 
@@ -154,12 +162,14 @@ dbMatrix::rowSums(sparse)
 ### dim
 
 ``` r
+
 dim(sparse)
 ```
 
     ## [1] 100  50
 
 ``` r
+
 dim(dgc)
 ```
 
@@ -170,24 +180,28 @@ dim(dgc)
 Click to expand
 
 ``` r
+
   all.equal(dbMatrix::colMeans(sparse, memory = TRUE, names = TRUE), Matrix::colMeans(dgc))
 ```
 
       ## [1] TRUE
 
 ``` r
+
   all.equal(dbMatrix::colSums(sparse, memory = TRUE, names = TRUE), Matrix::colSums(dgc))
 ```
 
       ## [1] TRUE
 
 ``` r
+
   all.equal(dbMatrix::rowMeans(sparse, memory = TRUE, names = TRUE), Matrix::rowMeans(dgc))
 ```
 
       ## [1] TRUE
 
 ``` r
+
   all.equal(dbMatrix::rowSums(sparse, memory = TRUE, names = TRUE), Matrix::rowSums(dgc))
 ```
 
@@ -196,6 +210,7 @@ Click to expand
 ## dbDenseMatrix Operations
 
 ``` r
+
 # Create a dense matrix directly
 set.seed(42)
 mat <- matrix(rnorm(100), nrow = 10, ncol = 10)
@@ -232,6 +247,7 @@ dense
 ### transpose
 
 ``` r
+
 dbMatrix::t(dense)
 ```
 
@@ -253,6 +269,7 @@ dbMatrix::t(dense)
 ### colMeans
 
 ``` r
+
 dbMatrix::colMeans(dense)
 ```
 
@@ -264,6 +281,7 @@ dbMatrix::colMeans(dense)
 ### colSums
 
 ``` r
+
 dbMatrix::colSums(dense)
 ```
 
@@ -275,6 +293,7 @@ dbMatrix::colSums(dense)
 ### rowMeans
 
 ``` r
+
 dbMatrix::rowMeans(dense)
 ```
 
@@ -286,6 +305,7 @@ dbMatrix::rowMeans(dense)
 ### rowSums
 
 ``` r
+
 dbMatrix::rowSums(dense)
 ```
 
@@ -297,6 +317,7 @@ dbMatrix::rowSums(dense)
 ### mean
 
 ``` r
+
 dbMatrix::mean(dense)
 ```
 
@@ -305,6 +326,7 @@ dbMatrix::mean(dense)
 ### dim
 
 ``` r
+
 dim(dense)
 ```
 
@@ -313,30 +335,32 @@ dim(dense)
 ## Cleanup
 
 ``` r
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 DBI::dbDisconnect(con2, shutdown = TRUE)
+options(old_options)
 ```
 
 ## Session Info
 
 ``` r
+
 sessionInfo()
 ```
 
-    ## R version 4.5.3 (2026-03-11)
+    ## R version 4.6.0 (2026-04-24)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
     ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
     ## 
     ## locale:
-    ##  [1] LC_CTYPE=C.UTF-8    LC_NUMERIC=C        LC_TIME=C.UTF-8    
-    ##  [4] LC_COLLATE=C.UTF-8  LC_MONETARY=C.UTF-8 LC_MESSAGES=C.UTF-8
-    ##  [7] LC_PAPER=C.UTF-8    LC_NAME=C           LC_ADDRESS=C       
-    ## [10] LC_TELEPHONE=C     
-    ##  [ reached 'max' / getOption("max.print") -- omitted 2 entries ]
+    ##  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+    ##  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+    ##  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+    ## [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
     ## 
     ## time zone: UTC
     ## tzcode source: system (glibc)
@@ -345,10 +369,25 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] Matrix_1.7-4        dbMatrix_0.0.0.9126
+    ## [1] Matrix_1.7-5   dbMatrix_0.1.0
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] bit_4.6.0        jsonlite_2.0.0   dplyr_1.2.0      compiler_4.5.3  
-    ##  [5] tidyselect_1.2.1 Rcpp_1.1.1       blob_1.3.0       nanoarrow_0.8.0 
-    ##  [9] pins_1.4.2       assertthat_0.2.1
-    ##  [ reached 'max' / getOption("max.print") -- omitted 45 entries ]
+    ##  [1] bit_4.6.0             jsonlite_2.0.0        dplyr_1.2.1          
+    ##  [4] compiler_4.6.0        tidyselect_1.2.1      Rcpp_1.1.1-1.1       
+    ##  [7] blob_1.3.0            nanoarrow_0.8.0       pins_1.4.2           
+    ## [10] assertthat_0.2.1      dbProject_0.1.0       jquerylib_0.1.4      
+    ## [13] arrow_24.0.0          systemfonts_1.3.2     textshaping_1.0.5    
+    ## [16] yaml_2.3.12           fastmap_1.2.0         lattice_0.22-9       
+    ## [19] R6_2.6.1              generics_0.1.4        knitr_1.51           
+    ## [22] tibble_3.3.1          desc_1.4.3            MatrixGenerics_1.24.0
+    ## [25] DBI_1.3.0             bslib_0.11.0          pillar_1.11.1        
+    ## [28] connections_0.2.1     rlang_1.2.0           cachem_1.1.0         
+    ## [31] xfun_0.57             fs_2.1.0              sass_0.4.10          
+    ## [34] bit64_4.8.2           cli_3.6.6             withr_3.0.2          
+    ## [37] pkgdown_2.2.0         magrittr_2.0.5        digest_0.6.39        
+    ## [40] grid_4.6.0            rscontract_0.1.2      dbplyr_2.5.2         
+    ## [43] lifecycle_1.0.5       vctrs_0.7.3           evaluate_1.0.5       
+    ## [46] glue_1.8.1            data.table_1.18.4     duckdb_1.5.2         
+    ## [49] ragg_1.5.2            rmarkdown_2.31        purrr_1.2.2          
+    ## [52] pkgconfig_2.0.3       matrixStats_1.5.0     tools_4.6.0          
+    ## [55] htmltools_0.5.9

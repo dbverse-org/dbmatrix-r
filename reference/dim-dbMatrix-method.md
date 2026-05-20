@@ -15,3 +15,8 @@ dim(x)
 
   [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
   object
+
+## Value
+
+An integer vector of length 2 giving the number of rows and columns in
+`x`.

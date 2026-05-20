@@ -37,3 +37,10 @@ tail(x, n = 6L, ...)
 - ...:
 
   arguments to be passed to or from other methods.
+
+## Value
+
+A
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object containing the first or last `n` rows of `x`, with updated
+dimensions and row names.

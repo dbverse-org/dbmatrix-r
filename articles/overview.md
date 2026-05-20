@@ -1,5 +1,10 @@
 # Overview
 
+``` r
+
+library(dbMatrix)
+```
+
 ## dbMatrix
 
 `dbMatrix` is a core package in the
@@ -9,6 +14,32 @@ inherits from the `dbData` base class and consists of two subclasses,
 
 `dbMatrix` objects emulate in-memory dense and sparse matrices in an
 embedded database powered by DuckDB.
+
+## Minimal example
+
+``` r
+
+con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+
+mat <- matrix(1:9, nrow = 3, ncol = 3)
+dbmat <- dbMatrix(
+  value = mat,
+  con = con,
+  name = "overview_matrix",
+  class = "dbDenseMatrix",
+  overwrite = TRUE
+)
+
+dbmat
+#> 3 x 3  dbMatrix of class "dbDenseMatrix"
+#> [[ Colnames: 'col1', 'col2', 'col3' ]]
+#>                                   
+#> row1 1.0000000 4.0000000 7.0000000
+#> row2 2.0000000 5.0000000 8.0000000
+#> row3 3.0000000 6.0000000 9.0000000
+
+DBI::dbDisconnect(con, shutdown = TRUE)
+```
 
 ## dbSparseMatrix
 

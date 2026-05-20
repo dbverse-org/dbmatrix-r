@@ -14,13 +14,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/dbverse-org/dbmatrix-r/blob/dev/DESCRIPTION)
 
-C. Ruiz E, George Chen J, Dries R (2026). *dbMatrix: dbMatrix*. R
-package version 0.0.0.9126, <https://github.com/dbverse-org/dbmatrix-r>.
+C. Ruiz E, George Chen J, Dries R (2026). *dbMatrix: Database-Backed
+Matrix Classes and Operations*. R package version 0.1.0,
+<https://github.com/dbverse-org/dbmatrix-r>.
 
     @Manual{,
-      title = {dbMatrix: dbMatrix},
+      title = {dbMatrix: Database-Backed Matrix Classes and Operations},
       author = {Edward {C. Ruiz} and Jiaji {George Chen} and Ruben Dries},
       year = {2026},
-      note = {R package version 0.0.0.9126},
+      note = {R package version 0.1.0},
       url = {https://github.com/dbverse-org/dbmatrix-r},
     }

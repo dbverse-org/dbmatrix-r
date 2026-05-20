@@ -1,6 +1,7 @@
 # Arithmetic
 
 ``` r
+
 library(dbMatrix)
 ```
 
@@ -21,6 +22,7 @@ page](https://github.com/dbverse-org/dbmatrix-r/).
 Let’s create a simple sparse matrix for demonstration:
 
 ``` r
+
 # Create a sparse matrix
 set.seed(42)
 dgc <- Matrix::rsparsematrix(100, 50, density = 0.1, rand.x = function(n) rpois(n, 5) + 1)
@@ -47,6 +49,7 @@ single-cell RNA-seq data, the matrix is sparse.
 Let’s create a `dbSparseMatrix` object from the above `dgc` object.
 
 ``` r
+
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 
@@ -82,6 +85,7 @@ Note: Addition or subtraction with non-zero addends on a
 `dbSparseMatrix` results in a `dbDenseMatrix`.
 
 ``` r
+
 dbsm + 1
 #> ℹ Performing on-the-fly densification (cold path). See ?dbMatrix_options for details.
 #> 100 x 50  dbMatrix of class "dbDenseMatrix"
@@ -118,6 +122,7 @@ dbsm * 100
 are [conformable](https://en.wikipedia.org/wiki/Conformable_matrix).
 
 ``` r
+
 dbsm + dbsm
 #> 100 x 50  dbMatrix of class "dbSparseMatrix"
 #> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
@@ -138,6 +143,7 @@ dbsm + dbsm
 #### Hadamard product
 
 ``` r
+
 dbsm * dbsm
 #> 100 x 50  dbMatrix of class "dbSparseMatrix"
 #> [[ Colnames 'cell_1', 'cell_2', 'cell_3' ... suppressing 44 ...'cell_48', 'cell_49', 'cell_50' ]]
@@ -160,16 +166,19 @@ TODO
 ### Cleanup
 
 ``` r
+
 DBI::dbDisconnect(con, shutdown = TRUE)
+options(old_options)
 ```
 
 ### Session Info
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.3 (2026-03-11)
+#> R version 4.6.0 (2026-04-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.3 LTS
+#> Running under: Ubuntu 24.04.4 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -188,26 +197,26 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] dbMatrix_0.0.0.9126
+#> [1] dbMatrix_0.1.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] bit_4.6.0             Matrix_1.7-4          jsonlite_2.0.0       
-#>  [4] dplyr_1.2.0           compiler_4.5.3        tidyselect_1.2.1     
-#>  [7] Rcpp_1.1.1            blob_1.3.0            nanoarrow_0.8.0      
-#> [10] pins_1.4.2            assertthat_0.2.1      dbProject_0.0.0.9002 
-#> [13] jquerylib_0.1.4       arrow_23.0.1.1        systemfonts_1.3.2    
+#>  [1] bit_4.6.0             Matrix_1.7-5          jsonlite_2.0.0       
+#>  [4] dplyr_1.2.1           compiler_4.6.0        tidyselect_1.2.1     
+#>  [7] Rcpp_1.1.1-1.1        blob_1.3.0            nanoarrow_0.8.0      
+#> [10] pins_1.4.2            assertthat_0.2.1      dbProject_0.1.0      
+#> [13] jquerylib_0.1.4       arrow_24.0.0          systemfonts_1.3.2    
 #> [16] textshaping_1.0.5     yaml_2.3.12           fastmap_1.2.0        
 #> [19] lattice_0.22-9        R6_2.6.1              generics_0.1.4       
 #> [22] knitr_1.51            tibble_3.3.1          desc_1.4.3           
-#> [25] MatrixGenerics_1.22.0 DBI_1.3.0             bslib_0.10.0         
-#> [28] pillar_1.11.1         connections_0.2.1     rlang_1.1.7          
-#> [31] cachem_1.1.0          xfun_0.57             fs_2.0.0             
-#> [34] sass_0.4.10           bit64_4.6.0-1         cli_3.6.5            
-#> [37] withr_3.0.2           pkgdown_2.2.0         magrittr_2.0.4       
-#> [40] digest_0.6.39         grid_4.5.3            rscontract_0.1.2     
-#> [43] dbplyr_2.5.2          lifecycle_1.0.5       vctrs_0.7.2          
-#> [46] evaluate_1.0.5        glue_1.8.0            data.table_1.18.2.1  
-#> [49] duckdb_1.5.0          ragg_1.5.1            rmarkdown_2.30       
-#> [52] purrr_1.2.1           pkgconfig_2.0.3       matrixStats_1.5.0    
-#> [55] tools_4.5.3           htmltools_0.5.9
+#> [25] MatrixGenerics_1.24.0 DBI_1.3.0             bslib_0.11.0         
+#> [28] pillar_1.11.1         connections_0.2.1     rlang_1.2.0          
+#> [31] cachem_1.1.0          xfun_0.57             fs_2.1.0             
+#> [34] sass_0.4.10           bit64_4.8.2           cli_3.6.6            
+#> [37] withr_3.0.2           pkgdown_2.2.0         magrittr_2.0.5       
+#> [40] digest_0.6.39         grid_4.6.0            rscontract_0.1.2     
+#> [43] dbplyr_2.5.2          lifecycle_1.0.5       vctrs_0.7.3          
+#> [46] evaluate_1.0.5        glue_1.8.1            data.table_1.18.4    
+#> [49] duckdb_1.5.2          ragg_1.5.2            rmarkdown_2.31       
+#> [52] purrr_1.2.2           pkgconfig_2.0.3       matrixStats_1.5.0    
+#> [55] tools_4.6.0           htmltools_0.5.9
 ```

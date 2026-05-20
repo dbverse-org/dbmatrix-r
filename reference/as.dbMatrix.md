@@ -40,6 +40,15 @@ as.dbMatrix(x, con = NULL, name = "dbMatrix", overwrite = FALSE, ...)
 
   Additional arguments passed to methods
 
+## Value
+
+A
+[`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
+for dense matrix inputs or a
+[`dbSparseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
+for sparse matrix inputs. The returned object keeps the input dimensions
+and dimnames while storing matrix values in DuckDB.
+
 ## Details
 
 If no `con` is provided, a temporary in-memory database connection is

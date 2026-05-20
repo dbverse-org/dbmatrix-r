@@ -77,11 +77,3 @@ values to a non-zero value.
 - `sim_dbSparseMatrix()`: Simulate a dbSparseMatrix in memory
 
 - `sim_dbDenseMatrix()`: Simulate a dbDenseMatrix in memory
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-sim_ijx_matrix()
-} # }
-```

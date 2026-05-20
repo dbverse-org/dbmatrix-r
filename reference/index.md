@@ -51,6 +51,16 @@ Function for creating `dbMatrix` objects
 - [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md)
   : dbMatrix_from_tbl
 
+- [`` `[`( ``*`<dbMatrix>`*`,`*`<dbIndex>`*`,`*`<missing>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<missing>`*`,`*`<dbIndex>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<dbIndex>`*`,`*`<dbIndex>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<dbMatrix>`*`,`*`<missing>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[<-`( ``*`<dbMatrix>`*`,`*`<dbMatrix>`*`,`*`<missing>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<dbDenseMatrix>`*`,`*`<missing>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<missing>`*`,`*`<dbDenseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  [`` `[`( ``*`<dbMatrix>`*`,`*`<dbDenseMatrix>`*`,`*`<dbDenseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/extract-dbMatrix.md)
+  : Extract or replace values in database-backed matrices
+
 - [`to_named_ijx_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/to_named_ijx_tbl.md)
   : Convert dbMatrix to named ijx table
 
@@ -160,15 +170,15 @@ Methods to retrieve basic properties of `dbMatrix` objects
 
 Convenience methods for `dbData` objects
 
-- [`dbLoad(`*`<DBIConnection>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+- [`Arith(`*`<dbMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`Arith(`*`<ANY>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`Arith(`*`<dbMatrix>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`Ops(`*`<dbMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`Ops(`*`<ANY>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`Ops(`*`<dbMatrix>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
+  [`dbLoad(`*`<DBIConnection>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
   [`writeMM(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix-methods.md)
-  :
-
-  ### dbDisconnect
-
-  \#' @title dbDisconnect \#' @rdname DBI \#' @export
-  setMethod('dbDisconnect', signature(x = 'dbMatrix'), function(x, ...)
-  con \<- get_con(x) DBI::dbDisconnect(conn = con, shutdown = TRUE) )
+  : Arith dbMatrix, e2
 
 ## Package Options
 

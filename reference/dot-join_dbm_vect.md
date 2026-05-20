@@ -25,3 +25,10 @@ Join a `dbSparseMatrix` with a `dbMatrix` object
 - swap_arith_order:
 
   order of the arguments for the operation. default: NULL
+
+## Value
+
+A
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object containing the result of applying `op` between `dbm` and
+`vec_matrix`.

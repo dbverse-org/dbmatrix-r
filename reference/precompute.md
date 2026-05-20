@@ -31,7 +31,8 @@ precompute(conn, m, n, verbose = FALSE)
 
 ## Value
 
-tbl_dbi
+A `tbl_dbi` object referencing the newly created precomputed lookup
+table in DuckDB.
 
 ## Details
 
@@ -44,12 +45,3 @@ the name 'precomp_mXn'.
 In such cases, run this function again with a larger `n_rows` and
 `num_cols`, or to manually remove the precomputed table set
 `options(dbMatrix.precomp = NULL)` in the R console.
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-con = DBI::dbConnect(duckdb::duckdb(), ":memory:")
-precompute(con = con , m = 100, n = 100)
-} # }
-```

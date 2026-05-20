@@ -13,3 +13,8 @@ Input validation for data arg
 - value:
 
   A `Matrix`, `matrix`, or `tbl_duckdb_connection` object
+
+## Value
+
+No return value. Called for input validation and throws an error if
+`value` is invalid.

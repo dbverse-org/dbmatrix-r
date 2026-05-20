@@ -95,6 +95,21 @@ dbMatrix(
   additional params to pass to
   [`dplyr::copy_to`](https://dplyr.tidyverse.org/reference/copy_to.html)
 
+## Value
+
+`dbMatrix()` returns an initialized
+[`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
+or
+[`dbSparseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
+S4 object that points to matrix data stored in DuckDB.
+
+A
+[`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
+or
+[`dbSparseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbSparseMatrix-class.md)
+object, depending on `class`, pointing to matrix data stored in DuckDB.
+The object records the matrix dimensions and dimension names.
+
 ## Details
 
 This function reads in data into a pre-existing DuckDB database.

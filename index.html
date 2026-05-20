@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>dbMatrix • dbMatrix</title>
+<title>Database-Backed Matrix Classes and Operations • dbMatrix</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="dbMatrix">
-<meta name="description" content="dbMatrix is a package in the dbverse for working with matrices in databases.">
-<meta property="og:description" content="dbMatrix is a package in the dbverse for working with matrices in databases.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Database-Backed Matrix Classes and Operations">
+<meta name="description" content="Provides S4 classes and methods for storing dense and sparse matrices in DuckDB databases. The package supports constructing database-backed matrices from base R and Matrix objects, extracting slices and summaries, performing arithmetic and selected linear algebra operations, and materializing results for larger-than-memory workflows. It integrates with dbProject to keep database paths, live connections, and lazy matrix tables synchronized across interactive analyses.">
+<meta property="og:description" content="Provides S4 classes and methods for storing dense and sparse matrices in DuckDB databases. The package supports constructing database-backed matrices from base R and Matrix objects, extracting slices and summaries, performing arithmetic and selected linear algebra operations, and materializing results for larger-than-memory workflows. It integrates with dbProject to keep database paths, live connections, and lazy matrix tables synchronized across interactive analyses.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9126</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,6 +83,7 @@
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=dbMatrix" class="external-link">View on CRAN</a></li>
 <li><a href="https://github.com/dbverse-org/dbmatrix-r/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/dbverse-org/dbmatrix-r/issues" class="external-link">Report a bug</a></li>
 </ul>

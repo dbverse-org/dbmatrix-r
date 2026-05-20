@@ -70,10 +70,6 @@ dbMatrix_from_tbl(
   (1-based integers). If provided with `i_col`, skips index encoding for
   optimal performance. `(optional)`
 
-- con:
-
-  DBI or duckdb connection object `(required)`
-
 ## Value
 
 `dbMatrix` object

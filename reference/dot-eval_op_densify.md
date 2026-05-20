@@ -18,6 +18,11 @@ Evaluate if a dbSparseMatrix should be densified
 
   A `dbMatrix` object with 1D row or col.
 
+## Value
+
+`TRUE` if the operation should densify the sparse matrix before
+evaluation, otherwise `FALSE`.
+
 ## Details
 
 Evaluates if a `dbSparseMatrix` should be densified for `[Arith]`

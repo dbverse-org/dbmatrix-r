@@ -42,3 +42,14 @@ dimnames(x) <- value
   [`dimnames`](https://rdrr.io/r/base/dimnames.html)`(x)`. For a matrix
   or array this is either `NULL` or a character vector of non-zero
   length equal to the appropriate dimension.
+
+## Value
+
+[`rownames()`](https://rdrr.io/r/base/colnames.html) and
+[`colnames()`](https://rdrr.io/r/base/colnames.html) return character
+vectors of dimension names.
+[`dimnames()`](https://rdrr.io/r/base/dimnames.html) returns a length-2
+list containing row and column name vectors. The replacement forms
+return the modified
+[`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
+object.

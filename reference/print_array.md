@@ -34,3 +34,8 @@ print_array(
 - digits:
 
   default = 5. If numeric, round to this number of digits
+
+## Value
+
+No return value. Called for its side effect of printing a formatted
+matrix preview to the console.

@@ -34,3 +34,7 @@ colMeans(x, na.rm = FALSE, dims = 1, ...)
 - ...:
 
   Additional arguments passed to specific methods.
+
+## Value
+
+A named numeric vector containing one mean per row or column of `x`.

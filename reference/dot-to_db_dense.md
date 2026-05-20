@@ -33,12 +33,3 @@ to
 A
 [`dbDenseMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbDenseMatrix-class.md)
 object
-
-## Examples
-
-``` r
-if (FALSE) { # \dontrun{
-dbsm <- sim_dbSparseMatrix(10, 10)
-dbdm <- .to_db_dense(dbsm)
-} # }
-```

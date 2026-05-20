@@ -22,6 +22,11 @@ map_ijx_dimnames(dbMatrix, colName_i, colName_j)
 
   name of column colnames to add to database default: 'FALSE'.'
 
+## Value
+
+A lazy `tbl_dbi` with `i`, `j`, `x`, and the mapped row/column name
+columns.
+
 ## Details
 
 Constructs a table in a database that contains the accompanying dimnames

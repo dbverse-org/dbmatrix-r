@@ -11,7 +11,7 @@ db_svd(
   center = TRUE,
   scale = FALSE,
   center_rows = NULL,
-  memory_limit = getOption("dbMatrix.svd_memory", 500 * 1024^2),
+  memory_limit = getOption("dbMatrix.svd_memory", 8 * 1024^3),
   return_format = c("svd", "pca")
 )
 ```
@@ -40,7 +40,7 @@ db_svd(
 
 - memory_limit:
 
-  Bytes for Fast Path. Set 0 to force BPCells path. Default 500 MB.
+  Bytes for Fast Path. Default 8 GB.
 
 - return_format:
 

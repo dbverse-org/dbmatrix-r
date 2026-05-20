@@ -16,3 +16,7 @@ ncol.dbMatrix(x)
 
   [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
   object
+
+## Value
+
+A length-one integer giving the number of rows or columns in `x`.

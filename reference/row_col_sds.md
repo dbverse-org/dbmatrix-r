@@ -93,3 +93,8 @@ rowSds(
   Always TRUE for
   [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
   queries. Included for compatibility with the generic.
+
+## Value
+
+A named numeric vector containing one sample standard deviation per row
+or column of `x`.

@@ -15,6 +15,7 @@ page](https://github.com/dbverse-org/dbmatrix-r/).**
 You can install the development version of dbMatrix from Github like so:
 
 ``` r
+
 # install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))
 pak::pak("dbverse-org/dbmatrix-r")
 ```

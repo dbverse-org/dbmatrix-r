@@ -22,3 +22,8 @@ mean(x, ...)
 - ...:
 
   further arguments passed to or from other methods.
+
+## Value
+
+A length-one numeric vector giving the arithmetic mean of all entries in
+`x`.

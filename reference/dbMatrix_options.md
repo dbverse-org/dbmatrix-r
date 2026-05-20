@@ -5,6 +5,10 @@ the
 [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
 package.
 
+## Value
+
+No return value. This documentation page describes package options.
+
 ## Details
 
 Use [`options()`](https://rdrr.io/r/base/options.html) to set the below

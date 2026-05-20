@@ -46,3 +46,7 @@ colSums(x, na.rm = FALSE, dims = 1, ...)
   logical. If FALSE (default), results returned as dbDenseMatrix. This
   is recommended for large computations. Set to TRUE to return the
   results as a vector.
+
+## Value
+
+A named numeric vector containing one sum per row or column of `x`.
