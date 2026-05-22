@@ -278,9 +278,9 @@ arith_call_dbm_vect_multi <- function(
 .join_dbm_vect <- function(dbm, vec_matrix, op, swap_arith_order = FALSE) {
   # check inputs
   con <- dbplyr::remote_con(vec_matrix[])
-  n_rows <- bit64::as.integer64.integer(dim(dbm)[1])
-  n_cols <- bit64::as.integer64.integer(dim(dbm)[2])
-  length <- bit64::as.integer64.integer(length(vec_matrix))
+  n_rows <- bit64::as.integer64(dim(dbm)[1])
+  n_cols <- bit64::as.integer64(dim(dbm)[2])
+  length <- bit64::as.integer64(length(vec_matrix))
   total_dims <- n_rows * n_cols
 
   # validate dimensions
