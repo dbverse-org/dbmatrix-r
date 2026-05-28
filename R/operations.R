@@ -18,6 +18,97 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
 }
 
 #' @noRd
+.flatten_x_mutates <- function(lazy_query) {
+  if (inherits(lazy_query, "lazy_base_remote_query")) {
+    return(list(source = lazy_query$x, expr = quote(x)))
+  }
+
+  if (!inherits(lazy_query, "lazy_select_query")) {
+    return(NULL)
+  }
+
+  if (
+    length(lazy_query$where) ||
+      length(lazy_query$group_by) ||
+      length(lazy_query$order_by) ||
+      !is.null(lazy_query$limit) ||
+      isTRUE(lazy_query$distinct)
+  ) {
+    return(NULL)
+  }
+
+  if (!identical(lazy_query$select$name, c("i", "j", "x"))) {
+    return(NULL)
+  }
+
+  select_labels <- vapply(
+    lazy_query$select$expr,
+    rlang::as_label,
+    character(1)
+  )
+  if (!identical(select_labels[1:2], c("i", "j"))) {
+    return(NULL)
+  }
+
+  parent <- .flatten_x_mutates(lazy_query$x)
+  if (is.null(parent)) {
+    return(NULL)
+  }
+
+  x_expr <- rlang::get_expr(lazy_query$select$expr[[3L]])
+  parent$expr <- do.call(substitute, list(x_expr, list(x = parent$expr)))
+  parent
+}
+
+#' @noRd
+.try_fuse_dbm_op <- function(
+  e1,
+  e2,
+  op,
+  coalesce_zero = FALSE,
+  as_numeric = FALSE
+) {
+  if (!all(dim(e1) == dim(e2))) {
+    return(NULL)
+  }
+
+  con1 <- dbplyr::remote_con(e1[])
+  con2 <- dbplyr::remote_con(e2[])
+  if (!identical(con1, con2)) {
+    return(NULL)
+  }
+
+  lhs <- .flatten_x_mutates(e1[]$lazy_query)
+  rhs <- .flatten_x_mutates(e2[]$lazy_query)
+  if (is.null(lhs) || is.null(rhs) || !identical(lhs$source, rhs$source)) {
+    return(NULL)
+  }
+
+  source <- as.character(lhs$source)
+  if (length(source) != 1L || is.na(source)) {
+    return(NULL)
+  }
+
+  lhs_expr <- lhs$expr
+  rhs_expr <- rhs$expr
+  if (coalesce_zero) {
+    lhs_expr <- substitute(dplyr::coalesce(expr, 0), list(expr = lhs_expr))
+    rhs_expr <- substitute(dplyr::coalesce(expr, 0), list(expr = rhs_expr))
+  }
+
+  fused_expr <- rlang::call2(op, lhs_expr, rhs_expr)
+  if (as_numeric) {
+    fused_expr <- rlang::call2("as.numeric", fused_expr)
+  }
+
+  e1[] <- dplyr::tbl(con1, source) |>
+    dplyr::mutate(x = !!fused_expr) |>
+    dplyr::select(i, j, x)
+  e1@name <- NA_character_
+  e1
+}
+
+#' @noRd
 arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
   # order matters
   ordered_args <- ops_ordered_args_vect(dbm_narg, 'x', 'num_vect')
@@ -569,6 +660,16 @@ setMethod(
         stopf('non-conformable matrix dimensions')
       }
 
+      res <- .try_fuse_dbm_op(
+        e1 = e1,
+        e2 = e2,
+        op = generic_char,
+        coalesce_zero = TRUE
+      )
+      if (!is.null(res)) {
+        return(res)
+      }
+
       # Perform full join operation on dbMatrix
       # TODO: avoid full join
       build_call <- glue::glue(
@@ -660,6 +761,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
 
   if (op %in% compare_ops) {
+    res <- .try_fuse_dbm_op(e1 = e1, e2 = e2, op = op, as_numeric = TRUE)
+    if (!is.null(res)) {
+      return(res)
+    }
+
     # Comparison operators return BOOLEAN - cast to numeric for type safety
     build_call <- glue::glue(
       "
@@ -672,6 +778,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'dbMatrix'), function(e1, e2) {
     "
     )
   } else {
+    res <- .try_fuse_dbm_op(e1 = e1, e2 = e2, op = op)
+    if (!is.null(res)) {
+      return(res)
+    }
+
     build_call <- glue::glue(
       "
       e1[] |>
