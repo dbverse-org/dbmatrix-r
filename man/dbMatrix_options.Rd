@@ -32,6 +32,9 @@ during implicit coercion.
 \item \code{dbMatrix.precomp_db}: character. Path to an external DuckDB file containing
 precomputed table(s). If set, \code{dbMatrix} will automatically attach this
 database (read-only) and look for a suitable precomputed table to speed up densification.
+\item \code{dbMatrix.readMM.temporary_table}: logical. If \code{TRUE} (default), temporary
+\code{.mtx} and \code{.mtx.gz} ingestion uses a DuckDB temporary table. If \code{FALSE},
+ingestion uses a temporary view over \code{read_csv()}.
 \item \code{dbMatrix.allow_densify}: logical. If \code{FALSE} (default), automatic sparse-to-dense
 conversion is disabled. This prevents unexpected disk spilling and memory issues
 when operations would require densification (e.g., division by zero, scalar addition
@@ -39,4 +42,3 @@ to sparse matrix). Set to \code{TRUE} to enable on-disk dense conversion. \stron
 Dense conversion can cause massive disk usage for large matrices.
 }
 }
-

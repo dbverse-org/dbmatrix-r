@@ -18,6 +18,9 @@
 #' * `dbMatrix.precomp_db`: character. Path to an external DuckDB file containing
 #' precomputed table(s). If set, `dbMatrix` will automatically attach this
 #' database (read-only) and look for a suitable precomputed table to speed up densification.
+#' * `dbMatrix.readMM.temporary_table`: logical. If `TRUE` (default), temporary
+#' `.mtx` and `.mtx.gz` ingestion uses a DuckDB temporary table. If `FALSE`,
+#' ingestion uses a temporary view over `read_csv()`.
 #' * `dbMatrix.allow_densify`: logical. If `FALSE` (default), automatic sparse-to-dense
 #' conversion is disabled. This prevents unexpected disk spilling and memory issues
 #' when operations would require densification (e.g., division by zero, scalar addition

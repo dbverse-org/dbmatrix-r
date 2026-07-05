@@ -1434,9 +1434,13 @@ readMM <- function(
 
   # Read in .mtx or .mtx.gz file
   if ((grepl("\\.mtx", value))) {
-    # Determine if creating temporary view or permanent table
+    # Determine if creating temporary object or permanent table
     create_statement <- if (temporary) {
-      "CREATE OR REPLACE TEMPORARY VIEW"
+      if (getOption("dbMatrix.readMM.temporary_table", TRUE)) {
+        "CREATE OR REPLACE TEMPORARY TABLE"
+      } else {
+        "CREATE OR REPLACE TEMPORARY VIEW"
+      }
     } else {
       "CREATE TABLE"
     }
