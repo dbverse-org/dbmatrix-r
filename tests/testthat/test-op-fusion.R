@@ -19,6 +19,10 @@ rlang::local_options(lifecycle_verbosity = "quiet")
     dplyr::collect()
 }
 
+.has_sql_full_join <- function(dbm) {
+  grepl("FULL JOIN", dbplyr::sql_render(dbm[]), fixed = TRUE)
+}
+
 .new_toy_sparse_dbm <- function(con, name = "toy") {
   sparse_matrix <- Matrix::sparseMatrix(
     i = c(1, 2, 3, 3),
@@ -143,4 +147,24 @@ test_that("non row-local operands fall back to join path", {
 
   expect_true(.has_join_query(distinct_result[]$lazy_query))
   expect_true(.has_join_query(filtered_result[]$lazy_query))
+})
+
+test_that("same-parent normalized expressions fuse without a full join", {
+  con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
+
+  db_matrix <- .new_toy_sparse_dbm(con)
+  norm <- db_matrix * colSums(db_matrix)
+  mask <- norm > 0
+
+  expected <- norm[] |>
+    dplyr::full_join(mask[], by = c("i", "j")) |>
+    dplyr::mutate(
+      x = dplyr::coalesce(x.x, 0) * dplyr::coalesce(x.y, 0)
+    ) |>
+    dplyr::select(i, j, x)
+  result <- norm * mask
+
+  expect_false(.has_sql_full_join(result))
+  expect_equal(.collect_ordered(result[]), .collect_ordered(expected))
 })

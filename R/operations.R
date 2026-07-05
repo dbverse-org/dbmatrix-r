@@ -61,6 +61,59 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
 }
 
 #' @noRd
+.top_x_mutate <- function(lazy_query) {
+  if (!inherits(lazy_query, "lazy_select_query")) {
+    return(NULL)
+  }
+
+  if (
+    length(lazy_query$where) ||
+      length(lazy_query$group_by) ||
+      length(lazy_query$order_by) ||
+      !is.null(lazy_query$limit) ||
+      isTRUE(lazy_query$distinct)
+  ) {
+    return(NULL)
+  }
+
+  if (!identical(lazy_query$select$name, c("i", "j", "x"))) {
+    return(NULL)
+  }
+
+  select_labels <- vapply(
+    lazy_query$select$expr,
+    rlang::as_label,
+    character(1)
+  )
+  if (!identical(select_labels[1:2], c("i", "j"))) {
+    return(NULL)
+  }
+
+  list(
+    source = lazy_query$x,
+    expr = rlang::get_expr(lazy_query$select$expr[[3L]])
+  )
+}
+
+#' @noRd
+.same_lazy_query <- function(template, x, y) {
+  if (identical(x, y)) {
+    return(TRUE)
+  }
+
+  render_lazy <- function(lazy_query) {
+    tbl <- template
+    tbl$lazy_query <- lazy_query
+    dbplyr::sql_render(tbl)
+  }
+
+  tryCatch(
+    identical(render_lazy(x), render_lazy(y)),
+    error = function(e) FALSE
+  )
+}
+
+#' @noRd
 .try_fuse_dbm_op <- function(
   e1,
   e2,
@@ -72,25 +125,57 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
     return(NULL)
   }
 
-  con1 <- dbplyr::remote_con(e1[])
-  con2 <- dbplyr::remote_con(e2[])
+  tbl1 <- e1[]
+  tbl2 <- e2[]
+  con1 <- dbplyr::remote_con(tbl1)
+  con2 <- dbplyr::remote_con(tbl2)
   if (!identical(con1, con2)) {
     return(NULL)
   }
 
-  lhs <- .flatten_x_mutates(e1[]$lazy_query)
-  rhs <- .flatten_x_mutates(e2[]$lazy_query)
-  if (is.null(lhs) || is.null(rhs) || !identical(lhs$source, rhs$source)) {
-    return(NULL)
+  lhs <- .flatten_x_mutates(tbl1$lazy_query)
+  rhs <- .flatten_x_mutates(tbl2$lazy_query)
+  source_tbl <- NULL
+  lhs_expr <- NULL
+  rhs_expr <- NULL
+
+  if (!is.null(lhs) && !is.null(rhs) && identical(lhs$source, rhs$source)) {
+    source <- as.character(lhs$source)
+    if (length(source) != 1L || is.na(source)) {
+      return(NULL)
+    }
+
+    source_tbl <- dplyr::tbl(con1, source)
+    lhs_expr <- lhs$expr
+    rhs_expr <- rhs$expr
+  } else {
+    lhs <- .top_x_mutate(tbl1$lazy_query)
+    rhs <- .top_x_mutate(tbl2$lazy_query)
+    if (!is.null(rhs) && .same_lazy_query(tbl1, rhs$source, tbl1$lazy_query)) {
+      source_tbl <- tbl1
+      lhs_expr <- quote(x)
+      rhs_expr <- rhs$expr
+    } else if (
+      !is.null(lhs) &&
+        .same_lazy_query(tbl2, lhs$source, tbl2$lazy_query)
+    ) {
+      source_tbl <- tbl2
+      lhs_expr <- lhs$expr
+      rhs_expr <- quote(x)
+    } else if (
+      !is.null(lhs) &&
+        !is.null(rhs) &&
+        .same_lazy_query(tbl1, lhs$source, rhs$source)
+    ) {
+      source_tbl <- tbl1
+      source_tbl$lazy_query <- lhs$source
+      lhs_expr <- lhs$expr
+      rhs_expr <- rhs$expr
+    } else {
+      return(NULL)
+    }
   }
 
-  source <- as.character(lhs$source)
-  if (length(source) != 1L || is.na(source)) {
-    return(NULL)
-  }
-
-  lhs_expr <- lhs$expr
-  rhs_expr <- rhs$expr
   if (coalesce_zero) {
     lhs_expr <- substitute(dplyr::coalesce(expr, 0), list(expr = lhs_expr))
     rhs_expr <- substitute(dplyr::coalesce(expr, 0), list(expr = rhs_expr))
@@ -101,7 +186,7 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
     fused_expr <- rlang::call2("as.numeric", fused_expr)
   }
 
-  e1[] <- dplyr::tbl(con1, source) |>
+  e1[] <- source_tbl |>
     dplyr::mutate(x = !!fused_expr) |>
     dplyr::select(i, j, x)
   e1@name <- NA_character_
