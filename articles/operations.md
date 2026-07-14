@@ -67,6 +67,14 @@ dplyr::glimpse(dgc)
 
 # create dbSparseMatrix from the same dgc
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+```
+
+    ## duckdb is keeping downloaded extensions in a temporary directory:
+    ## ℹ /tmp/Rtmp6o0yI5/duckdb/extensions
+    ## This is removed when the R session ends, so extensions are re-downloaded each session.
+    ## ℹ To keep them, point `options(duckdb.extension_directory =)` or the `DUCKDB_EXTENSION_DIRECTORY` environment variable at a permanent path.
+
+``` r
 
 sparse <- dbMatrix(
   value = dgc,
@@ -348,7 +356,7 @@ options(old_options)
 sessionInfo()
 ```
 
-    ## R version 4.6.0 (2026-04-24)
+    ## R version 4.6.1 (2026-06-24)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.4 LTS
     ## 
@@ -372,22 +380,22 @@ sessionInfo()
     ## [1] Matrix_1.7-5   dbMatrix_0.1.0
     ## 
     ## loaded via a namespace (and not attached):
-    ##  [1] bit_4.6.0             jsonlite_2.0.0        dplyr_1.2.1          
-    ##  [4] compiler_4.6.0        tidyselect_1.2.1      Rcpp_1.1.1-1.1       
-    ##  [7] blob_1.3.0            nanoarrow_0.8.0       pins_1.4.2           
-    ## [10] assertthat_0.2.1      dbProject_0.1.0       jquerylib_0.1.4      
-    ## [13] arrow_24.0.0          systemfonts_1.3.2     textshaping_1.0.5    
-    ## [16] yaml_2.3.12           fastmap_1.2.0         lattice_0.22-9       
-    ## [19] R6_2.6.1              generics_0.1.4        knitr_1.51           
-    ## [22] tibble_3.3.1          desc_1.4.3            MatrixGenerics_1.24.0
-    ## [25] DBI_1.3.0             bslib_0.11.0          pillar_1.11.1        
-    ## [28] connections_0.2.1     rlang_1.2.0           cachem_1.1.0         
-    ## [31] xfun_0.57             fs_2.1.0              sass_0.4.10          
-    ## [34] bit64_4.8.2           cli_3.6.6             withr_3.0.2          
-    ## [37] pkgdown_2.2.0         magrittr_2.0.5        digest_0.6.39        
-    ## [40] grid_4.6.0            rscontract_0.1.2      dbplyr_2.5.2         
-    ## [43] lifecycle_1.0.5       vctrs_0.7.3           evaluate_1.0.5       
-    ## [46] glue_1.8.1            data.table_1.18.4     duckdb_1.5.2         
-    ## [49] ragg_1.5.2            rmarkdown_2.31        purrr_1.2.2          
-    ## [52] pkgconfig_2.0.3       matrixStats_1.5.0     tools_4.6.0          
-    ## [55] htmltools_0.5.9
+    ##  [1] sass_0.4.10           generics_0.1.4        lattice_0.22-9       
+    ##  [4] digest_0.6.39         magrittr_2.0.5        evaluate_1.0.5       
+    ##  [7] grid_4.6.1            nanoarrow_0.8.0-1     blob_1.3.0           
+    ## [10] fastmap_1.2.0         jsonlite_2.0.0        pins_1.4.2           
+    ## [13] DBI_1.3.0             purrr_1.2.2           textshaping_1.0.5    
+    ## [16] jquerylib_0.1.4       duckdb_1.5.4.3        cli_3.6.6            
+    ## [19] rlang_1.3.0           dbplyr_2.6.0          rscontract_0.1.2     
+    ## [22] bit64_4.8.2           connections_0.2.1     withr_3.0.3          
+    ## [25] cachem_1.1.0          yaml_2.3.12           otel_0.2.0           
+    ## [28] tools_4.6.1           dplyr_1.2.1           assertthat_0.2.1     
+    ## [31] vctrs_0.7.3           R6_2.6.1              matrixStats_1.5.0    
+    ## [34] lifecycle_1.0.5       fs_2.1.0              dbProject_0.1.1      
+    ## [37] bit_4.6.0             ragg_1.5.2            arrow_24.0.0         
+    ## [40] pkgconfig_2.0.3       desc_1.4.3            pkgdown_2.2.1        
+    ## [43] bslib_0.11.0          pillar_1.11.1         data.table_1.18.4    
+    ## [46] glue_1.8.1            Rcpp_1.1.2            systemfonts_1.3.2    
+    ## [49] xfun_0.60             tibble_3.3.1          tidyselect_1.2.1     
+    ## [52] MatrixGenerics_1.24.0 knitr_1.51            htmltools_0.5.9      
+    ## [55] rmarkdown_2.31        compiler_4.6.1

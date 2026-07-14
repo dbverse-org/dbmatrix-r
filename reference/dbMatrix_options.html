@@ -80,6 +80,9 @@ during implicit coercion.</p></li>
 <li><p><code>dbMatrix.precomp_db</code>: character. Path to an external DuckDB file containing
 precomputed table(s). If set, <code>dbMatrix</code> will automatically attach this
 database (read-only) and look for a suitable precomputed table to speed up densification.</p></li>
+<li><p><code>dbMatrix.readMM.temporary_table</code>: logical. If <code>TRUE</code> (default), temporary
+<code>.mtx</code> and <code>.mtx.gz</code> ingestion uses a DuckDB temporary table. If <code>FALSE</code>,
+ingestion uses a temporary view over <code>read_csv()</code>.</p></li>
 <li><p><code>dbMatrix.allow_densify</code>: logical. If <code>FALSE</code> (default), automatic sparse-to-dense
 conversion is disabled. This prevents unexpected disk spilling and memory issues
 when operations would require densification (e.g., division by zero, scalar addition
@@ -96,7 +99,7 @@ Dense conversion can cause massive disk usage for large matrices.</p></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
