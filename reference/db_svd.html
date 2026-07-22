@@ -58,7 +58,12 @@
 <span>  scale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  center_rows <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  memory_limit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_memory"</span>, <span class="fl">8</span> <span class="op">*</span> <span class="fl">1024</span><span class="op">^</span><span class="fl">3</span><span class="op">)</span>,</span>
-<span>  return_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"svd"</span>, <span class="st">"pca"</span><span class="op">)</span></span>
+<span>  return_format <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"svd"</span>, <span class="st">"pca"</span><span class="op">)</span>,</span>
+<span>  tol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_tol"</span>, <span class="fl">1e-05</span><span class="op">)</span>,</span>
+<span>  maxit <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_maxit"</span>, <span class="fl">1000L</span><span class="op">)</span>,</span>
+<span>  ncv <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_ncv"</span>, <span class="cn">NULL</span><span class="op">)</span>,</span>
+<span>  score_threads <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_score_threads"</span>, <span class="fl">1L</span><span class="op">)</span>,</span>
+<span>  operator_threads <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"dbMatrix.svd_operator_threads"</span>, <span class="fl">1L</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -92,6 +97,27 @@
 
 <dt id="arg-return-format">return_format<a class="anchor" aria-label="anchor" href="#arg-return-format"></a></dt>
 <dd><p>"svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)</p></dd>
+
+
+<dt id="arg-tol">tol<a class="anchor" aria-label="anchor" href="#arg-tol"></a></dt>
+<dd><p>Eigensolver convergence tolerance.</p></dd>
+
+
+<dt id="arg-maxit">maxit<a class="anchor" aria-label="anchor" href="#arg-maxit"></a></dt>
+<dd><p>Maximum eigensolver iterations.</p></dd>
+
+
+<dt id="arg-ncv">ncv<a class="anchor" aria-label="anchor" href="#arg-ncv"></a></dt>
+<dd><p>Number of Lanczos basis vectors. Defaults to
+<code>max(ceiling(1.5 * k), 40)</code>.</p></dd>
+
+
+<dt id="arg-score-threads">score_threads<a class="anchor" aria-label="anchor" href="#arg-score-threads"></a></dt>
+<dd><p>Number of threads used to calculate the cell scores.</p></dd>
+
+
+<dt id="arg-operator-threads">operator_threads<a class="anchor" aria-label="anchor" href="#arg-operator-threads"></a></dt>
+<dd><p>Number of threads used for each Gram-matrix product.</p></dd>
 
 </dl></div>
     <div class="section level2">

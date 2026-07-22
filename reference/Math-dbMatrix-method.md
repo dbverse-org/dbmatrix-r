@@ -127,7 +127,7 @@ object.
 mat <- matrix(1, nrow = 3, ncol = 3)
 dbmat <- as.dbMatrix(mat)
 #> duckdb is keeping downloaded extensions in a temporary directory:
-#> ℹ /tmp/RtmpWGOFG0/duckdb/extensions
+#> ℹ /tmp/RtmpRMMoMa/duckdb/extensions
 #> This is removed when the R session ends, so extensions are re-downloaded each session.
 #> ℹ To keep them, point `options(duckdb.extension_directory =)` or the `DUCKDB_EXTENSION_DIRECTORY` environment variable at a permanent path.
 log(dbmat)

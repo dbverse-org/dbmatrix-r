@@ -12,7 +12,12 @@ db_svd(
   scale = FALSE,
   center_rows = NULL,
   memory_limit = getOption("dbMatrix.svd_memory", 8 * 1024^3),
-  return_format = c("svd", "pca")
+  return_format = c("svd", "pca"),
+  tol = getOption("dbMatrix.svd_tol", 1e-05),
+  maxit = getOption("dbMatrix.svd_maxit", 1000L),
+  ncv = getOption("dbMatrix.svd_ncv", NULL),
+  score_threads = getOption("dbMatrix.svd_score_threads", 1L),
+  operator_threads = getOption("dbMatrix.svd_operator_threads", 1L)
 )
 ```
 
@@ -45,6 +50,27 @@ db_svd(
 - return_format:
 
   "svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)
+
+- tol:
+
+  Eigensolver convergence tolerance.
+
+- maxit:
+
+  Maximum eigensolver iterations.
+
+- ncv:
+
+  Number of Lanczos basis vectors. Defaults to
+  `max(ceiling(1.5 * k), 40)`.
+
+- score_threads:
+
+  Number of threads used to calculate the cell scores.
+
+- operator_threads:
+
+  Number of threads used for each Gram-matrix product.
 
 ## Value
 

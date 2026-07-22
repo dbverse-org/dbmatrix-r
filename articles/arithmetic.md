@@ -53,7 +53,7 @@ Let’s create a `dbSparseMatrix` object from the above `dgc` object.
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #> duckdb is keeping downloaded extensions in a temporary directory:
-#> ℹ /tmp/Rtmp79bsr2/duckdb/extensions
+#> ℹ /tmp/RtmpdchPPn/duckdb/extensions
 #> This is removed when the R session ends, so extensions are re-downloaded each session.
 #> ℹ To keep them, point `options(duckdb.extension_directory =)` or the `DUCKDB_EXTENSION_DIRECTORY` environment variable at a permanent path.
 
@@ -217,7 +217,7 @@ sessionInfo()
 #> [31] assertthat_0.2.1      vctrs_0.7.3           R6_2.6.1             
 #> [34] matrixStats_1.5.0     lifecycle_1.0.5       fs_2.1.0             
 #> [37] dbProject_0.1.1       bit_4.6.0             ragg_1.5.2           
-#> [40] arrow_24.0.0          pkgconfig_2.0.3       desc_1.4.3           
+#> [40] arrow_25.0.0          pkgconfig_2.0.3       desc_1.4.3           
 #> [43] pkgdown_2.2.1         bslib_0.11.0          pillar_1.11.1        
 #> [46] data.table_1.18.4     glue_1.8.1            Rcpp_1.1.2           
 #> [49] systemfonts_1.3.2     xfun_0.60             tibble_3.3.1         

@@ -70,7 +70,7 @@ con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 ```
 
     ## duckdb is keeping downloaded extensions in a temporary directory:
-    ## ℹ /tmp/Rtmp6o0yI5/duckdb/extensions
+    ## ℹ /tmp/Rtmp7CbGwX/duckdb/extensions
     ## This is removed when the R session ends, so extensions are re-downloaded each session.
     ## ℹ To keep them, point `options(duckdb.extension_directory =)` or the `DUCKDB_EXTENSION_DIRECTORY` environment variable at a permanent path.
 
@@ -392,7 +392,7 @@ sessionInfo()
     ## [28] tools_4.6.1           dplyr_1.2.1           assertthat_0.2.1     
     ## [31] vctrs_0.7.3           R6_2.6.1              matrixStats_1.5.0    
     ## [34] lifecycle_1.0.5       fs_2.1.0              dbProject_0.1.1      
-    ## [37] bit_4.6.0             ragg_1.5.2            arrow_24.0.0         
+    ## [37] bit_4.6.0             ragg_1.5.2            arrow_25.0.0         
     ## [40] pkgconfig_2.0.3       desc_1.4.3            pkgdown_2.2.1        
     ## [43] bslib_0.11.0          pillar_1.11.1         data.table_1.18.4    
     ## [46] glue_1.8.1            Rcpp_1.1.2            systemfonts_1.3.2    
