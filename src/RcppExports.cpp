@@ -27,8 +27,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_op_svd_arrow_cpp
-Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols, Rcpp::NumericVector row_offset, Rcpp::NumericVector row_scale, Rcpp::NumericVector col_scale, int k);
-RcppExport SEXP _dbMatrix_compute_op_svd_arrow_cpp(SEXP stream_factorySEXP, SEXP n_rowsSEXP, SEXP n_colsSEXP, SEXP row_offsetSEXP, SEXP row_scaleSEXP, SEXP col_scaleSEXP, SEXP kSEXP) {
+Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols, Rcpp::NumericVector row_offset, Rcpp::NumericVector row_scale, Rcpp::NumericVector col_scale, int k, double tol, int maxit, int ncv, bool pca_scores, int score_threads, int operator_threads, double expected_nnz);
+RcppExport SEXP _dbMatrix_compute_op_svd_arrow_cpp(SEXP stream_factorySEXP, SEXP n_rowsSEXP, SEXP n_colsSEXP, SEXP row_offsetSEXP, SEXP row_scaleSEXP, SEXP col_scaleSEXP, SEXP kSEXP, SEXP tolSEXP, SEXP maxitSEXP, SEXP ncvSEXP, SEXP pca_scoresSEXP, SEXP score_threadsSEXP, SEXP operator_threadsSEXP, SEXP expected_nnzSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,14 +39,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type row_scale(row_scaleSEXP);
     Rcpp::traits::input_parameter< Rcpp::NumericVector >::type col_scale(col_scaleSEXP);
     Rcpp::traits::input_parameter< int >::type k(kSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_op_svd_arrow_cpp(stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k));
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< int >::type maxit(maxitSEXP);
+    Rcpp::traits::input_parameter< int >::type ncv(ncvSEXP);
+    Rcpp::traits::input_parameter< bool >::type pca_scores(pca_scoresSEXP);
+    Rcpp::traits::input_parameter< int >::type score_threads(score_threadsSEXP);
+    Rcpp::traits::input_parameter< int >::type operator_threads(operator_threadsSEXP);
+    Rcpp::traits::input_parameter< double >::type expected_nnz(expected_nnzSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_op_svd_arrow_cpp(stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k, tol, maxit, ncv, pca_scores, score_threads, operator_threads, expected_nnz));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_dbMatrix_write_arrow_to_bpcells_cpp", (DL_FUNC) &_dbMatrix_write_arrow_to_bpcells_cpp, 5},
-    {"_dbMatrix_compute_op_svd_arrow_cpp", (DL_FUNC) &_dbMatrix_compute_op_svd_arrow_cpp, 7},
+    {"_dbMatrix_compute_op_svd_arrow_cpp", (DL_FUNC) &_dbMatrix_compute_op_svd_arrow_cpp, 14},
     {NULL, NULL, 0}
 };
 

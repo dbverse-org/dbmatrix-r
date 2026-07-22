@@ -5,7 +5,7 @@
     .Call(`_dbMatrix_write_arrow_to_bpcells_cpp`, output_dir, n_rows, n_cols, col_scale, stream_factory)
 }
 
-.compute_op_svd_arrow_cpp <- function(stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k) {
-    .Call(`_dbMatrix_compute_op_svd_arrow_cpp`, stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k)
+.compute_op_svd_arrow_cpp <- function(stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k, tol, maxit, ncv, pca_scores, score_threads, operator_threads, expected_nnz) {
+    .Call(`_dbMatrix_compute_op_svd_arrow_cpp`, stream_factory, n_rows, n_cols, row_offset, row_scale, col_scale, k, tol, maxit, ncv, pca_scores, score_threads, operator_threads, expected_nnz)
 }
 

@@ -11,7 +11,12 @@ db_svd(
   scale = FALSE,
   center_rows = NULL,
   memory_limit = getOption("dbMatrix.svd_memory", 8 * 1024^3),
-  return_format = c("svd", "pca")
+  return_format = c("svd", "pca"),
+  tol = getOption("dbMatrix.svd_tol", 1e-05),
+  maxit = getOption("dbMatrix.svd_maxit", 1000L),
+  ncv = getOption("dbMatrix.svd_ncv", NULL),
+  score_threads = getOption("dbMatrix.svd_score_threads", 1L),
+  operator_threads = getOption("dbMatrix.svd_operator_threads", 1L)
 )
 }
 \arguments{
@@ -28,6 +33,17 @@ db_svd(
 \item{memory_limit}{Bytes for Fast Path. Default 8 GB.}
 
 \item{return_format}{"svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)}
+
+\item{tol}{Eigensolver convergence tolerance.}
+
+\item{maxit}{Maximum eigensolver iterations.}
+
+\item{ncv}{Number of Lanczos basis vectors. Defaults to
+\code{max(ceiling(1.5 * k), 40)}.}
+
+\item{score_threads}{Number of threads used to calculate the cell scores.}
+
+\item{operator_threads}{Number of threads used for each Gram-matrix product.}
 }
 \value{
 List with SVD or PCA components
