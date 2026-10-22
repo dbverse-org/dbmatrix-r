@@ -34,27 +34,23 @@
 using namespace Spectra;
 
 // OP-Aware Gram Operator for implicit centering/scaling inspired by BPCells
-// Computes y = A_norm @ A_norm^T @ x where A_norm = diag(row_scale) * A * diag(col_scale) +
-// row_offset
+// Computes y = A_norm @ A_norm^T @ x where A_norm = diag(row_scale) * A + row_offset
 class OpAwareGramOp {
 private:
   const Eigen::SparseMatrix<double, Eigen::ColMajor> &A_;
   const Eigen::VectorXd &row_offset_;
   const Eigen::VectorXd &row_scale_;
-  const Eigen::VectorXd &col_scale_;
   int n_rows_, n_cols_, operator_threads_;
-  mutable Eigen::VectorXd z_, scaled_z_;
+  mutable Eigen::VectorXd z_;
 
 public:
   OpAwareGramOp(const Eigen::SparseMatrix<double, Eigen::ColMajor> &A,
                 const Eigen::VectorXd &row_offset,
                 const Eigen::VectorXd &row_scale,
-                const Eigen::VectorXd &col_scale,
                 int operator_threads)
-      : A_(A), row_offset_(row_offset),
-        row_scale_(row_scale), col_scale_(col_scale),
+      : A_(A), row_offset_(row_offset), row_scale_(row_scale),
         n_rows_(A.rows()), n_cols_(A.cols()), operator_threads_(operator_threads),
-        z_(A.cols()), scaled_z_(A.cols()) {}
+        z_(A.cols()) {}
 
   int rows() const { return n_rows_; }
   int cols() const { return n_rows_; }
@@ -85,11 +81,10 @@ public:
             for (Eigen::SparseMatrix<double, Eigen::ColMajor>::InnerIterator it(A_, col); it; ++it)
               dot += it.value() * scaled_x[it.row()];
 
-            const double z = col_scale_[col] * dot;
-            const double scaled_z = col_scale_[col] * z;
+            const double z = dot;
             z_sum += z;
             for (Eigen::SparseMatrix<double, Eigen::ColMajor>::InnerIterator it(A_, col); it; ++it)
-              accumulator[it.row()] += it.value() * scaled_z;
+              accumulator[it.row()] += it.value() * z;
           }
           local_z_sum[worker] = z_sum;
         });
@@ -108,20 +103,18 @@ public:
       return;
     }
 
-    // A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
-    // z = A_norm^T @ x = col_scale * (A^T @ (row_scale * x) + row_offset^T @ x)
+    // A_norm = diag(row_scale) * A + row_offset
+    // z = A_norm^T @ x = A^T @ (row_scale * x) + row_offset^T @ x
     Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
     double offset_dot_x = row_offset_.dot(x);
     // Multiplying the transpose expression directly avoids materializing a
     // second full sparse matrix. For a column-major A, A^T * x can still be
     // evaluated efficiently one stored column at a time.
     z_.noalias() = A_.transpose() * scaled_x;
-    z_ = col_scale_.cwiseProduct(z_);
-    z_.array() += col_scale_.array() * offset_dot_x;
+    z_.array() += offset_dot_x;
 
-    // y = A_norm @ z = row_scale * (A @ (col_scale * z)) + row_offset * sum(z)
-    scaled_z_ = col_scale_.cwiseProduct(z_);
-    y.noalias() = A_ * scaled_z_;
+    // y = A_norm @ z = row_scale * (A @ z) + row_offset * sum(z)
+    y.noalias() = A_ * z_;
     y = row_scale_.cwiseProduct(y);
     y += row_offset_ * z_.sum();
   }
@@ -130,8 +123,7 @@ public:
 // [[Rcpp::export(.compute_op_svd_arrow_cpp)]]
 Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
                                     Rcpp::NumericVector row_offset,
-                                    Rcpp::NumericVector row_scale,
-                                    Rcpp::NumericVector col_scale, int k,
+                                    Rcpp::NumericVector row_scale, int k,
                                     double tol, int maxit, int ncv,
                                     bool pca_scores, int score_threads,
                                     int operator_threads, double expected_nnz) {
@@ -180,8 +172,7 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   // Create operator and solve
   Eigen::VectorXd r_off = Rcpp::as<Eigen::VectorXd>(row_offset);
   Eigen::VectorXd r_scl = Rcpp::as<Eigen::VectorXd>(row_scale);
-  Eigen::VectorXd c_scl = Rcpp::as<Eigen::VectorXd>(col_scale);
-  OpAwareGramOp op(A, r_off, r_scl, c_scl, operator_threads);
+  OpAwareGramOp op(A, r_off, r_scl, operator_threads);
 
   SymEigsSolver<double, LARGEST_ALGE, OpAwareGramOp> eigs(&op, k, ncv);
   eigs.init();
@@ -211,7 +202,7 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   }
 
   // Compute V = A_norm^T @ U @ D^-1
-  // A_norm^T = col_scale * A^T * row_scale + row_offset^T
+  // A_norm^T = A^T * row_scale + row_offset^T
   Rcpp::NumericMatrix v_vecs(n_cols, k);
 
   const double *u_data = REAL(u_vecs);
@@ -224,12 +215,11 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
       v_out.setZero();
       return;
     }
-    // v = col_scale * (A^T @ (row_scale * u) + row_offset^T @ u)
+    // v = A^T @ (row_scale * u) + row_offset^T @ u
     Eigen::VectorXd scaled_u = r_scl.cwiseProduct(u_col);
     double offset_dot_u = r_off.dot(u_col);
     Eigen::VectorXd v_col = A.transpose() * scaled_u;
-    v_col = c_scl.cwiseProduct(v_col);
-    v_col.array() += c_scl.array() * offset_dot_u;
+    v_col.array() += offset_dot_u;
     // A^T U is already V D. Divide only for the SVD representation; the PCA
     // representation can return cell coordinates directly without creating a
     // second n_cols-by-k matrix in R.
@@ -272,7 +262,6 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
                             Rcpp::Named("nops") = eigs.num_operations(),
                             Rcpp::Named("score_threads") = n_score_workers,
                             Rcpp::Named("operator_threads") = std::max(1, std::min(operator_threads, n_cols)),
-                            Rcpp::Named("matrix_build_sec") = seconds_between(started_at, matrix_ready_at),
                             Rcpp::Named("arrow_stream_sec") = seconds_between(started_at, stream_ready_at),
                             Rcpp::Named("csc_build_sec") = seconds_between(stream_ready_at, matrix_ready_at),
                             Rcpp::Named("eigensolver_sec") = seconds_between(matrix_ready_at, eigensolver_done_at),

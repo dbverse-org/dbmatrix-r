@@ -46,7 +46,8 @@ db_svd(
 \item{operator_threads}{Number of threads used for each Gram-matrix product.}
 }
 \value{
-List with SVD or PCA components
+List with SVD or PCA components. Timings and solver counts are in
+\code{attr(result, "diagnostics")}.
 }
 \description{
 Perform Streaming SVD on a dbMatrix
