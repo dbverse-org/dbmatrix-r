@@ -193,6 +193,14 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
   e1
 }
 
+#' Sparse matrices store only non-zero values. If an operation turns 0 into
+#' something else (exp(0) = 1, 0 == 0, 1 / 0 = Inf), the zeros must be filled
+#' in before computing.
+#' @noRd
+.changes_zero <- function(f) {
+  !isTRUE(suppressWarnings(f(0) == 0))
+}
+
 #' @noRd
 arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
   # order matters
@@ -200,11 +208,20 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
 
   # helper functions
   .skip_computation <- function(num_vect, generic_char) {
-    if ((generic_char %in% c('*', '/') && all(num_vect == 1))) {
+    if ((generic_char == '*' && all(num_vect == 1))) {
       return(TRUE)
     }
 
-    if ((generic_char %in% c('+', '-') && all(num_vect == 0))) {
+    if ((generic_char == '+' && all(num_vect == 0))) {
+      return(TRUE)
+    }
+
+    # x / 1 and x - 0 are no-ops, but 1 / x and 0 - x are not
+    if (dbm_narg == 1L && generic_char == '/' && all(num_vect == 1)) {
+      return(TRUE)
+    }
+
+    if (dbm_narg == 1L && generic_char == '-' && all(num_vect == 0)) {
       return(TRUE)
     }
 
@@ -235,33 +252,22 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     return(FALSE)
   }
 
-  .is_additive_ops <- function(num_vect) {
-    if (num_vect == "+" || num_vect == "-") {
-      return(TRUE)
-    } else {
+  .do_densification <- function(num_vect, generic_char, dbm) {
+    if (!is(dbm, "dbSparseMatrix") || length(num_vect) != 1) {
       return(FALSE)
     }
-  }
 
-  .do_densification <- function(num_vect, generic_char, dbm) {
-    if (
-      is(dbm, "dbSparseMatrix") &&
-        length(num_vect) == 1 &&
-        .is_additive_ops(generic_char)
-    ) {
+    if (generic_char %in% c("+", "-")) {
       return(TRUE)
     }
 
-    if (
-      is(dbm, "dbSparseMatrix") &&
-        length(num_vect) == 1 &&
-        (generic_char == "^" || generic_char == "%%") &&
-        num_vect == 0
-    ) {
+    if ((generic_char == "^" || generic_char == "%%") && num_vect == 0) {
       return(TRUE)
     }
 
-    return(FALSE)
+    # scalar on the left (1 / x, 2 ^ x): check what happens to the zeros
+    op <- match.fun(generic_char)
+    dbm_narg == 2L && .changes_zero(function(z) op(num_vect, z))
   }
 
   # Main function
@@ -304,7 +310,9 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     )
   } else if (generic_char == "%/%" && num_vect == 0) {
     # edge case 2
-    dbm <- .to_db_dense(x = dbm)
+    if (is(dbm, "dbSparseMatrix")) {
+      dbm <- .to_db_dense(x = dbm)
+    }
     dbm[] <- dbm[] |>
       dplyr::mutate(
         x = dplyr::case_when(
