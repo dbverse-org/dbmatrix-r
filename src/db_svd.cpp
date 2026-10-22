@@ -41,7 +41,6 @@ private:
   const Eigen::VectorXd &row_offset_;
   const Eigen::VectorXd &row_scale_;
   int n_rows_, n_cols_, operator_threads_;
-  mutable Eigen::VectorXd z_;
 
 public:
   OpAwareGramOp(const Eigen::SparseMatrix<double, Eigen::ColMajor> &A,
@@ -49,8 +48,7 @@ public:
                 const Eigen::VectorXd &row_scale,
                 int operator_threads)
       : A_(A), row_offset_(row_offset), row_scale_(row_scale),
-        n_rows_(A.rows()), n_cols_(A.cols()), operator_threads_(operator_threads),
-        z_(A.cols()) {}
+        n_rows_(A.rows()), n_cols_(A.cols()), operator_threads_(operator_threads) {}
 
   int rows() const { return n_rows_; }
   int cols() const { return n_rows_; }
@@ -59,8 +57,9 @@ public:
     Eigen::Map<const Eigen::VectorXd> x(x_in, n_rows_);
     Eigen::Map<Eigen::VectorXd> y(y_out, n_rows_);
 
+    // One pass per column (dot product, then scatter); also used for one thread
     const int n_workers = std::max(1, std::min(operator_threads_, n_cols_));
-    if (n_workers > 1) {
+    {
       const Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
       const double offset_dot_x = row_offset_.dot(x);
       std::vector<Eigen::VectorXd> local_y(
@@ -100,23 +99,7 @@ public:
       }
       y = row_scale_.cwiseProduct(y);
       y += row_offset_ * z_sum;
-      return;
     }
-
-    // A_norm = diag(row_scale) * A + row_offset
-    // z = A_norm^T @ x = A^T @ (row_scale * x) + row_offset^T @ x
-    Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
-    double offset_dot_x = row_offset_.dot(x);
-    // Multiplying the transpose expression directly avoids materializing a
-    // second full sparse matrix. For a column-major A, A^T * x can still be
-    // evaluated efficiently one stored column at a time.
-    z_.noalias() = A_.transpose() * scaled_x;
-    z_.array() += offset_dot_x;
-
-    // y = A_norm @ z = row_scale * (A @ z) + row_offset * sum(z)
-    y.noalias() = A_ * z_;
-    y = row_scale_.cwiseProduct(y);
-    y += row_offset_ * z_.sum();
   }
 };
 
