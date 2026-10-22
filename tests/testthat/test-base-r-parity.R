@@ -4,7 +4,8 @@ cases <- c(
   "1 / x", "8 / x", "0 - x", "x / 1", "x - 0",
   "exp(x)", "cos(x)", "x == 0", "x >= 0", "x > 1",
   "-x", "+x",
-  "head(x, 1)", "tail(x, 1)", "head(x, 10)"
+  "head(x, 1)", "tail(x, 1)", "head(x, 10)",
+  "rowMeans(x)", "colMeans(x)"
 )
 
 m <- matrix(c(1, 2, 0, 4, 0, 8), 2, dimnames = list(c("a", "b"), c("x", "y", "z")))
@@ -31,6 +32,12 @@ for (class in c("dbDenseMatrix", "dbSparseMatrix")) {
     })
   }
 
+  test_that(paste(class, "means skip NA values"), {
+    value <- if (class == "dbSparseMatrix") as(m_na, "CsparseMatrix") else m_na
+    x_na <- dbMatrix(value = value, con = con, name = "parity_na", class = class, overwrite = TRUE)
+    expect_equal(unname(rowMeans(x_na)), rowMeans(m_na, na.rm = TRUE))
+    expect_equal(unname(colMeans(x_na)), colMeans(m_na, na.rm = TRUE))
+  })
 }
 
 test_that("sparse ops that change zeros error instead of skipping them when densify is off", {

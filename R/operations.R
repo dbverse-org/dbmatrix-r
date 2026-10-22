@@ -1120,11 +1120,7 @@ setMethod(
   'rowMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-    x <- .castNumeric(x)
-    n_cols <- ncol(x)
-
-    # Calculate rowMeans directly: sum(x) per row / n_cols
-    res <- rowSums(x) / n_cols
+    res <- .margin_means(x, by = "i")
     names(res) <- rownames(x)
     return(res)
   }
@@ -1137,15 +1133,34 @@ setMethod(
   'colMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-    x <- .castNumeric(x)
-    n_rows <- nrow(x)
-
-    # Calculate colMeans directly: sum(x) per col / n_rows
-    res <- colSums(x) / n_rows
+    res <- .margin_means(x, by = "j")
     names(res) <- colnames(x)
     return(res)
   }
 )
+
+#' Mean per row (`by = "i"`) or column (`by = "j"`). NA values are skipped,
+#' so each mean divides by the number of non-NA values.
+#' @noRd
+.margin_means <- function(x, by) {
+  x <- .castNumeric(x)
+  n_groups <- if (by == "i") nrow(x) else ncol(x)
+  n_values <- if (by == "i") ncol(x) else nrow(x)
+
+  res_df <- x[] |>
+    dplyr::group_by(!!rlang::sym(by)) |>
+    dplyr::summarise(
+      sum_x = sum(x, na.rm = TRUE),
+      n_na = dplyr::sql("COUNT(*) - COUNT(x)") # cheaper than summing is.na(x)
+    ) |>
+    dplyr::collect()
+
+  sums <- numeric(n_groups)
+  n_na <- numeric(n_groups)
+  sums[res_df[[by]]] <- res_df$sum_x
+  n_na[res_df[[by]]] <- res_df$n_na
+  sums / (n_values - n_na)
+}
 
 ## colSds dbdm ####
 #' Row (column) standard deviations for [`dbMatrix`] objects
