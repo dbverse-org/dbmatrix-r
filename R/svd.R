@@ -9,7 +9,7 @@
 #' @param tol Eigensolver convergence tolerance.
 #' @param maxit Maximum eigensolver iterations.
 #' @param ncv Number of Lanczos basis vectors. Defaults to
-#'   `max(ceiling(1.5 * k), 40)`.
+#'   `max(2 * k + 1, 40)`, capped at the number of rows.
 #' @param score_threads Number of threads used to calculate the cell scores.
 #' @param operator_threads Number of threads used for each Gram-matrix product.
 #' @return List with SVD or PCA components. Timings and solver counts are in
@@ -60,7 +60,8 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
     stop("tol must be one positive finite number")
   if (length(maxit) != 1L || is.na(maxit) || maxit < 1L)
     stop("maxit must be one positive integer")
-  if (is.null(ncv)) ncv <- min(max(as.integer(ceiling(1.5 * k)), 40L), n_rows)
+  # 2k + 1 basis vectors means fewer restarts than 1.5k (ARPACK's usual rule)
+  if (is.null(ncv)) ncv <- min(max(2L * k + 1L, 40L), n_rows)
   ncv <- as.integer(ncv)
   if (length(ncv) != 1L || is.na(ncv) || ncv <= k || ncv > n_rows)
     stop("ncv must be greater than k and no greater than the number of rows")

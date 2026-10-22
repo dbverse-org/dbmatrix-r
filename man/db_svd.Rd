@@ -39,7 +39,7 @@ db_svd(
 \item{maxit}{Maximum eigensolver iterations.}
 
 \item{ncv}{Number of Lanczos basis vectors. Defaults to
-\code{max(ceiling(1.5 * k), 40)}.}
+\code{max(2 * k + 1, 40)}, capped at the number of rows.}
 
 \item{score_threads}{Number of threads used to calculate the cell scores.}
 
