@@ -2,7 +2,8 @@
 # the results must match. Add a line here to cover a new operation.
 cases <- c(
   "1 / x", "8 / x", "0 - x", "x / 1", "x - 0",
-  "exp(x)", "cos(x)", "x == 0", "x >= 0", "x > 1"
+  "exp(x)", "cos(x)", "x == 0", "x >= 0", "x > 1",
+  "-x", "+x"
 )
 
 m <- matrix(c(1, 2, 0, 4, 0, 8), 2, dimnames = list(c("a", "b"), c("x", "y", "z")))
