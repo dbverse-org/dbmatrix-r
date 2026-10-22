@@ -1187,14 +1187,8 @@ dbMatrix_from_tbl <- function(
     }
 
     # Create temporary lookup tables for row/col name -> index mapping
-    row_lookup_name <- paste0(
-      "_row_lookup_",
-      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
-    )
-    col_lookup_name <- paste0(
-      "_col_lookup_",
-      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
-    )
+    row_lookup_name <- unique_table_name("_row_lookup")
+    col_lookup_name <- unique_table_name("_col_lookup")
 
     # Register row lookup
     row_lookup_df <- data.frame(

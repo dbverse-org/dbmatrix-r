@@ -50,5 +50,14 @@ test_that("sparse ops that change zeros error instead of skipping them when dens
   expect_error(as.matrix(1 / x), "sparse-to-dense")
 })
 
+test_that("temporary table names leave the random seed alone", {
+  set.seed(1)
+  expected <- runif(1)
+  set.seed(1)
+  x <- dbMatrix(value = m, con = con, name = "parity_seed", class = "dbDenseMatrix", overwrite = TRUE)
+  invisible(as.matrix(x[1, ] + 1))
+  expect_identical(runif(1), expected)
+})
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 options(old_options)

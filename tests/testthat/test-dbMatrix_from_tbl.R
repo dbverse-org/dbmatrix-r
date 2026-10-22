@@ -86,3 +86,17 @@ test_that("dbMatrix_from_tbl validates inputs", {
 
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
+
+test_that("dbMatrix_from_tbl leaves the random seed alone", {
+  con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  tbl <- dplyr::copy_to(con, data.frame(gene = c("g1", "g2"), cell = c("c1", "c2")), name = "seed_data")
+
+  set.seed(1)
+  expected <- runif(1)
+  set.seed(1)
+  dbMatrix_from_tbl(tbl, rownames_colName = "gene", colnames_colName = "cell",
+                    row_names = c("g1", "g2"), col_names = c("c1", "c2"),
+                    name = "seed_matrix", overwrite = TRUE)
+  expect_identical(runif(1), expected)
+})
