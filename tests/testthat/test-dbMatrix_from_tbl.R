@@ -32,6 +32,10 @@ test_that("dbMatrix_from_tbl creates dbSparseMatrix from tbl", {
   expect_equal(mat["gene2", "cell3"], 1)
   expect_equal(mat["gene3", "cell1"], 1)
 
+  # Row and column indices are 32-bit integers, which db_svd() expects
+  types <- DBI::dbGetQuery(con, paste("DESCRIBE", dbplyr::sql_render(result[])))
+  expect_equal(types$column_type[types$column_name %in% c("i", "j")], c("INTEGER", "INTEGER"))
+
   # Cleanup
   DBI::dbDisconnect(con, shutdown = TRUE)
 })
