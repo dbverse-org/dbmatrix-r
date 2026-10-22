@@ -791,6 +791,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
 
+  if (is(e1, "dbSparseMatrix") && length(e2) == 1L && !is.na(e2) &&
+      .changes_zero(function(z) match.fun(op)(z, e2))) {
+    e1 <- .to_db_dense(e1)
+  }
+
   if (is.na(e2) && op == "==") {
     build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(is.na(x)))')
   } else if (is.na(e2) && op == "!=") {
@@ -821,6 +826,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
+
+  if (is(e2, "dbSparseMatrix") && length(e1) == 1L && !is.na(e1) &&
+      .changes_zero(function(z) match.fun(op)(e1, z))) {
+    e2 <- .to_db_dense(e2)
+  }
 
   if (op %in% compare_ops) {
     # Comparison operators return BOOLEAN - cast to numeric for type safety
@@ -1644,6 +1654,14 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @export
 setMethod('Math', signature(x = 'dbMatrix'), function(x) {
   op_name <- as.character(.Generic)
+
+  # log() on a sparse matrix transforms only the stored values and leaves the
+  # zeros at 0. Log normalization relies on this: add a pseudocount to the
+  # stored values, then call log() (as Giotto does).
+  keeps_zeros <- op_name %in% c("log", "log2", "log10")
+  if (is(x, "dbSparseMatrix") && !keeps_zeros && .changes_zero(match.fun(op_name))) {
+    x <- .to_db_dense(x)
+  }
 
   # SQL translations for R functions that DuckDB doesn't have natively
   # These functions need to be translated to equivalent SQL expressions
