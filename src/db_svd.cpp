@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cmath>
 #include <numeric>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -125,23 +126,34 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   if (!stream_ptr || !stream_ptr->get_next)
     Rcpp::stop("Invalid stream.");
 
-  struct ArrowSchema schema;
-  if (stream_ptr->get_schema(stream_ptr, &schema) == 0 && schema.release)
+  // Columns must be int32 i, int32 j, double x (db_svd() casts them in SQL).
+  // Anything else would be misread and could crash R, so stop instead.
+  struct ArrowSchema schema{};
+  bool types_ok = stream_ptr->get_schema(stream_ptr, &schema) == 0 && schema.n_children == 3 &&
+                  std::string(schema.children[0]->format) == "i" &&
+                  std::string(schema.children[1]->format) == "i" &&
+                  std::string(schema.children[2]->format) == "g";
+  if (schema.release)
     schema.release(&schema);
 
+  bool in_bounds = true;
   struct ArrowArray chunk;
-  while (stream_ptr->get_next(stream_ptr, &chunk) == 0 && chunk.release) {
-    if (chunk.n_children == 3) {
-      const int32_t *i = (const int32_t *)chunk.children[0]->buffers[1];
-      const int32_t *j = (const int32_t *)chunk.children[1]->buffers[1];
-      const double *x = (const double *)chunk.children[2]->buffers[1];
-      for (int64_t idx = 0; idx < chunk.length; ++idx)
-        triplets.emplace_back(i[idx] - 1, j[idx] - 1, x[idx]);
+  while (types_ok && in_bounds && stream_ptr->get_next(stream_ptr, &chunk) == 0 && chunk.release) {
+    const int32_t *i = (const int32_t *)chunk.children[0]->buffers[1];
+    const int32_t *j = (const int32_t *)chunk.children[1]->buffers[1];
+    const double *x = (const double *)chunk.children[2]->buffers[1];
+    for (int64_t idx = 0; idx < chunk.length && in_bounds; ++idx) {
+      in_bounds = i[idx] >= 1 && i[idx] <= n_rows && j[idx] >= 1 && j[idx] <= n_cols;
+      triplets.emplace_back(i[idx] - 1, j[idx] - 1, x[idx]);
     }
     chunk.release(&chunk);
   }
   if (stream_ptr->release)
     stream_ptr->release(stream_ptr);
+  if (!types_ok)
+    Rcpp::stop("SVD input must have integer i and j columns and a double x column.");
+  if (!in_bounds)
+    Rcpp::stop("SVD input has row or column indices outside the matrix dimensions.");
   const auto stream_ready_at = std::chrono::steady_clock::now();
 
   // Build CSC matrix

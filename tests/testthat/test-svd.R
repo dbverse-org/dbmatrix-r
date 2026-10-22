@@ -146,3 +146,30 @@ test_that("db_svd errors on center_rows=FALSE with centering", {
     "center_rows=FALSE.*not yet supported"
   )
 })
+
+test_that("db_svd works with 64-bit integer indices", {
+  testthat::skip_if_not_installed("duckdb")
+
+  set.seed(3)
+  m <- as.matrix(Matrix::rsparsematrix(40, 30, density = 0.3))
+  ijx <- Matrix::summary(as(m, "CsparseMatrix"))
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  DBI::dbWriteTable(con, "ijx_raw", data.frame(i = ijx$i, j = ijx$j, x = ijx$x))
+  DBI::dbExecute(con, "CREATE TABLE ijx_big AS SELECT i::BIGINT AS i, j::BIGINT AS j, x FROM ijx_raw")
+  dbm <- dbMatrix(
+    value = dplyr::tbl(con, "ijx_big"), con = con, name = "ijx_big", dims = c(40L, 30L),
+    dim_names = list(as.factor(paste0("r", 1:40)), as.factor(paste0("c", 1:30))),
+    class = "dbSparseMatrix", overwrite = TRUE, init = TRUE
+  )
+
+  res <- db_svd(dbm, k = 3, center = FALSE, tol = 1e-10)
+  testthat::expect_equal(res$d, svd(m)$d[1:3], tolerance = 1e-6)
+})
+
+test_that("db_svd explains when the matrix exceeds memory_limit", {
+  testthat::skip_if_not_installed("duckdb")
+
+  dbm <- sim_dbSparseMatrix(num_rows = 10, num_cols = 10, memory = TRUE)
+  testthat::expect_error(db_svd(dbm, k = 2, memory_limit = 1), "more than memory_limit")
+})

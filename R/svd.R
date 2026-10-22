@@ -74,29 +74,33 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
 
   return_format <- match.arg(return_format)
 
+  tbl <- dbm[]
+  # The C++ reader expects 32-bit integer indices and double values; cast here
+  # so tables with other column types (e.g. BIGINT indices) work too.
+  final_sql <- paste0(
+    "SELECT CAST(i AS INTEGER) AS i, CAST(j AS INTEGER) AS j, CAST(x AS DOUBLE) AS x FROM (",
+    dbplyr::sql_render(tbl), ") AS svd_input"
+  )
+
+  # Check the memory estimate before doing any other work
+  nnz <- as.numeric(dplyr::collect(dplyr::count(tbl))$n[1])
+  if (is.na(nnz) || nnz == 0) nnz <- n_rows * n_cols
+  data_size <- nnz * 16
+  size_text <- function(bytes) format(structure(bytes, class = "object_size"), units = "auto")
+  if (data_size > memory_limit) {
+    stop(
+      "db_svd() needs about ", size_text(data_size), " for this matrix, more than memory_limit (",
+      size_text(memory_limit), "). Increase memory_limit or set options(dbMatrix.svd_memory = ...).",
+      call. = FALSE
+    )
+  }
+
   # Compute row means/sds for normalization (center_rows=TRUE when center||scale)
   means <- if (center) as.numeric(rowMeans(dbm)) else numeric(0)
   sds <- numeric(0)
   if (scale) {
     sds <- as.numeric(rowSds(dbm))
     sds[is.na(sds) | sds == 0] <- 1
-  }
-
-  tbl <- dbm[]
-  final_sql <- as.character(dbplyr::sql_render(tbl))
-
-  # Estimate data size for path selection
-  nnz_df <- dplyr::collect(tbl |> dplyr::count())
-  nnz <- as.numeric(nnz_df$n[1])
-  if (is.null(nnz) || is.na(nnz) || nnz == 0) nnz <- n_rows * n_cols
-
-  data_size <- nnz * 16
-  use_cache <- memory_limit > 0 && data_size <= memory_limit
-
-  if (getOption("dbMatrix.verbose", TRUE)) {
-    if (!use_cache && memory_limit > 0) {
-      cli::cli_alert_info("Data size ({format(structure(data_size, class='object_size'), units='auto')}) exceeds limit - using streaming iteration")
-    }
   }
 
   stream_factory <- function() {
@@ -116,30 +120,25 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
     if (center) row_offset <- -means * inv_sds
   }
 
-  if (use_cache) {
-    # Fast Path: Arrow -> Eigen CSC
-    if (getOption("dbMatrix.verbose", TRUE)) {
-      cli::cli_alert_info("Data size ({format(structure(data_size, class='object_size'), units='auto')}) - Arrow/Eigen (CSC)")
-    }
-
-    result <- .compute_op_svd_arrow_cpp(
-      stream_factory = stream_factory,
-      n_rows = as.integer(n_rows),
-      n_cols = as.integer(n_cols),
-      row_offset = as.numeric(row_offset),
-      row_scale = as.numeric(row_scale),
-      k = as.integer(k),
-      tol = tol,
-      maxit = maxit,
-      ncv = ncv,
-      pca_scores = identical(return_format, "pca"),
-      score_threads = score_threads,
-      operator_threads = operator_threads,
-      expected_nnz = nnz
-    )
-  } else {
-    stop("Estimated SVD input exceeds memory_limit; increase memory_limit to use the in-memory Arrow/Eigen path.")
+  if (getOption("dbMatrix.verbose", TRUE)) {
+    cli::cli_alert_info("Data size ({size_text(data_size)}) - Arrow/Eigen (CSC)")
   }
+
+  result <- .compute_op_svd_arrow_cpp(
+    stream_factory = stream_factory,
+    n_rows = as.integer(n_rows),
+    n_cols = as.integer(n_cols),
+    row_offset = as.numeric(row_offset),
+    row_scale = as.numeric(row_scale),
+    k = as.integer(k),
+    tol = tol,
+    maxit = maxit,
+    ncv = ncv,
+    pca_scores = identical(return_format, "pca"),
+    score_threads = score_threads,
+    operator_threads = operator_threads,
+    expected_nnz = nnz
+  )
 
   # Set dimnames while each matrix is owned only by the C++ result list.
   # Extracting first and then modifying the alias can duplicate a very large
