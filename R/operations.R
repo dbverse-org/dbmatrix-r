@@ -1811,9 +1811,14 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
   # sql <- suppressWarnings(eval(str2lang(build_call)))
   # res <- DBI::dbGetQuery(dbplyr::remote_con(x[]), sql)[[1]] # get value
 
-  if (is.na(res)) {
-    #FIXME
-    res <- TRUE
+  # SQL gives NULL (NA in R) when there are no non-missing values; return what
+  # base R gives for an empty input. NaN results are kept as they are.
+  if (is.na(res) && !is.nan(res)) {
+    res <- switch(
+      as.character(.Generic),
+      sum = 0, prod = 1, max = -Inf, min = Inf, any = FALSE, all = TRUE,
+      res
+    )
   }
 
   return(res)

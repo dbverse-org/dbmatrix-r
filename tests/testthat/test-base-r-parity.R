@@ -60,6 +60,17 @@ test_that("temporary table names leave the random seed alone", {
   expect_identical(runif(1), expected)
 })
 
+test_that("summaries of all-missing or NaN values match base R", {
+  all_na <- matrix(NA_real_, 2, 2)
+  with_nan <- matrix(c(1, NaN, 3, 4), 2)
+  x_na <- dbMatrix(value = all_na, con = con, name = "parity_all_na", class = "dbDenseMatrix", overwrite = TRUE)
+  x_nan <- dbMatrix(value = with_nan, con = con, name = "parity_nan", class = "dbDenseMatrix", overwrite = TRUE)
+  expect_identical(sum(x_na), sum(all_na, na.rm = TRUE))
+  expect_identical(any(x_na), any(all_na, na.rm = TRUE))
+  expect_identical(all(x_na), all(all_na, na.rm = TRUE))
+  expect_true(is.nan(sum(x_nan)))
+})
+
 test_that("matrix products give a clear error instead of recursing", {
   x <- dbMatrix(value = m, con = con, name = "parity_prod", class = "dbDenseMatrix", overwrite = TRUE)
   expect_error(crossprod(x), "not supported")
