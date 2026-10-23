@@ -1,5 +1,48 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.2.0 (2026-10-23)
+
+## Breaking changes
+
+- Sparse operations that turn 0 into another value, such as `exp()`, `cos()`, `1 / x`, `x == 0`, `x >= 0` or `x < 1`, now fill in the zeros first. This needs `options(dbMatrix.allow_densify = TRUE)`; otherwise they give an error. Before, only the stored values changed, which gave wrong results. `log()`, `log2()` and `log10()` still transform only the stored values, so `log(x + 1)`-style normalization stays sparse.
+
+## Features
+
+- `db_svd()` is faster and can use several threads (`operator_threads`, `score_threads`). It returns PCA coordinates directly, uses `max(2k + 1, 40)` Lanczos vectors by default, and reports timings in `attr(result, "diagnostics")`.
+
+- Chained operations on the same matrix are combined into one database query.
+
+- New option `dbMatrix.readMM.temporary_table` controls whether temporary `readMM()` imports use a temporary table (default) or a view.
+
+## Bug fixes
+
+- `1 / x` and `0 - x` returned `x` unchanged.
+
+- Unary minus (`-x`) failed.
+
+- `head()` and `tail()` failed on matrices with row names, and `tail()` returned one row too many.
+
+- `rowMeans()` and `colMeans()` divided by the full length instead of the number of non-missing values.
+
+- `min()` and `max()` of a sparse matrix ignored the zeros that are not stored.
+
+- `sum()`, `prod()`, `max()`, `min()`, `any()` and `all()` returned `TRUE` when there were no non-missing values or the result was `NaN`. They now return what base R returns.
+
+- `crossprod()` and `tcrossprod()` recursed until R ran out of stack. Matrix products (`%*%`, `crossprod()`, `tcrossprod()`) now give a clear error; they are not supported yet.
+
+- `db_svd()` crashed R on matrices with 64-bit row or column indices, such as those from `dbMatrix_from_tbl()`, and failed on very large matrices with no stored values. Its memory-limit error now says what to change.
+
+- `dbMatrix_from_tbl()` stores row and column indices as 32-bit integers, like every other dbMatrix.
+
+- dbMatrix operations no longer change the random number stream after `set.seed()`.
+
+- Compatible with newer versions of bit64 (#6, @MichaelChirico).
+
+## Documentation
+
+- Updated the operations and arithmetic vignettes, the math functions help page and the `db_svd()` help page to match what is supported.
+
+
 # dbMatrix 0.1.0 (2026-05-19)
 
 First CRAN release.
