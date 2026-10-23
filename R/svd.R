@@ -93,7 +93,6 @@ db_svd <- function(dbm, k = 10, center = TRUE, scale = FALSE, center_rows = NULL
 
   # Check the memory estimate before doing any other work
   nnz <- as.numeric(dplyr::collect(dplyr::count(tbl))$n[1])
-  if (is.na(nnz) || nnz == 0) nnz <- n_rows * n_cols
   data_size <- nnz * 16
   size_text <- function(bytes) format(structure(bytes, class = "object_size"), units = "auto")
   if (data_size > memory_limit) {

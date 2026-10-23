@@ -173,3 +173,16 @@ test_that("db_svd explains when the matrix exceeds memory_limit", {
   dbm <- sim_dbSparseMatrix(num_rows = 10, num_cols = 10, memory = TRUE)
   testthat::expect_error(db_svd(dbm, k = 2, memory_limit = 1), "more than memory_limit")
 })
+
+test_that("db_svd handles a large matrix with no stored values", {
+  testthat::skip_if_not_installed("duckdb")
+
+  # 50,000 x 50,000 is more than 2^31 cells
+  empty <- Matrix::sparseMatrix(i = integer(0), j = integer(0), x = numeric(0), dims = c(50000L, 50000L))
+  con <- DBI::dbConnect(duckdb::duckdb())
+  on.exit(DBI::dbDisconnect(con, shutdown = TRUE))
+  dbm <- dbMatrix(value = empty, con = con, name = "empty_big", class = "dbSparseMatrix", overwrite = TRUE)
+
+  res <- db_svd(dbm, k = 2, center = FALSE)
+  testthat::expect_equal(res$d, c(0, 0))
+})
