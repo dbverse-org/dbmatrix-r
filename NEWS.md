@@ -1,5 +1,38 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.1.0 (2026-05-19)
+
+First CRAN release.
+
+## Features
+
+- `db_svd()` can scale rows, and its default memory limit is now 8 GB (was 500 MB).
+
+- New `to_named_ijx_tbl()` returns a matrix as a table of row name, column name and value.
+
+- Dividing one sparse dbMatrix by another keeps the result sparse.
+
+## Bug fixes
+
+- `writeMM()` always writes integer row and column indices and numeric values.
+
+- Converting a sparse dbMatrix to a `Matrix` sparse matrix is more reliable.
+
+- Subsetting that returns an empty matrix no longer fails.
+
+- Row and column names keep a stable order when building a dbMatrix from a table.
+
+- Row and column names that are not character strings are handled correctly.
+
+- `db_svd()` checks its inputs and gives clear errors.
+
+## Performance
+
+- Building a dbMatrix from a table matches names by number instead of by text, which is faster.
+
+- Subsetting that keeps every row and column returns immediately.
+
+
 # dbMatrix 0.0.0.9126 (2026-01-13)
 
 ## Bug fixes

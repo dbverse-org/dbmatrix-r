@@ -193,6 +193,14 @@ ops_ordered_args_vect <- function(dbm_narg, a, b) {
   e1
 }
 
+#' Sparse matrices store only non-zero values. If an operation turns 0 into
+#' something else (exp(0) = 1, 0 == 0, 1 / 0 = Inf), the zeros must be filled
+#' in before computing.
+#' @noRd
+.changes_zero <- function(f) {
+  !isTRUE(suppressWarnings(f(0) == 0))
+}
+
 #' @noRd
 arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
   # order matters
@@ -200,11 +208,20 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
 
   # helper functions
   .skip_computation <- function(num_vect, generic_char) {
-    if ((generic_char %in% c('*', '/') && all(num_vect == 1))) {
+    if ((generic_char == '*' && all(num_vect == 1))) {
       return(TRUE)
     }
 
-    if ((generic_char %in% c('+', '-') && all(num_vect == 0))) {
+    if ((generic_char == '+' && all(num_vect == 0))) {
+      return(TRUE)
+    }
+
+    # x / 1 and x - 0 are no-ops, but 1 / x and 0 - x are not
+    if (dbm_narg == 1L && generic_char == '/' && all(num_vect == 1)) {
+      return(TRUE)
+    }
+
+    if (dbm_narg == 1L && generic_char == '-' && all(num_vect == 0)) {
       return(TRUE)
     }
 
@@ -235,33 +252,22 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     return(FALSE)
   }
 
-  .is_additive_ops <- function(num_vect) {
-    if (num_vect == "+" || num_vect == "-") {
-      return(TRUE)
-    } else {
+  .do_densification <- function(num_vect, generic_char, dbm) {
+    if (!is(dbm, "dbSparseMatrix") || length(num_vect) != 1) {
       return(FALSE)
     }
-  }
 
-  .do_densification <- function(num_vect, generic_char, dbm) {
-    if (
-      is(dbm, "dbSparseMatrix") &&
-        length(num_vect) == 1 &&
-        .is_additive_ops(generic_char)
-    ) {
+    if (generic_char %in% c("+", "-")) {
       return(TRUE)
     }
 
-    if (
-      is(dbm, "dbSparseMatrix") &&
-        length(num_vect) == 1 &&
-        (generic_char == "^" || generic_char == "%%") &&
-        num_vect == 0
-    ) {
+    if ((generic_char == "^" || generic_char == "%%") && num_vect == 0) {
       return(TRUE)
     }
 
-    return(FALSE)
+    # scalar on the left (1 / x, 2 ^ x): check what happens to the zeros
+    op <- match.fun(generic_char)
+    dbm_narg == 2L && .changes_zero(function(z) op(num_vect, z))
   }
 
   # Main function
@@ -304,7 +310,9 @@ arith_call_dbm <- function(dbm_narg, dbm, num_vect, generic_char) {
     )
   } else if (generic_char == "%/%" && num_vect == 0) {
     # edge case 2
-    dbm <- .to_db_dense(x = dbm)
+    if (is(dbm, "dbSparseMatrix")) {
+      dbm <- .to_db_dense(x = dbm)
+    }
     dbm[] <- dbm[] |>
       dplyr::mutate(
         x = dplyr::case_when(
@@ -611,6 +619,11 @@ arith_call_dbm_vect_multi <- function(
 #' @export
 #' @usage \S4method{Arith}{dbMatrix,ANY}(e1, e2)
 setMethod('Arith', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
+  # unary -x and +x
+  if (missing(e2)) {
+    return(if (.Generic == "-") e1 * -1 else e1)
+  }
+
   dbm <- .castNumeric(e1)
 
   num_vect <- if (typeof(e2) != 'double') {
@@ -783,6 +796,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
 
+  if (is(e1, "dbSparseMatrix") && length(e2) == 1L && !is.na(e2) &&
+      .changes_zero(function(z) match.fun(op)(z, e2))) {
+    e1 <- .to_db_dense(e1)
+  }
+
   if (is.na(e2) && op == "==") {
     build_call <- glue::glue('e1[] |> dplyr::mutate(x = as.numeric(is.na(x)))')
   } else if (is.na(e2) && op == "!=") {
@@ -813,6 +831,11 @@ setMethod('Ops', signature(e1 = 'dbMatrix', e2 = 'ANY'), function(e1, e2) {
 setMethod('Ops', signature(e1 = 'ANY', e2 = 'dbMatrix'), function(e1, e2) {
   op <- as.character(.Generic)
   compare_ops <- c(">", "<", ">=", "<=", "==", "!=")
+
+  if (is(e2, "dbSparseMatrix") && length(e1) == 1L && !is.na(e1) &&
+      .changes_zero(function(z) match.fun(op)(e1, z))) {
+    e2 <- .to_db_dense(e2)
+  }
 
   if (op %in% compare_ops) {
     # Comparison operators return BOOLEAN - cast to numeric for type safety
@@ -1097,11 +1120,7 @@ setMethod(
   'rowMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-    x <- .castNumeric(x)
-    n_cols <- ncol(x)
-
-    # Calculate rowMeans directly: sum(x) per row / n_cols
-    res <- rowSums(x) / n_cols
+    res <- .margin_means(x, by = "i")
     names(res) <- rownames(x)
     return(res)
   }
@@ -1114,22 +1133,43 @@ setMethod(
   'colMeans',
   signature(x = 'dbMatrix'),
   function(x, ...) {
-    x <- .castNumeric(x)
-    n_rows <- nrow(x)
-
-    # Calculate colMeans directly: sum(x) per col / n_rows
-    res <- colSums(x) / n_rows
+    res <- .margin_means(x, by = "j")
     names(res) <- colnames(x)
     return(res)
   }
 )
 
+#' Mean per row (`by = "i"`) or column (`by = "j"`). NA values are skipped,
+#' so each mean divides by the number of non-NA values.
+#' @noRd
+.margin_means <- function(x, by) {
+  x <- .castNumeric(x)
+  n_groups <- if (by == "i") nrow(x) else ncol(x)
+  n_values <- if (by == "i") ncol(x) else nrow(x)
+
+  res_df <- x[] |>
+    dplyr::group_by(!!rlang::sym(by)) |>
+    dplyr::summarise(
+      sum_x = sum(x, na.rm = TRUE),
+      n_na = dplyr::sql("COUNT(*) - COUNT(x)") # cheaper than summing is.na(x)
+    ) |>
+    dplyr::collect()
+
+  sums <- numeric(n_groups)
+  n_na <- numeric(n_groups)
+  sums[res_df[[by]]] <- res_df$sum_x
+  n_na[res_df[[by]]] <- res_df$n_na
+  sums / (n_values - n_na)
+}
+
 ## colSds dbdm ####
 #' Row (column) standard deviations for [`dbMatrix`] objects
 #' @inherit MatrixGenerics::rowSds description
 #' @param x A [`dbMatrix`] object.
-#' @param rows Always NULL for [`dbMatrix`] queries. TODO
-#' @param cols Always NULL for [`dbMatrix`] queries. TODO
+#' @param rows Always NULL for [`dbMatrix`] queries. Included for compatibility
+#' with the generic.
+#' @param cols Always NULL for [`dbMatrix`] queries. Included for compatibility
+#' with the generic.
 #' @param na.rm Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
 #' @param center Always NULL for [`dbMatrix`] queries. Included for compatibility
@@ -1580,17 +1620,26 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @param x A [`dbMatrix`] object.
 #'
 #' @details
-#' This method provides implementations for the following Math functions:
+#' Supported functions:
 #'
-#' *Arithmetic and rounding*:
-#' * `abs()`, `sign()`, `sqrt()`, `ceiling()`, `floor()`, `trunc()`
+#' * Rounding and sign: `abs()`, `sign()`, `sqrt()`, `ceiling()`, `floor()`, `trunc()`
+#' * Logarithms and exponentials: `log()`, `log10()`, `log2()`, `log1p()`, `exp()`, `expm1()`
+#' * Trigonometric: `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`,
+#'   `cosh()`, `sinh()`, `tanh()`, `acosh()`, `asinh()`, `atanh()`
+#' * Special: `gamma()`, `lgamma()`
 #'
-#' *Cumulative operations*:
-#' * `cummax()`, `cummin()`, `cumprod()`, `cumsum()`
-#' * **Note: `cumprod()` is not supported**
+#' Not supported: `cumprod()`, `cospi()`, `sinpi()`, `tanpi()`, `digamma()` and
+#' `trigamma()`. `cumsum()`, `cummax()` and `cummin()` run but do not match base R,
+#' which returns a vector.
 #'
-#' *Logarithmic*:
-#' * `log()`, `log10()`, `log2()`, `log1p()`
+#' Values outside a function's domain (for example `log(0)` on a dense matrix or
+#' `acos(2)`) give a database error instead of `-Inf` or `NaN`.
+#'
+#' **Sparse matrices**: a `dbSparseMatrix` stores only non-zero values. Functions
+#' that turn 0 into something else, such as `exp()` or `cos()`, first fill in the
+#' zeros (see `dbMatrix.allow_densify` in [dbMatrix_options]). `log()`, `log2()`
+#' and `log10()` are the exception: they transform only the stored values and
+#' leave zeros at 0, so `log(x + 1)`-style normalization can stay sparse.
 #'
 #' **DuckDB Log Function Mappings**:
 #' | R Function | DuckDB Function | Notes |
@@ -1604,23 +1653,6 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' For `dbSparseMatrix` with pending operations, `log(x + 1)` operations preserve sparsity
 #' since `log(0 + 1) = 0`. The multiplicative component is applied first,
 #' then the log transformation is applied to sparse values only.
-#'
-#' *Trigonometric*:
-#' * `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`
-#' * `cosh()`, `sinh()`, `tanh()`, `acosh()`, `asinh()`, `atanh()`
-#' * `cospi()`, `sinpi()`, `tanpi()`
-#' * **Note: `acosh()` `asinh()` `atanh()` are not supported**
-#'
-#' *Exponential*:
-#' * `exp()`, `expm1()`
-#' * **Note: `expm1()` is not supported**
-#'
-#' *Special functions*:
-#' * `gamma()`, `lgamma()`, `digamma()`, `trigamma()`
-#' * **Note: `digamma()` `trigamma()` are not supported**
-#'
-#' The function applies the specified mathematical operation to each element
-#' of the [`dbMatrix`] object.
 #'
 #' @return
 #' A [`dbMatrix`] object with the mathematical operation applied to each element.
@@ -1636,6 +1668,14 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @export
 setMethod('Math', signature(x = 'dbMatrix'), function(x) {
   op_name <- as.character(.Generic)
+
+  # log() on a sparse matrix transforms only the stored values and leaves the
+  # zeros at 0. Log normalization relies on this: add a pseudocount to the
+  # stored values, then call log() (as Giotto does).
+  keeps_zeros <- op_name %in% c("log", "log2", "log10")
+  if (is(x, "dbSparseMatrix") && !keeps_zeros && .changes_zero(match.fun(op_name))) {
+    x <- .to_db_dense(x)
+  }
 
   # SQL translations for R functions that DuckDB doesn't have natively
   # These functions need to be translated to equivalent SQL expressions
@@ -1754,6 +1794,14 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
   )
   res <- suppressWarnings(eval(str2lang(build_call)))
 
+  # A sparse matrix does not store its zeros, so include 0 when any are missing
+  if (is(x, "dbSparseMatrix") && .Generic %in% c("max", "min")) {
+    n_stored <- dplyr::pull(dplyr::count(x[]), "n")
+    if (n_stored < prod(dim(x))) {
+      res <- match.fun(.Generic)(res, 0, na.rm = TRUE)
+    }
+  }
+
   # avoid using dplyr::pull()
   # build_call = glue::glue(
   #   "x[] |>
@@ -1763,9 +1811,14 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
   # sql <- suppressWarnings(eval(str2lang(build_call)))
   # res <- DBI::dbGetQuery(dbplyr::remote_con(x[]), sql)[[1]] # get value
 
-  if (is.na(res)) {
-    #FIXME
-    res <- TRUE
+  # SQL gives NULL (NA in R) when there are no non-missing values; return what
+  # base R gives for an empty input. NaN results are kept as they are.
+  if (is.na(res) && !is.nan(res)) {
+    res <- switch(
+      as.character(.Generic),
+      sum = 0, prod = 1, max = -Inf, min = Inf, any = FALSE, all = TRUE,
+      res
+    )
   }
 
   return(res)
@@ -1790,6 +1843,61 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
 
   return(x)
 })
+
+### matrix products ####
+
+#' Matrix products
+#' @description Matrix products (`%*%`, `crossprod()`, `tcrossprod()`) are not
+#'   supported for [`dbMatrix`] objects yet. These methods give a clear error.
+#' @param x,y [`dbMatrix`] objects or matrices.
+#' @param ... Not used.
+#' @return Does not return; always gives an error.
+#' @concept transform
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "dbMatrix", y = "ANY"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "ANY", y = "dbMatrix"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "dbMatrix", y = "ANY"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "ANY", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "dbMatrix", y = "ANY"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "ANY", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+# Both arguments dbMatrix: avoids an "ambiguous method" note
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+# Without these methods, crossprod() on a dbMatrix loops between the default
+# S4 method and base::crossprod() until R runs out of stack.
+.no_matrix_product <- function() {
+  stop(
+    "Matrix products (%*%, crossprod(), tcrossprod()) are not supported for dbMatrix objects yet.",
+    call. = FALSE
+  )
+}
 
 ### nrow ####
 
@@ -1859,13 +1967,7 @@ setMethod('dim', signature(x = 'dbMatrix'), function(x) {
 #' @rdname head_tail
 #' @export
 setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  n_subset <- 1:n
-  x[] <- x[] |> dplyr::filter(i %in% n_subset)
-
-  x@dims[1L] <- min(nrow(x), as.integer(n))
-  rownames(x) <- head(rownames(x))
-
-  return(x)
+  x[seq_len(min(n, nrow(x))), , drop = FALSE]
 })
 
 ### tail ####
@@ -1873,14 +1975,8 @@ setMethod('head', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
 #' @rdname head_tail
 #' @export
 setMethod('tail', signature(x = 'dbMatrix'), function(x, n = 6L, ...) {
-  tail_rownames <- tail(rownames(x))
-  n_subset <- (nrow(x) - n):nrow(x)
-  x[] <- x[] |> dplyr::filter(i %in% n_subset)
-
-  x@dims[1L] <- min(nrow(x), as.integer(n))
-  rownames(x) <- tail_rownames
-
-  return(x)
+  n <- min(n, nrow(x))
+  x[seq.int(nrow(x) - n + 1L, length.out = n), , drop = FALSE]
 })
 
 ### length ####

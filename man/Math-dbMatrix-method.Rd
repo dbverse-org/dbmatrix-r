@@ -18,23 +18,27 @@ for \code{\link{dbMatrix}} objects. This includes various mathematical operation
 logarithms, exponentials, trigonometric functions, and other transformations.
 }
 \details{
-This method provides implementations for the following Math functions:
-
-\emph{Arithmetic and rounding}:
+Supported functions:
 \itemize{
-\item \code{abs()}, \code{sign()}, \code{sqrt()}, \code{ceiling()}, \code{floor()}, \code{trunc()}
+\item Rounding and sign: \code{abs()}, \code{sign()}, \code{sqrt()}, \code{ceiling()}, \code{floor()}, \code{trunc()}
+\item Logarithms and exponentials: \code{log()}, \code{log10()}, \code{log2()}, \code{log1p()}, \code{exp()}, \code{expm1()}
+\item Trigonometric: \code{cos()}, \code{sin()}, \code{tan()}, \code{acos()}, \code{asin()}, \code{atan()},
+\code{cosh()}, \code{sinh()}, \code{tanh()}, \code{acosh()}, \code{asinh()}, \code{atanh()}
+\item Special: \code{gamma()}, \code{lgamma()}
 }
 
-\emph{Cumulative operations}:
-\itemize{
-\item \code{cummax()}, \code{cummin()}, \code{cumprod()}, \code{cumsum()}
-\item \strong{Note: \code{cumprod()} is not supported}
-}
+Not supported: \code{cumprod()}, \code{cospi()}, \code{sinpi()}, \code{tanpi()}, \code{digamma()} and
+\code{trigamma()}. \code{cumsum()}, \code{cummax()} and \code{cummin()} run but do not match base R,
+which returns a vector.
 
-\emph{Logarithmic}:
-\itemize{
-\item \code{log()}, \code{log10()}, \code{log2()}, \code{log1p()}
-}
+Values outside a function's domain (for example \code{log(0)} on a dense matrix or
+\code{acos(2)}) give a database error instead of \code{-Inf} or \code{NaN}.
+
+\strong{Sparse matrices}: a \code{dbSparseMatrix} stores only non-zero values. Functions
+that turn 0 into something else, such as \code{exp()} or \code{cos()}, first fill in the
+zeros (see \code{dbMatrix.allow_densify} in \link{dbMatrix_options}). \code{log()}, \code{log2()}
+and \code{log10()} are the exception: they transform only the stored values and
+leave zeros at 0, so \code{log(x + 1)}-style normalization can stay sparse.
 
 \strong{DuckDB Log Function Mappings}:\tabular{lll}{
    R Function \tab DuckDB Function \tab Notes \cr
@@ -49,29 +53,6 @@ This method provides implementations for the following Math functions:
 For \code{dbSparseMatrix} with pending operations, \code{log(x + 1)} operations preserve sparsity
 since \code{log(0 + 1) = 0}. The multiplicative component is applied first,
 then the log transformation is applied to sparse values only.
-
-\emph{Trigonometric}:
-\itemize{
-\item \code{cos()}, \code{sin()}, \code{tan()}, \code{acos()}, \code{asin()}, \code{atan()}
-\item \code{cosh()}, \code{sinh()}, \code{tanh()}, \code{acosh()}, \code{asinh()}, \code{atanh()}
-\item \code{cospi()}, \code{sinpi()}, \code{tanpi()}
-\item \strong{Note: \code{acosh()} \code{asinh()} \code{atanh()} are not supported}
-}
-
-\emph{Exponential}:
-\itemize{
-\item \code{exp()}, \code{expm1()}
-\item \strong{Note: \code{expm1()} is not supported}
-}
-
-\emph{Special functions}:
-\itemize{
-\item \code{gamma()}, \code{lgamma()}, \code{digamma()}, \code{trigamma()}
-\item \strong{Note: \code{digamma()} \code{trigamma()} are not supported}
-}
-
-The function applies the specified mathematical operation to each element
-of the \code{\link{dbMatrix}} object.
 }
 \examples{
 mat <- matrix(1, nrow = 3, ncol = 3)

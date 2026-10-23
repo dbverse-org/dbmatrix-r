@@ -2,7 +2,7 @@
 % Please edit documentation in R/svd.R
 \name{db_svd}
 \alias{db_svd}
-\title{Perform Streaming SVD on a dbMatrix}
+\title{Truncated SVD or PCA of a dbSparseMatrix}
 \usage{
 db_svd(
   dbm,
@@ -30,7 +30,9 @@ db_svd(
 
 \item{center_rows}{Logical, center rows vs columns (default TRUE for standard PCA)}
 
-\item{memory_limit}{Bytes for Fast Path. Default 8 GB.}
+\item{memory_limit}{Largest estimated memory use, in bytes, allowed for
+reading the matrix (about 16 bytes per non-zero value). Default 8 GB. Set
+\code{options(dbMatrix.svd_memory = ...)} to change it for the session.}
 
 \item{return_format}{"svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)}
 
@@ -39,15 +41,19 @@ db_svd(
 \item{maxit}{Maximum eigensolver iterations.}
 
 \item{ncv}{Number of Lanczos basis vectors. Defaults to
-\code{max(ceiling(1.5 * k), 40)}.}
+\code{max(2 * k + 1, 40)}, capped at the number of rows.}
 
 \item{score_threads}{Number of threads used to calculate the cell scores.}
 
 \item{operator_threads}{Number of threads used for each Gram-matrix product.}
 }
 \value{
-List with SVD or PCA components
+List with SVD or PCA components. Timings and solver counts are in
+\code{attr(result, "diagnostics")}.
 }
 \description{
-Perform Streaming SVD on a dbMatrix
+Computes the top \code{k} singular values and vectors. The matrix is read from
+the database into memory once, and centering and scaling are applied without
+densifying it. Matrices with more than about 2.1 billion non-zero values are
+not supported.
 }

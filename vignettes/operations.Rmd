@@ -29,27 +29,34 @@ library(Matrix)
 
 ## dbMatrix generics
 
-`dbMatrix` objects currently support several statistical matrix operations listed below with support for more coming soon.
+The table below lists the matrix operations `dbMatrix` supports. If you need
+one that is missing, please open an issue on
+[GitHub](https://github.com/dbverse-org/dbmatrix-r/issues).
 
-✅  - implemented
-🟧 - not yet implemented
+✅ - supported
+❌ - not supported
 
-|          | dbSparseMatrix | dbDenseMatrix |
-|----------|----------------|---------------|
-| colSums  | ✅             | ✅            |
-| rowSums  | ✅             | ✅            |
-| colMeans | ✅             | ✅            |
-| rowMeans | ✅             | ✅            |
-| colSds   | 🟧             | ✅            |
-| rowSds   | 🟧             | ✅            |
-| t        | ✅             | ✅            |
-| mean     | ✅             | ✅            |
-| nrow     | ✅             | ✅            |
-| ncol     | ✅             | ✅            |
-| dims     | ✅             | ✅            |
-| head     | ✅             | ✅            |
-| tail     | ✅             | ✅            |
-| ...      |                |               |
+|                                   | dbSparseMatrix | dbDenseMatrix |
+|-----------------------------------|----------------|---------------|
+| `colSums`, `rowSums`              | ✅             | ✅            |
+| `colMeans`, `rowMeans`            | ✅             | ✅            |
+| `colVars`, `rowVars`              | ✅             | ✅            |
+| `colSds`, `rowSds`                | ✅             | ✅            |
+| `sum`, `mean`, `max`, `min`       | ✅             | ✅            |
+| `range`                           | ❌             | ❌            |
+| `t`                               | ✅             | ✅            |
+| `[` (subsetting)                  | ✅             | ✅            |
+| `head`, `tail`                    | ✅             | ✅            |
+| `is.na`                           | ✅             | ✅            |
+| `dim`, `nrow`, `ncol`, `dimnames` | ✅             | ✅            |
+| `rownames`, `colnames`            | ✅             | ✅            |
+| `writeMM`                         | ✅             | ✅            |
+| `db_svd`                          | ✅             | ❌            |
+
+Arithmetic and math functions are covered in `vignette("arithmetic")`.
+
+`dbMatrix` skips missing values (`NA`) in all of these summaries, as if
+`na.rm = TRUE`.
 
 ## dbSparse Matrix Operations
 
@@ -120,13 +127,13 @@ dim(dgc)
   <summary>Click to expand </summary>
   
   ```{r}
-all.equal(dbMatrix::colMeans(sparse, memory = TRUE, names = TRUE), Matrix::colMeans(dgc))
+all.equal(dbMatrix::colMeans(sparse), Matrix::colMeans(dgc))
 
-all.equal(dbMatrix::colSums(sparse, memory = TRUE, names = TRUE), Matrix::colSums(dgc))
+all.equal(dbMatrix::colSums(sparse), Matrix::colSums(dgc))
 
-all.equal(dbMatrix::rowMeans(sparse, memory = TRUE, names = TRUE), Matrix::rowMeans(dgc))
+all.equal(dbMatrix::rowMeans(sparse), Matrix::rowMeans(dgc))
 
-all.equal(dbMatrix::rowSums(sparse, memory = TRUE, names = TRUE), Matrix::rowSums(dgc))
+all.equal(dbMatrix::rowSums(sparse), Matrix::rowSums(dgc))
   ```
 </details>
 

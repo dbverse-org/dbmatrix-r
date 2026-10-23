@@ -1130,8 +1130,8 @@ dbMatrix_from_tbl <- function(
     sql <- glue::glue(
       'CREATE TABLE "{name}" AS
         SELECT
-          "{i_col}" AS i,
-          "{j_col}" AS j,
+          CAST("{i_col}" AS INTEGER) AS i,
+          CAST("{j_col}" AS INTEGER) AS j,
           {agg_expr} AS x
         FROM ({source_sql}) AS _src
         WHERE "{i_col}" IS NOT NULL AND "{j_col}" IS NOT NULL
@@ -1187,14 +1187,8 @@ dbMatrix_from_tbl <- function(
     }
 
     # Create temporary lookup tables for row/col name -> index mapping
-    row_lookup_name <- paste0(
-      "_row_lookup_",
-      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
-    )
-    col_lookup_name <- paste0(
-      "_col_lookup_",
-      paste(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
-    )
+    row_lookup_name <- unique_table_name("_row_lookup")
+    col_lookup_name <- unique_table_name("_col_lookup")
 
     # Register row lookup
     row_lookup_df <- data.frame(
@@ -1284,7 +1278,7 @@ dbMatrix_from_tbl <- function(
     j_encoded <- rlang::sym(paste0(as.character(colnames_colName), "_encoded"))
 
     count_table <- count_table |>
-      dplyr::mutate(i_encoded := dplyr::dense_rank(rownames_colName)) |>
+      dplyr::mutate(i_encoded := as.integer(dplyr::dense_rank(rownames_colName))) |>
       dbplyr::window_order(rownames_colName)
 
     # Extract row names from data (DENSE_RANK indices match this ordering)
@@ -1296,7 +1290,7 @@ dbMatrix_from_tbl <- function(
     dim_i <- as.integer(length(row_names))
 
     count_table <- count_table |>
-      dplyr::mutate(j_encoded := dplyr::dense_rank(colnames_colName)) |>
+      dplyr::mutate(j_encoded := as.integer(dplyr::dense_rank(colnames_colName))) |>
       dbplyr::window_order(colnames_colName) |>
       dplyr::ungroup()
 

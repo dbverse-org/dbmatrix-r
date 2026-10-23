@@ -13,6 +13,7 @@
 #include <chrono>
 #include <cmath>
 #include <numeric>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -34,27 +35,21 @@
 using namespace Spectra;
 
 // OP-Aware Gram Operator for implicit centering/scaling inspired by BPCells
-// Computes y = A_norm @ A_norm^T @ x where A_norm = diag(row_scale) * A * diag(col_scale) +
-// row_offset
+// Computes y = A_norm @ A_norm^T @ x where A_norm = diag(row_scale) * A + row_offset
 class OpAwareGramOp {
 private:
   const Eigen::SparseMatrix<double, Eigen::ColMajor> &A_;
   const Eigen::VectorXd &row_offset_;
   const Eigen::VectorXd &row_scale_;
-  const Eigen::VectorXd &col_scale_;
   int n_rows_, n_cols_, operator_threads_;
-  mutable Eigen::VectorXd z_, scaled_z_;
 
 public:
   OpAwareGramOp(const Eigen::SparseMatrix<double, Eigen::ColMajor> &A,
                 const Eigen::VectorXd &row_offset,
                 const Eigen::VectorXd &row_scale,
-                const Eigen::VectorXd &col_scale,
                 int operator_threads)
-      : A_(A), row_offset_(row_offset),
-        row_scale_(row_scale), col_scale_(col_scale),
-        n_rows_(A.rows()), n_cols_(A.cols()), operator_threads_(operator_threads),
-        z_(A.cols()), scaled_z_(A.cols()) {}
+      : A_(A), row_offset_(row_offset), row_scale_(row_scale),
+        n_rows_(A.rows()), n_cols_(A.cols()), operator_threads_(operator_threads) {}
 
   int rows() const { return n_rows_; }
   int cols() const { return n_rows_; }
@@ -63,8 +58,9 @@ public:
     Eigen::Map<const Eigen::VectorXd> x(x_in, n_rows_);
     Eigen::Map<Eigen::VectorXd> y(y_out, n_rows_);
 
+    // One pass per column (dot product, then scatter); also used for one thread
     const int n_workers = std::max(1, std::min(operator_threads_, n_cols_));
-    if (n_workers > 1) {
+    {
       const Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
       const double offset_dot_x = row_offset_.dot(x);
       std::vector<Eigen::VectorXd> local_y(
@@ -85,11 +81,10 @@ public:
             for (Eigen::SparseMatrix<double, Eigen::ColMajor>::InnerIterator it(A_, col); it; ++it)
               dot += it.value() * scaled_x[it.row()];
 
-            const double z = col_scale_[col] * dot;
-            const double scaled_z = col_scale_[col] * z;
+            const double z = dot;
             z_sum += z;
             for (Eigen::SparseMatrix<double, Eigen::ColMajor>::InnerIterator it(A_, col); it; ++it)
-              accumulator[it.row()] += it.value() * scaled_z;
+              accumulator[it.row()] += it.value() * z;
           }
           local_z_sum[worker] = z_sum;
         });
@@ -105,33 +100,14 @@ public:
       }
       y = row_scale_.cwiseProduct(y);
       y += row_offset_ * z_sum;
-      return;
     }
-
-    // A_norm = diag(row_scale) * A * diag(col_scale) + row_offset
-    // z = A_norm^T @ x = col_scale * (A^T @ (row_scale * x) + row_offset^T @ x)
-    Eigen::VectorXd scaled_x = row_scale_.cwiseProduct(x);
-    double offset_dot_x = row_offset_.dot(x);
-    // Multiplying the transpose expression directly avoids materializing a
-    // second full sparse matrix. For a column-major A, A^T * x can still be
-    // evaluated efficiently one stored column at a time.
-    z_.noalias() = A_.transpose() * scaled_x;
-    z_ = col_scale_.cwiseProduct(z_);
-    z_.array() += col_scale_.array() * offset_dot_x;
-
-    // y = A_norm @ z = row_scale * (A @ (col_scale * z)) + row_offset * sum(z)
-    scaled_z_ = col_scale_.cwiseProduct(z_);
-    y.noalias() = A_ * scaled_z_;
-    y = row_scale_.cwiseProduct(y);
-    y += row_offset_ * z_.sum();
   }
 };
 
 // [[Rcpp::export(.compute_op_svd_arrow_cpp)]]
 Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
                                     Rcpp::NumericVector row_offset,
-                                    Rcpp::NumericVector row_scale,
-                                    Rcpp::NumericVector col_scale, int k,
+                                    Rcpp::NumericVector row_scale, int k,
                                     double tol, int maxit, int ncv,
                                     bool pca_scores, int score_threads,
                                     int operator_threads, double expected_nnz) {
@@ -150,23 +126,34 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   if (!stream_ptr || !stream_ptr->get_next)
     Rcpp::stop("Invalid stream.");
 
-  struct ArrowSchema schema;
-  if (stream_ptr->get_schema(stream_ptr, &schema) == 0 && schema.release)
+  // Columns must be int32 i, int32 j, double x (db_svd() casts them in SQL).
+  // Anything else would be misread and could crash R, so stop instead.
+  struct ArrowSchema schema{};
+  bool types_ok = stream_ptr->get_schema(stream_ptr, &schema) == 0 && schema.n_children == 3 &&
+                  std::string(schema.children[0]->format) == "i" &&
+                  std::string(schema.children[1]->format) == "i" &&
+                  std::string(schema.children[2]->format) == "g";
+  if (schema.release)
     schema.release(&schema);
 
+  bool in_bounds = true;
   struct ArrowArray chunk;
-  while (stream_ptr->get_next(stream_ptr, &chunk) == 0 && chunk.release) {
-    if (chunk.n_children == 3) {
-      const int32_t *i = (const int32_t *)chunk.children[0]->buffers[1];
-      const int32_t *j = (const int32_t *)chunk.children[1]->buffers[1];
-      const double *x = (const double *)chunk.children[2]->buffers[1];
-      for (int64_t idx = 0; idx < chunk.length; ++idx)
-        triplets.emplace_back(i[idx] - 1, j[idx] - 1, x[idx]);
+  while (types_ok && in_bounds && stream_ptr->get_next(stream_ptr, &chunk) == 0 && chunk.release) {
+    const int32_t *i = (const int32_t *)chunk.children[0]->buffers[1];
+    const int32_t *j = (const int32_t *)chunk.children[1]->buffers[1];
+    const double *x = (const double *)chunk.children[2]->buffers[1];
+    for (int64_t idx = 0; idx < chunk.length && in_bounds; ++idx) {
+      in_bounds = i[idx] >= 1 && i[idx] <= n_rows && j[idx] >= 1 && j[idx] <= n_cols;
+      triplets.emplace_back(i[idx] - 1, j[idx] - 1, x[idx]);
     }
     chunk.release(&chunk);
   }
   if (stream_ptr->release)
     stream_ptr->release(stream_ptr);
+  if (!types_ok)
+    Rcpp::stop("SVD input must have integer i and j columns and a double x column.");
+  if (!in_bounds)
+    Rcpp::stop("SVD input has row or column indices outside the matrix dimensions.");
   const auto stream_ready_at = std::chrono::steady_clock::now();
 
   // Build CSC matrix
@@ -180,8 +167,7 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   // Create operator and solve
   Eigen::VectorXd r_off = Rcpp::as<Eigen::VectorXd>(row_offset);
   Eigen::VectorXd r_scl = Rcpp::as<Eigen::VectorXd>(row_scale);
-  Eigen::VectorXd c_scl = Rcpp::as<Eigen::VectorXd>(col_scale);
-  OpAwareGramOp op(A, r_off, r_scl, c_scl, operator_threads);
+  OpAwareGramOp op(A, r_off, r_scl, operator_threads);
 
   SymEigsSolver<double, LARGEST_ALGE, OpAwareGramOp> eigs(&op, k, ncv);
   eigs.init();
@@ -211,7 +197,7 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
   }
 
   // Compute V = A_norm^T @ U @ D^-1
-  // A_norm^T = col_scale * A^T * row_scale + row_offset^T
+  // A_norm^T = A^T * row_scale + row_offset^T
   Rcpp::NumericMatrix v_vecs(n_cols, k);
 
   const double *u_data = REAL(u_vecs);
@@ -224,12 +210,11 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
       v_out.setZero();
       return;
     }
-    // v = col_scale * (A^T @ (row_scale * u) + row_offset^T @ u)
+    // v = A^T @ (row_scale * u) + row_offset^T @ u
     Eigen::VectorXd scaled_u = r_scl.cwiseProduct(u_col);
     double offset_dot_u = r_off.dot(u_col);
     Eigen::VectorXd v_col = A.transpose() * scaled_u;
-    v_col = c_scl.cwiseProduct(v_col);
-    v_col.array() += c_scl.array() * offset_dot_u;
+    v_col.array() += offset_dot_u;
     // A^T U is already V D. Divide only for the SVD representation; the PCA
     // representation can return cell coordinates directly without creating a
     // second n_cols-by-k matrix in R.
@@ -272,7 +257,6 @@ Rcpp::List compute_op_svd_arrow_cpp(SEXP stream_factory, int n_rows, int n_cols,
                             Rcpp::Named("nops") = eigs.num_operations(),
                             Rcpp::Named("score_threads") = n_score_workers,
                             Rcpp::Named("operator_threads") = std::max(1, std::min(operator_threads, n_cols)),
-                            Rcpp::Named("matrix_build_sec") = seconds_between(started_at, matrix_ready_at),
                             Rcpp::Named("arrow_stream_sec") = seconds_between(started_at, stream_ready_at),
                             Rcpp::Named("csc_build_sec") = seconds_between(stream_ready_at, matrix_ready_at),
                             Rcpp::Named("eigensolver_sec") = seconds_between(matrix_ready_at, eigensolver_done_at),

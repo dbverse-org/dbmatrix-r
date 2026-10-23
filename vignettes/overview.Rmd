@@ -44,7 +44,7 @@ DBI::dbDisconnect(con, shutdown = TRUE)
 
 
 ## dbSparseMatrix
-![](../man/figures/dbMatrix-overview.png)
+![A dbSparseMatrix stores only the non-zero values as row (i), column (j) and value (x) triplets.](../man/figures/dbMatrix-overview.png)
 
 Sparse matrices are represented as triplet vectors with `i`, `j`,
 and `x` numerical vectors. `i` and `j` refer to the row and column indices, respectively, with specific `x` values or counts. Note: The `i` and `j` vectors are one-based following conventions from the `Matrix` R package and the `TSparseMatrix` class.
