@@ -1839,6 +1839,61 @@ setMethod('t', signature(x = 'dbMatrix'), function(x) {
   return(x)
 })
 
+### matrix products ####
+
+#' Matrix products
+#' @description Matrix products (`%*%`, `crossprod()`, `tcrossprod()`) are not
+#'   supported for [`dbMatrix`] objects yet. These methods give a clear error.
+#' @param x,y [`dbMatrix`] objects or matrices.
+#' @param ... Not used.
+#' @return Does not return; always gives an error.
+#' @concept transform
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "dbMatrix", y = "ANY"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "ANY", y = "dbMatrix"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "dbMatrix", y = "ANY"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "ANY", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "dbMatrix", y = "ANY"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "ANY", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+# Both arguments dbMatrix: avoids an "ambiguous method" note
+#' @rdname matrix-products
+#' @export
+setMethod("%*%", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("crossprod", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+#' @rdname matrix-products
+#' @export
+setMethod("tcrossprod", signature(x = "dbMatrix", y = "dbMatrix"), function(x, y, ...) .no_matrix_product())
+
+# Without these methods, crossprod() on a dbMatrix loops between the default
+# S4 method and base::crossprod() until R runs out of stack.
+.no_matrix_product <- function() {
+  stop(
+    "Matrix products (%*%, crossprod(), tcrossprod()) are not supported for dbMatrix objects yet.",
+    call. = FALSE
+  )
+}
+
 ### nrow ####
 
 #' The Number of Rows/Columns of a dbMatrix Object

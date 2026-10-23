@@ -60,5 +60,13 @@ test_that("temporary table names leave the random seed alone", {
   expect_identical(runif(1), expected)
 })
 
+test_that("matrix products give a clear error instead of recursing", {
+  x <- dbMatrix(value = m, con = con, name = "parity_prod", class = "dbDenseMatrix", overwrite = TRUE)
+  expect_error(crossprod(x), "not supported")
+  expect_error(tcrossprod(x), "not supported")
+  expect_error(x %*% x, "not supported")
+  expect_error(crossprod(m, x), "not supported")
+})
+
 DBI::dbDisconnect(con, shutdown = TRUE)
 options(old_options)
