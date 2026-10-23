@@ -25,7 +25,15 @@ library(dbMatrix)
 
 `dbMatrix` objects support `Arith` and `Ops` operations. We will demonstrate how to perform arithmetic operations on `dbSparseMatrix` objects.
 
-**Note:** Some operations with zero values are not yet supported with dbMatrix objects. In addition, certain arithmetic operations between `dbMatrix` objects are also not yet supported. We welcome user feedback and reporting issues on the [Github page ](https://github.com/dbverse-org/dbmatrix-r/).
+**Note on sparse matrices:** a `dbSparseMatrix` stores only non-zero values.
+Operations that turn 0 into something else, such as `x + 1`, `1 / x`, `exp(x)`
+or `x == 0`, first fill in the zeros, which can use a lot of space for large
+matrices. This only happens when `options(dbMatrix.allow_densify = TRUE)` is
+set; otherwise these operations give an error. `log()`, `log2()` and `log10()`
+are the exception: they transform only the stored values and leave zeros at 0.
+See `?dbMatrix_options` and `?Math,dbMatrix-method`.
+
+Please report problems on [GitHub](https://github.com/dbverse-org/dbmatrix-r/issues).
 
 ### Create test data
 Let's create a simple sparse matrix for demonstration:
@@ -85,7 +93,7 @@ dbsm * dbsm
 ```
 
 #### Matrix product
-TODO
+The matrix product (`%*%`) is not supported yet.
 
 ### Cleanup
 ```{r}

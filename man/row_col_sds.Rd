@@ -50,9 +50,11 @@
 \arguments{
 \item{x}{A \code{\link{dbMatrix}} object.}
 
-\item{rows}{Always NULL for \code{\link{dbMatrix}} queries. TODO}
+\item{rows}{Always NULL for \code{\link{dbMatrix}} queries. Included for compatibility
+with the generic.}
 
-\item{cols}{Always NULL for \code{\link{dbMatrix}} queries. TODO}
+\item{cols}{Always NULL for \code{\link{dbMatrix}} queries. Included for compatibility
+with the generic.}
 
 \item{na.rm}{Always TRUE for \code{\link{dbMatrix}} queries. Included for compatibility
 with the generic.}

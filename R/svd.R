@@ -1,10 +1,19 @@
-#' Perform Streaming SVD on a dbMatrix
+#' Truncated SVD or PCA of a dbSparseMatrix
+#'
+#' @description
+#' Computes the top `k` singular values and vectors. The matrix is read from
+#' the database into memory once, and centering and scaling are applied without
+#' densifying it. Matrices with more than about 2.1 billion non-zero values are
+#' not supported.
+#'
 #' @param dbm A dbSparseMatrix object
 #' @param k Number of singular values to compute
 #' @param center Logical, center rows (default TRUE)
 #' @param scale Logical, scale rows (default FALSE)
 #' @param center_rows Logical, center rows vs columns (default TRUE for standard PCA)
-#' @param memory_limit Bytes for Fast Path. Default 8 GB.
+#' @param memory_limit Largest estimated memory use, in bytes, allowed for
+#'   reading the matrix (about 16 bytes per non-zero value). Default 8 GB. Set
+#'   `options(dbMatrix.svd_memory = ...)` to change it for the session.
 #' @param return_format "svd" (d, u, v) or "pca" (eigenvalues, loadings, coords)
 #' @param tol Eigensolver convergence tolerance.
 #' @param maxit Maximum eigensolver iterations.

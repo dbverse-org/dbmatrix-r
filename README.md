@@ -20,11 +20,15 @@ computations.
 
 **Note: Work in progress! Bugs or unexpected behavior are likely to
 occur. We welcome user feedback and reporting issues on the [Github
-page](https://github.com/dbverse-org/dbmatrix-r/).**
+page](https://github.com/dbverse-org/dbmatrix-r/).** \## Installation
 
-## Installation
+Install the released version from CRAN:
 
-You can install the development version of dbMatrix from Github like so:
+``` r
+install.packages("dbMatrix")
+```
+
+Or the development version from GitHub:
 
 ``` r
 # install.packages("pak", repos = sprintf("https://r-lib.github.io/p/pak/stable/%s/%s/%s", .Platform$pkgType, R.Version()$os, R.Version()$arch))

@@ -1166,8 +1166,10 @@ setMethod(
 #' Row (column) standard deviations for [`dbMatrix`] objects
 #' @inherit MatrixGenerics::rowSds description
 #' @param x A [`dbMatrix`] object.
-#' @param rows Always NULL for [`dbMatrix`] queries. TODO
-#' @param cols Always NULL for [`dbMatrix`] queries. TODO
+#' @param rows Always NULL for [`dbMatrix`] queries. Included for compatibility
+#' with the generic.
+#' @param cols Always NULL for [`dbMatrix`] queries. Included for compatibility
+#' with the generic.
 #' @param na.rm Always TRUE for [`dbMatrix`] queries. Included for compatibility
 #' with the generic.
 #' @param center Always NULL for [`dbMatrix`] queries. Included for compatibility
@@ -1618,17 +1620,26 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' @param x A [`dbMatrix`] object.
 #'
 #' @details
-#' This method provides implementations for the following Math functions:
+#' Supported functions:
 #'
-#' *Arithmetic and rounding*:
-#' * `abs()`, `sign()`, `sqrt()`, `ceiling()`, `floor()`, `trunc()`
+#' * Rounding and sign: `abs()`, `sign()`, `sqrt()`, `ceiling()`, `floor()`, `trunc()`
+#' * Logarithms and exponentials: `log()`, `log10()`, `log2()`, `log1p()`, `exp()`, `expm1()`
+#' * Trigonometric: `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`,
+#'   `cosh()`, `sinh()`, `tanh()`, `acosh()`, `asinh()`, `atanh()`
+#' * Special: `gamma()`, `lgamma()`
 #'
-#' *Cumulative operations*:
-#' * `cummax()`, `cummin()`, `cumprod()`, `cumsum()`
-#' * **Note: `cumprod()` is not supported**
+#' Not supported: `cumprod()`, `cospi()`, `sinpi()`, `tanpi()`, `digamma()` and
+#' `trigamma()`. `cumsum()`, `cummax()` and `cummin()` run but do not match base R,
+#' which returns a vector.
 #'
-#' *Logarithmic*:
-#' * `log()`, `log10()`, `log2()`, `log1p()`
+#' Values outside a function's domain (for example `log(0)` on a dense matrix or
+#' `acos(2)`) give a database error instead of `-Inf` or `NaN`.
+#'
+#' **Sparse matrices**: a `dbSparseMatrix` stores only non-zero values. Functions
+#' that turn 0 into something else, such as `exp()` or `cos()`, first fill in the
+#' zeros (see `dbMatrix.allow_densify` in [dbMatrix_options]). `log()`, `log2()`
+#' and `log10()` are the exception: they transform only the stored values and
+#' leave zeros at 0, so `log(x + 1)`-style normalization can stay sparse.
 #'
 #' **DuckDB Log Function Mappings**:
 #' | R Function | DuckDB Function | Notes |
@@ -1642,23 +1653,6 @@ setMethod('mean', signature(x = 'dbSparseMatrix'), function(x, ...) {
 #' For `dbSparseMatrix` with pending operations, `log(x + 1)` operations preserve sparsity
 #' since `log(0 + 1) = 0`. The multiplicative component is applied first,
 #' then the log transformation is applied to sparse values only.
-#'
-#' *Trigonometric*:
-#' * `cos()`, `sin()`, `tan()`, `acos()`, `asin()`, `atan()`
-#' * `cosh()`, `sinh()`, `tanh()`, `acosh()`, `asinh()`, `atanh()`
-#' * `cospi()`, `sinpi()`, `tanpi()`
-#' * **Note: `acosh()` `asinh()` `atanh()` are not supported**
-#'
-#' *Exponential*:
-#' * `exp()`, `expm1()`
-#' * **Note: `expm1()` is not supported**
-#'
-#' *Special functions*:
-#' * `gamma()`, `lgamma()`, `digamma()`, `trigamma()`
-#' * **Note: `digamma()` `trigamma()` are not supported**
-#'
-#' The function applies the specified mathematical operation to each element
-#' of the [`dbMatrix`] object.
 #'
 #' @return
 #' A [`dbMatrix`] object with the mathematical operation applied to each element.
