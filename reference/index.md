@@ -121,6 +121,17 @@ Methods for transforming `dbMatrix` objects
 - [`is.na(`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/is.na-dbMatrix-method.md)
   : Element-wise is.na for dbMatrix
 
+- [`` `%*%`( ``*`<dbMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`` `%*%`( ``*`<ANY>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`crossprod(`*`<dbMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`crossprod(`*`<ANY>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`tcrossprod(`*`<dbMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`tcrossprod(`*`<ANY>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`` `%*%`( ``*`<dbMatrix>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`crossprod(`*`<dbMatrix>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  [`tcrossprod(`*`<dbMatrix>`*`,`*`<dbMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/matrix-products.md)
+  : Matrix products
+
 - [`` `%in%`( ``*`<dbDenseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
   [`` `%in%`( ``*`<ANY>`*`,`*`<dbDenseMatrix>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
   [`` `%in%`( ``*`<dbSparseMatrix>`*`,`*`<ANY>`*`)`](https://dbverse-org.github.io/dbmatrix-r/reference/percent-in.md)
@@ -133,7 +144,7 @@ Methods for transforming `dbMatrix` objects
   : Force computation of a dbMatrix
 
 - [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
-  : Perform Streaming SVD on a dbMatrix
+  : Truncated SVD or PCA of a dbSparseMatrix
 
 ## Matrix Properties
 

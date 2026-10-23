@@ -63,13 +63,13 @@ rowSds(
 
   Always NULL for
   [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
-  queries. TODO
+  queries. Included for compatibility with the generic.
 
 - cols:
 
   Always NULL for
   [`dbMatrix`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix.md)
-  queries. TODO
+  queries. Included for compatibility with the generic.
 
 - na.rm:
 

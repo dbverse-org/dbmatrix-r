@@ -1,6 +1,9 @@
-# Perform Streaming SVD on a dbMatrix
+# Truncated SVD or PCA of a dbSparseMatrix
 
-Perform Streaming SVD on a dbMatrix
+Computes the top `k` singular values and vectors. The matrix is read
+from the database into memory once, and centering and scaling are
+applied without densifying it. Matrices with more than about 2.1 billion
+non-zero values are not supported.
 
 ## Usage
 
@@ -45,7 +48,9 @@ db_svd(
 
 - memory_limit:
 
-  Bytes for Fast Path. Default 8 GB.
+  Largest estimated memory use, in bytes, allowed for reading the matrix
+  (about 16 bytes per non-zero value). Default 8 GB. Set
+  `options(dbMatrix.svd_memory = ...)` to change it for the session.
 
 - return_format:
 
@@ -61,8 +66,8 @@ db_svd(
 
 - ncv:
 
-  Number of Lanczos basis vectors. Defaults to
-  `max(ceiling(1.5 * k), 40)`.
+  Number of Lanczos basis vectors. Defaults to `max(2 * k + 1, 40)`,
+  capped at the number of rows.
 
 - score_threads:
 
@@ -74,4 +79,5 @@ db_svd(
 
 ## Value
 
-List with SVD or PCA components
+List with SVD or PCA components. Timings and solver counts are in
+`attr(result, "diagnostics")`.

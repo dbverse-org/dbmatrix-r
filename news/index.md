@@ -1,5 +1,48 @@
 # Changelog
 
+## dbMatrix 0.1.0 (2026-05-19)
+
+CRAN release: 2026-05-19
+
+First CRAN release.
+
+### Features
+
+- [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  can scale rows, and its default memory limit is now 8 GB (was 500 MB).
+
+- New
+  [`to_named_ijx_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/to_named_ijx_tbl.md)
+  returns a matrix as a table of row name, column name and value.
+
+- Dividing one sparse dbMatrix by another keeps the result sparse.
+
+### Bug fixes
+
+- [`writeMM()`](https://rdrr.io/pkg/Matrix/man/externalFormats.html)
+  always writes integer row and column indices and numeric values.
+
+- Converting a sparse dbMatrix to a `Matrix` sparse matrix is more
+  reliable.
+
+- Subsetting that returns an empty matrix no longer fails.
+
+- Row and column names keep a stable order when building a dbMatrix from
+  a table.
+
+- Row and column names that are not character strings are handled
+  correctly.
+
+- [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  checks its inputs and gives clear errors.
+
+### Performance
+
+- Building a dbMatrix from a table matches names by number instead of by
+  text, which is faster.
+
+- Subsetting that keeps every row and column returns immediately.
+
 ## dbMatrix 0.0.0.9126 (2026-01-13)
 
 ### Bug fixes

@@ -45,6 +45,30 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="dbmatrix-010-2026-05-19">dbMatrix 0.1.0 (2026-05-19)<a class="anchor" aria-label="anchor" href="#dbmatrix-010-2026-05-19"></a></h2><p class="text-muted">CRAN release: 2026-05-19</p>
+<p>First CRAN release.</p>
+<div class="section level3">
+<h3 id="features-0-1-0">Features<a class="anchor" aria-label="anchor" href="#features-0-1-0"></a></h3>
+<ul><li><p><code><a href="../reference/db_svd.html">db_svd()</a></code> can scale rows, and its default memory limit is now 8 GB (was 500 MB).</p></li>
+<li><p>New <code><a href="../reference/to_named_ijx_tbl.html">to_named_ijx_tbl()</a></code> returns a matrix as a table of row name, column name and value.</p></li>
+<li><p>Dividing one sparse dbMatrix by another keeps the result sparse.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-0"></a></h3>
+<ul><li><p><code><a href="https://rdrr.io/pkg/Matrix/man/externalFormats.html" class="external-link">writeMM()</a></code> always writes integer row and column indices and numeric values.</p></li>
+<li><p>Converting a sparse dbMatrix to a <code>Matrix</code> sparse matrix is more reliable.</p></li>
+<li><p>Subsetting that returns an empty matrix no longer fails.</p></li>
+<li><p>Row and column names keep a stable order when building a dbMatrix from a table.</p></li>
+<li><p>Row and column names that are not character strings are handled correctly.</p></li>
+<li><p><code><a href="../reference/db_svd.html">db_svd()</a></code> checks its inputs and gives clear errors.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-0-1-0">Performance<a class="anchor" aria-label="anchor" href="#performance-0-1-0"></a></h3>
+<ul><li><p>Building a dbMatrix from a table matches names by number instead of by text, which is faster.</p></li>
+<li><p>Subsetting that keeps every row and column returns immediately.</p></li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9126" id="dbmatrix-0009126-2026-01-13">dbMatrix 0.0.0.9126 (2026-01-13)<a class="anchor" aria-label="anchor" href="#dbmatrix-0009126-2026-01-13"></a></h2>
 <div class="section level3">
 <h3 id="bug-fixes-0-0-0-9126">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-0-0-9126"></a></h3>

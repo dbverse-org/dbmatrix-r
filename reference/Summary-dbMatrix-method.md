@@ -58,6 +58,14 @@ functions:
 ``` r
 mat <- matrix(1, nrow = 3, ncol = 3)
 dbmat <- as.dbMatrix(mat)
+#> duckdb keeps downloaded extensions and secrets in a temporary directory:
+#> ℹ /tmp/RtmpchaAWA/duckdb
+#> This is removed when the R session ends.
+#> • Extensions are re-downloaded each session.
+#> • Secrets are lost.
+#> ℹ Run duckdb(shared_home = TRUE) (or create ~/.duckdb) to keep them (suitable for most users).
+#> ℹ Run duckdb(shared_home = FALSE) to accept the temporary directory (and silence this message).
+#> ℹ See ?duckdb_storage for details and alternatives.
 max(dbmat)
 #> [1] 1
 min(dbmat)
