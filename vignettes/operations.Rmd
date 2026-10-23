@@ -34,7 +34,6 @@ one that is missing, please open an issue on
 [GitHub](https://github.com/dbverse-org/dbmatrix-r/issues).
 
 ✅ - supported
-⚠️ - supported with a limitation (see note)
 ❌ - not supported
 
 |                                   | dbSparseMatrix | dbDenseMatrix |
@@ -43,8 +42,7 @@ one that is missing, please open an issue on
 | `colMeans`, `rowMeans`            | ✅             | ✅            |
 | `colVars`, `rowVars`              | ✅             | ✅            |
 | `colSds`, `rowSds`                | ✅             | ✅            |
-| `sum`, `mean`                     | ✅             | ✅            |
-| `max`, `min`                      | ⚠️             | ✅            |
+| `sum`, `mean`, `max`, `min`       | ✅             | ✅            |
 | `range`                           | ❌             | ❌            |
 | `t`                               | ✅             | ✅            |
 | `[` (subsetting)                  | ✅             | ✅            |
@@ -54,10 +52,6 @@ one that is missing, please open an issue on
 | `rownames`, `colnames`            | ✅             | ✅            |
 | `writeMM`                         | ✅             | ✅            |
 | `db_svd`                          | ✅             | ❌            |
-
-⚠️ `max()` and `min()` on a `dbSparseMatrix` ignore the zeros that are not
-stored, so they can differ from base R when every stored value is negative
-(`max`) or positive (`min`).
 
 Arithmetic and math functions are covered in `vignette("arithmetic")`.
 

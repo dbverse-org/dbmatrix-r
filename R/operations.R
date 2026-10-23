@@ -1794,6 +1794,14 @@ setMethod('Summary', signature(x = 'dbMatrix'), function(x, ..., na.rm = TRUE) {
   )
   res <- suppressWarnings(eval(str2lang(build_call)))
 
+  # A sparse matrix does not store its zeros, so include 0 when any are missing
+  if (is(x, "dbSparseMatrix") && .Generic %in% c("max", "min")) {
+    n_stored <- dplyr::pull(dplyr::count(x[]), "n")
+    if (n_stored < prod(dim(x))) {
+      res <- match.fun(.Generic)(res, 0, na.rm = TRUE)
+    }
+  }
+
   # avoid using dplyr::pull()
   # build_call = glue::glue(
   #   "x[] |>
