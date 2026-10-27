@@ -155,7 +155,7 @@ Supported `value` data types:
 dgc <- readRDS(system.file("extdata", "dgc.rds", package = "dbMatrix"))
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpchaAWA/duckdb
+#> ℹ /tmp/RtmpGbMgtr/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.

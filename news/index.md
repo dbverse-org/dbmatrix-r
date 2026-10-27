@@ -1,5 +1,101 @@
 # Changelog
 
+## dbMatrix 0.2.0 (2026-10-23)
+
+CRAN release: 2026-10-23
+
+### Breaking changes
+
+- Sparse operations that turn 0 into another value, such as
+  [`exp()`](https://rdrr.io/r/base/Log.html),
+  [`cos()`](https://rdrr.io/r/base/Trig.html), `1 / x`, `x == 0`,
+  `x >= 0` or `x < 1`, now fill in the zeros first. This needs
+  `options(dbMatrix.allow_densify = TRUE)`; otherwise they give an
+  error. Before, only the stored values changed, which gave wrong
+  results. [`log()`](https://rdrr.io/r/base/Log.html),
+  [`log2()`](https://rdrr.io/r/base/Log.html) and
+  [`log10()`](https://rdrr.io/r/base/Log.html) still transform only the
+  stored values, so `log(x + 1)`-style normalization stays sparse.
+
+### Features
+
+- [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  is faster and can use several threads (`operator_threads`,
+  `score_threads`). It returns PCA coordinates directly, uses
+  `max(2k + 1, 40)` Lanczos vectors by default, and reports timings in
+  `attr(result, "diagnostics")`.
+
+- Chained operations on the same matrix are combined into one database
+  query.
+
+- New option `dbMatrix.readMM.temporary_table` controls whether
+  temporary
+  [`readMM()`](https://rdrr.io/pkg/Matrix/man/externalFormats.html)
+  imports use a temporary table (default) or a view.
+
+### Bug fixes
+
+- `1 / x` and `0 - x` returned `x` unchanged.
+
+- Unary minus (`-x`) failed.
+
+- [`head()`](https://rdrr.io/r/utils/head.html) and
+  [`tail()`](https://rdrr.io/r/utils/head.html) failed on matrices with
+  row names, and [`tail()`](https://rdrr.io/r/utils/head.html) returned
+  one row too many.
+
+- [`rowMeans()`](https://rdrr.io/pkg/Matrix/man/colSums-methods.html)
+  and
+  [`colMeans()`](https://rdrr.io/pkg/Matrix/man/colSums-methods.html)
+  divided by the full length instead of the number of non-missing
+  values.
+
+- [`min()`](https://rdrr.io/r/base/Extremes.html) and
+  [`max()`](https://rdrr.io/r/base/Extremes.html) of a sparse matrix
+  ignored the zeros that are not stored.
+
+- [`sum()`](https://rdrr.io/r/base/sum.html),
+  [`prod()`](https://rdrr.io/r/base/prod.html),
+  [`max()`](https://rdrr.io/r/base/Extremes.html),
+  [`min()`](https://rdrr.io/r/base/Extremes.html),
+  [`any()`](https://rdrr.io/r/base/any.html) and
+  [`all()`](https://rdrr.io/r/base/all.html) returned `TRUE` when there
+  were no non-missing values or the result was `NaN`. They now return
+  what base R returns.
+
+- [`crossprod()`](https://rdrr.io/pkg/Matrix/man/matmult-methods.html)
+  and
+  [`tcrossprod()`](https://rdrr.io/pkg/Matrix/man/matmult-methods.html)
+  recursed until R ran out of stack. Matrix products (`%*%`,
+  [`crossprod()`](https://rdrr.io/pkg/Matrix/man/matmult-methods.html),
+  [`tcrossprod()`](https://rdrr.io/pkg/Matrix/man/matmult-methods.html))
+  now give a clear error; they are not supported yet.
+
+- [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  crashed R on matrices with 64-bit row or column indices, such as those
+  from
+  [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md),
+  and failed on very large matrices with no stored values. Its
+  memory-limit error now says what to change.
+
+- [`dbMatrix_from_tbl()`](https://dbverse-org.github.io/dbmatrix-r/reference/dbMatrix_from_tbl.md)
+  stores row and column indices as 32-bit integers, like every other
+  dbMatrix.
+
+- dbMatrix operations no longer change the random number stream after
+  [`set.seed()`](https://rdrr.io/r/base/Random.html).
+
+- Compatible with newer versions of bit64
+  ([\#6](https://github.com/dbverse-org/dbmatrix-r/issues/6),
+  [@MichaelChirico](https://github.com/MichaelChirico)).
+
+### Documentation
+
+- Updated the operations and arithmetic vignettes, the math functions
+  help page and the
+  [`db_svd()`](https://dbverse-org.github.io/dbmatrix-r/reference/db_svd.md)
+  help page to match what is supported.
+
 ## dbMatrix 0.1.0 (2026-05-19)
 
 CRAN release: 2026-05-19

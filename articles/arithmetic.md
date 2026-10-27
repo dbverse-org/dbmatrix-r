@@ -62,7 +62,7 @@ Let’s create a `dbSparseMatrix` object from the above `dgc` object.
 # Note: by default the constructor creates a dbMatrix object in-memory
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/Rtmp8ZL3eF/duckdb
+#> ℹ /tmp/RtmpAPibRZ/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
@@ -214,7 +214,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] dbMatrix_0.1.0
+#> [1] dbMatrix_0.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] sass_0.4.10           generics_0.1.4        lattice_0.22-9       
@@ -222,15 +222,15 @@ sessionInfo()
 #>  [7] grid_4.6.1            nanoarrow_0.9.0       blob_1.3.0           
 #> [10] fastmap_1.2.0         jsonlite_2.0.0        Matrix_1.7-5         
 #> [13] pins_1.4.2            DBI_1.3.0             purrr_1.2.2          
-#> [16] textshaping_1.0.5     jquerylib_0.1.4       duckdb_1.5.6         
+#> [16] textshaping_1.0.5     jquerylib_0.1.4       duckdb_2.0.0         
 #> [19] cli_3.6.6             rlang_1.3.0           dbplyr_2.6.0         
 #> [22] rscontract_0.1.2      bit64_4.8.6           connections_0.2.1    
 #> [25] withr_3.0.3           cachem_1.1.0          yaml_2.3.12          
 #> [28] otel_0.2.0            tools_4.6.1           dplyr_1.2.1          
 #> [31] assertthat_0.2.1      vctrs_0.7.3           R6_2.6.1             
 #> [34] matrixStats_1.5.0     lifecycle_1.0.5       fs_2.1.0             
-#> [37] dbProject_0.1.1       bit_4.6.0             ragg_1.5.2           
-#> [40] arrow_25.0.1          pkgconfig_2.0.3       desc_1.4.3           
+#> [37] dbProject_0.1.2       bit_4.6.0             ragg_1.5.2           
+#> [40] arrow_26.0.0          pkgconfig_2.0.3       desc_1.4.3           
 #> [43] pkgdown_2.2.1         bslib_0.12.0          pillar_1.11.1        
 #> [46] data.table_1.18.6.1   glue_1.8.1            Rcpp_1.1.2           
 #> [49] systemfonts_1.3.2     xfun_0.62             tibble_3.3.1         

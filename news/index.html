@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">dbMatrix</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,6 +44,37 @@
       <small>Source: <a href="https://github.com/dbverse-org/dbmatrix-r/blob/dev/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="dbmatrix-020-2026-10-23">dbMatrix 0.2.0 (2026-10-23)<a class="anchor" aria-label="anchor" href="#dbmatrix-020-2026-10-23"></a></h2><p class="text-muted">CRAN release: 2026-10-23</p>
+<div class="section level3">
+<h3 id="breaking-changes-0-2-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-2-0"></a></h3>
+<ul><li>Sparse operations that turn 0 into another value, such as <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp()</a></code>, <code><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos()</a></code>, <code>1 / x</code>, <code>x == 0</code>, <code>x &gt;= 0</code> or <code>x &lt; 1</code>, now fill in the zeros first. This needs <code>options(dbMatrix.allow_densify = TRUE)</code>; otherwise they give an error. Before, only the stored values changed, which gave wrong results. <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log()</a></code>, <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log2()</a></code> and <code><a href="https://rdrr.io/r/base/Log.html" class="external-link">log10()</a></code> still transform only the stored values, so <code>log(x + 1)</code>-style normalization stays sparse.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="features-0-2-0">Features<a class="anchor" aria-label="anchor" href="#features-0-2-0"></a></h3>
+<ul><li><p><code><a href="../reference/db_svd.html">db_svd()</a></code> is faster and can use several threads (<code>operator_threads</code>, <code>score_threads</code>). It returns PCA coordinates directly, uses <code>max(2k + 1, 40)</code> Lanczos vectors by default, and reports timings in <code>attr(result, "diagnostics")</code>.</p></li>
+<li><p>Chained operations on the same matrix are combined into one database query.</p></li>
+<li><p>New option <code>dbMatrix.readMM.temporary_table</code> controls whether temporary <code><a href="https://rdrr.io/pkg/Matrix/man/externalFormats.html" class="external-link">readMM()</a></code> imports use a temporary table (default) or a view.</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-0"></a></h3>
+<ul><li><p><code>1 / x</code> and <code>0 - x</code> returned <code>x</code> unchanged.</p></li>
+<li><p>Unary minus (<code>-x</code>) failed.</p></li>
+<li><p><code><a href="https://rdrr.io/r/utils/head.html" class="external-link">head()</a></code> and <code><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail()</a></code> failed on matrices with row names, and <code><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail()</a></code> returned one row too many.</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowMeans()</a></code> and <code><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">colMeans()</a></code> divided by the full length instead of the number of non-missing values.</p></li>
+<li><p><code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min()</a></code> and <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code> of a sparse matrix ignored the zeros that are not stored.</p></li>
+<li><p><code><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum()</a></code>, <code><a href="https://rdrr.io/r/base/prod.html" class="external-link">prod()</a></code>, <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max()</a></code>, <code><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min()</a></code>, <code><a href="https://rdrr.io/r/base/any.html" class="external-link">any()</a></code> and <code><a href="https://rdrr.io/r/base/all.html" class="external-link">all()</a></code> returned <code>TRUE</code> when there were no non-missing values or the result was <code>NaN</code>. They now return what base R returns.</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/Matrix/man/matmult-methods.html" class="external-link">crossprod()</a></code> and <code><a href="https://rdrr.io/pkg/Matrix/man/matmult-methods.html" class="external-link">tcrossprod()</a></code> recursed until R ran out of stack. Matrix products (<code>%*%</code>, <code><a href="https://rdrr.io/pkg/Matrix/man/matmult-methods.html" class="external-link">crossprod()</a></code>, <code><a href="https://rdrr.io/pkg/Matrix/man/matmult-methods.html" class="external-link">tcrossprod()</a></code>) now give a clear error; they are not supported yet.</p></li>
+<li><p><code><a href="../reference/db_svd.html">db_svd()</a></code> crashed R on matrices with 64-bit row or column indices, such as those from <code><a href="../reference/dbMatrix_from_tbl.html">dbMatrix_from_tbl()</a></code>, and failed on very large matrices with no stored values. Its memory-limit error now says what to change.</p></li>
+<li><p><code><a href="../reference/dbMatrix_from_tbl.html">dbMatrix_from_tbl()</a></code> stores row and column indices as 32-bit integers, like every other dbMatrix.</p></li>
+<li><p>dbMatrix operations no longer change the random number stream after <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code>.</p></li>
+<li><p>Compatible with newer versions of bit64 (<a href="https://github.com/dbverse-org/dbmatrix-r/issues/6" class="external-link">#6</a>, <a href="https://github.com/MichaelChirico" class="external-link">@MichaelChirico</a>).</p></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-2-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-0"></a></h3>
+<ul><li>Updated the operations and arithmetic vignettes, the math functions help page and the <code><a href="../reference/db_svd.html">db_svd()</a></code> help page to match what is supported.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="dbmatrix-010-2026-05-19">dbMatrix 0.1.0 (2026-05-19)<a class="anchor" aria-label="anchor" href="#dbmatrix-010-2026-05-19"></a></h2><p class="text-muted">CRAN release: 2026-05-19</p>
 <p>First CRAN release.</p>

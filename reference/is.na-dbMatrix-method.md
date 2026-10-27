@@ -27,7 +27,7 @@ was NA and 0 otherwise.
 mat <- matrix(c(1, NA, 3, NA), nrow = 2)
 dbmat <- as.dbMatrix(mat)
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpchaAWA/duckdb
+#> ℹ /tmp/RtmpGbMgtr/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
