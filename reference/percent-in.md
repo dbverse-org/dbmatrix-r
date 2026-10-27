@@ -51,7 +51,7 @@ It follows R's standard behavior for the `%in%` operator:
 ``` r
 con <- DBI::dbConnect(duckdb::duckdb(), ":memory:")
 #> duckdb keeps downloaded extensions and secrets in a temporary directory:
-#> ℹ /tmp/RtmpGbMgtr/duckdb
+#> ℹ /tmp/RtmpQoK7i1/duckdb
 #> This is removed when the R session ends.
 #> • Extensions are re-downloaded each session.
 #> • Secrets are lost.
