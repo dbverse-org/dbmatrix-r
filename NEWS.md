@@ -1,5 +1,10 @@
 <!-- NEWS.md is maintained by https://fledge.cynkra.com, contributors should not edit this file -->
 
+# dbMatrix 0.2.0.9000
+
+- Same as previous version.
+
+
 # dbMatrix 0.2.0 (2026-10-23)
 
 ## Breaking changes
